@@ -1,3 +1,13 @@
+export type SectionKey =
+  | "hero"
+  | "roster"
+  | "about"
+  | "gallery"
+  | "ambassadors"
+  | "store"
+  | "sponsors"
+  | "contact";
+
 export interface RosterMember {
   id: string;
   ign: string;
@@ -46,6 +56,12 @@ export interface BrandAmbassador {
   games: string[];
   bio: string;
   socials: SocialLink[];
+  accentHeadline?: string;
+  accentSubline?: string;
+  accentLabel?: string;
+  accentLogo?: string;
+  accentImage?: string;
+  bannerImage?: string;
 }
 
 export interface AboutStat {
@@ -210,6 +226,8 @@ export interface BrandingConfig {
   navbarLogo?: string;
   navbarTitle?: string;
   navbarSubtitle?: string;
+  adminLogo?: string;
+  adminTitle?: string;
   navLabels?: NavLabels;
 }
 
@@ -222,6 +240,8 @@ export interface ContactConfig {
 }
 
 export interface SiteData {
+  sectionOrder: SectionKey[];
+  hiddenSections?: SectionKey[];
   branding: BrandingConfig;
   opening: OpeningConfig;
   templates: MessageTemplatesConfig;

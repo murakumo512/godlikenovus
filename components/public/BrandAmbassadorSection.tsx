@@ -13,13 +13,172 @@ import {
 } from "./MediaDisplay";
 import { SocialIcon } from "./SocialIcon";
 
+/**
+ * Default Godlike Accent (Gambar 2 style):
+ * Chamfered glowing crimson frame with top logo tab, stacked WELCOME / TO GODLIKE headline,
+ * and bottom glowing AMBASSADOR badge.
+ */
+function DefaultGodlikeAccent({
+  ba,
+  logo,
+}: {
+  ba: BrandAmbassador;
+  logo?: string;
+}) {
+  const headline = ba.accentHeadline?.trim() || "WELCOME";
+  const subline = ba.accentSubline?.trim() || "TO GODLIKE";
+  const label = ba.accentLabel?.trim() || "AMBASSADOR";
+  const accentLogo = ba.accentLogo || logo;
+
+  return (
+    <div className="relative w-full h-full flex flex-col justify-between py-[8%] pr-[7%] pl-[4%] select-none">
+      {/* Chamfered Glowing HUD Frame SVG (Inspired directly by Gambar 2) */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 260 190"
+        fill="none"
+        preserveAspectRatio="none"
+        className="pointer-events-none absolute inset-y-[7%] right-[6%] left-[2%] w-[92%] h-[86%] overflow-visible"
+        style={{
+          filter: "drop-shadow(0 0 8px rgba(225,29,46,0.75))",
+        }}
+      >
+        {/* Top Logo Tab Box */}
+        <path
+          d="M 148 2 H 248 L 258 12 V 40 H 140 V 10 Z"
+          fill="rgba(225,29,46,0.14)"
+          stroke="#E11D2E"
+          strokeWidth="1.8"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Outer Connecting Bracket */}
+        <path
+          d="M 258 40 V 144 H 20 L 8 156 V 178 L 18 188 H 246 L 258 176 V 144"
+          fill="rgba(225,29,46,0.12)"
+          stroke="#E11D2E"
+          strokeWidth="1.8"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Right Spine Line */}
+        <path
+          d="M 250 40 V 144"
+          stroke="#E11D2E"
+          strokeWidth="2.2"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+
+      {/* Top Right Logo inside Chamfered Tab */}
+      <div className="relative z-10 flex justify-end pr-[3%] pt-[1%]">
+        {accentLogo && (
+          <img
+            src={assetUrl(accentLogo)}
+            alt="Godlike"
+            className="h-[6.2cqw] max-h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.25)]"
+          />
+        )}
+      </div>
+
+      {/* Center Bold Stacked Display Text */}
+      <div className="relative z-10 my-auto pl-[4%] pr-[5%] text-left">
+        <div className="font-display font-extrabold uppercase leading-[0.88] tracking-wide text-[#E11D2E] text-[6.8cqw] drop-shadow-[0_2px_12px_rgba(225,29,46,0.45)]">
+          {headline}
+        </div>
+        <div className="font-display font-extrabold uppercase leading-[0.9] tracking-wide text-white text-[6.6cqw] mt-[0.6cqw]">
+          {subline}
+        </div>
+      </div>
+
+      {/* Bottom Glowing Ambassador Tag */}
+      <div className="relative z-10 pl-[5%] pb-[1.5%]">
+        <span className="font-display font-bold uppercase tracking-[0.18em] text-white text-[3.1cqw]">
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AmbassadorLandscapeCard({
+  ba,
+  logo,
+}: {
+  ba: BrandAmbassador;
+  logo?: string;
+}) {
+  // Mode C: 100% Custom Full Landscape Banner uploaded by Admin
+  if (ba.bannerImage) {
+    return (
+      <SmartMedia
+        src={ba.bannerImage}
+        alt={ba.name}
+        fit="contain-ambient"
+        className="absolute inset-0 w-full h-full"
+        imgClassName="group-hover:scale-[1.02] transition duration-700"
+        mutedLoop
+      />
+    );
+  }
+
+  // Mode A & B: Left = Person Photo, Right = Default Godlike Accent OR Custom Uploaded Accent Image
+  return (
+    <div className="absolute inset-0 bg-[#050507] overflow-hidden">
+      {/* Unified Bottom Crimson Studio Floor Glow (Gambar 2 signature glow) */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[34%] bg-gradient-to-t from-[#E11D2E]/85 via-[#E11D2E]/25 to-transparent z-[1]" />
+
+      {/* Subtle ambient crimson aura behind the person */}
+      <div
+        className="pointer-events-none absolute -left-[6%] top-[10%] w-[52%] h-[80%] rounded-full blur-2xl opacity-25 z-[1]"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(225,29,46,0.65) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* LEFT SIDE: Person Photo / Cutout */}
+      <div className="absolute inset-y-0 left-0 w-[50%] z-[10] flex items-end justify-center overflow-hidden">
+        {isAnyVideoUrl(ba.photo) ? (
+          <SmartMedia
+            src={ba.photo}
+            alt={ba.name}
+            fit="cover"
+            className="w-full h-full"
+            mutedLoop
+          />
+        ) : (
+          <img
+            src={assetUrl(ba.photo)}
+            alt={ba.name}
+            className="h-[95%] w-full object-contain object-bottom group-hover:scale-[1.04] transition duration-700 ease-out drop-shadow-[0_8px_24px_rgba(0,0,0,0.75)]"
+          />
+        )}
+      </div>
+
+      {/* RIGHT SIDE: Custom Uploaded Accent Image OR Default Godlike Accent */}
+      <div className="absolute inset-y-0 right-0 w-[54%] z-[15] flex items-center justify-center">
+        {ba.accentImage ? (
+          <img
+            src={assetUrl(ba.accentImage)}
+            alt=""
+            className="w-full h-full object-contain p-[4%]"
+          />
+        ) : (
+          <DefaultGodlikeAccent ba={ba} logo={logo} />
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function BrandAmbassadorSection({
   ambassadors,
   homeSections,
+  fallbackLogo,
   onInspectMedia,
 }: {
   ambassadors: BrandAmbassador[];
   homeSections: HomeSectionsConfig;
+  fallbackLogo?: string;
   onInspectMedia: (item: LightboxMediaItem) => void;
 }) {
   const [selectedBa, setSelectedBa] = useState<BrandAmbassador | null>(null);
@@ -28,6 +187,8 @@ export function BrandAmbassadorSection({
 
   if (!ambassadors || ambassadors.length === 0) return null;
 
+  const isSingle = ambassadors.length === 1;
+
   return (
     <ScrollSection
       id="ambassadors"
@@ -35,7 +196,6 @@ export function BrandAmbassadorSection({
       className="py-10 sm:py-16 md:py-20 px-3.5 sm:px-6 lg:px-8"
     >
       <div className="max-w-7xl mx-auto">
-        {/* Clean Editorial Header */}
         <div className="mb-5 sm:mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
           <div>
             {homeSections.baBadge && (
@@ -57,56 +217,44 @@ export function BrandAmbassadorSection({
           )}
         </div>
 
-        {/*
-          - Mobile (< sm): Compact IG-style 2-col / 3-col square grid (hemat ruang, tidak perlu scroll jauh!)
-          - Laptop (lg:grid-cols-4): Slightly larger than 5-col Roster Player cards (~280px wide, tidak kegedean!)
-        */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-5 lg:gap-6">
+        {/* Landscape 16:9 Banner Cards (Left Person + Right Godlike Accent / Custom Upload) */}
+        <div
+          className={
+            isSingle
+              ? "max-w-3xl mx-auto"
+              : "grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
+          }
+        >
           {ambassadors.map((ba) => (
             <article
               key={ba.id}
               onClick={() => setSelectedBa(ba)}
-              className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+              className="group cursor-pointer"
             >
-              {/* Compact Square on Mobile -> Portrait (slightly bigger than player card) on Laptop */}
-              <div className="relative w-full aspect-square sm:aspect-[3/3.6] overflow-hidden bg-zinc-900">
-                <SmartMedia
-                  src={ba.photo}
-                  alt={ba.name}
-                  fit="contain-ambient"
-                  className="w-full h-full"
-                  imgClassName="group-hover:scale-[1.04] transition duration-500 ease-out"
-                  mutedLoop
-                  showVideoBadge
-                />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/85 via-black/30 to-transparent z-10" />
-
-                <div className="absolute inset-x-0 bottom-0 z-20 p-2.5 sm:p-4">
-                  <h3 className="font-display text-lg sm:text-2xl lg:text-3xl font-bold uppercase text-white leading-none tracking-tight truncate">
-                    {ba.name}
-                  </h3>
-                </div>
+              <div className="@container relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-white/12 bg-[#050507] group-hover:border-[#E11D2E]/70 transition shadow-lg">
+                <AmbassadorLandscapeCard ba={ba} logo={fallbackLogo} />
               </div>
 
-              {/* Below Photo: Team name + subtle profile cue */}
-              <div className="px-2.5 py-2 sm:px-4 sm:py-3 border-t border-white/8 flex items-center justify-between gap-2">
+              <div className="pt-2.5 sm:pt-3 flex items-center justify-between gap-3 px-0.5">
                 <div className="min-w-0">
-                  <span className="hidden sm:block text-[10px] uppercase tracking-wider text-zinc-500">
-                    Team
-                  </span>
-                  <span className="block text-[11px] sm:text-sm font-medium text-zinc-300 truncate">
+                  <h3 className="font-display text-xl sm:text-2xl font-bold uppercase text-white leading-none truncate group-hover:text-[#E11D2E] transition">
+                    {ba.name}
+                  </h3>
+                  <span className="block text-xs text-zinc-400 truncate mt-1">
                     {ba.team || "Godlike Novus"}
                   </span>
                 </div>
-
-                <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-500 group-hover:text-[#E11D2E] shrink-0 transition" />
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400 group-hover:text-[#E11D2E] transition shrink-0">
+                  Lihat Profil
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </span>
               </div>
             </article>
           ))}
         </div>
       </div>
 
-      {/* Instagram-Style Detail Modal on Click: Big Full Photo + Nickname, Team, Games Played, Socials */}
+      {/* Detail Modal on Click: Nickname, Team, Games Played, Social Media */}
       {selectedBa && (
         <div
           role="dialog"
@@ -120,7 +268,6 @@ export function BrandAmbassadorSection({
             className="relative w-full max-w-4xl max-h-[90vh] md:h-[82vh] rounded-lg overflow-hidden bg-[#0e0e11] border border-white/12 shadow-2xl flex flex-col md:grid md:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Sticky Top Header */}
             <div className="md:hidden flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-[#0e0e11] shrink-0">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300 truncate pr-2">
                 {selectedBa.name}
@@ -139,12 +286,13 @@ export function BrandAmbassadorSection({
               data-lenis-prevent
               className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
-              {/* Left / Top: Full Large Uncropped Photo or Video (Click photo directly to zoom 1:1) */}
               <div
                 onClick={() => {
-                  if (!isAnyVideoUrl(selectedBa.photo)) {
+                  const mediaToInspect =
+                    selectedBa.bannerImage || selectedBa.photo;
+                  if (!isAnyVideoUrl(mediaToInspect)) {
                     onInspectMedia({
-                      url: selectedBa.photo,
+                      url: mediaToInspect,
                       title: selectedBa.name,
                       caption: `${selectedBa.nickname} — ${selectedBa.team}`,
                     });
@@ -165,14 +313,13 @@ export function BrandAmbassadorSection({
                   />
                 ) : (
                   <img
-                    src={assetUrl(selectedBa.photo)}
+                    src={assetUrl(selectedBa.bannerImage || selectedBa.photo)}
                     alt={selectedBa.name}
                     className="w-full max-h-[58vh] md:max-h-none h-auto md:h-full md:w-full object-contain select-none"
                   />
                 )}
               </div>
 
-              {/* Right / Bottom: Full Profile Details */}
               <div
                 data-lenis-prevent
                 className="md:col-span-6 md:h-full md:overflow-y-auto overscroll-contain border-t md:border-t-0 md:border-l border-white/10 flex flex-col bg-[#0e0e11]"
@@ -192,11 +339,9 @@ export function BrandAmbassadorSection({
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-5">
-                  <div>
-                    <h3 className="font-display text-3xl sm:text-4xl font-bold uppercase text-white leading-none">
-                      {selectedBa.name}
-                    </h3>
-                  </div>
+                  <h3 className="font-display text-3xl sm:text-4xl font-bold uppercase text-white leading-none">
+                    {selectedBa.name}
+                  </h3>
 
                   <div className="divide-y divide-white/10 border-y border-white/10 text-xs sm:text-sm">
                     {selectedBa.nickname && (

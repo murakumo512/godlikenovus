@@ -1,4 +1,15 @@
-import { SiteData } from "./types";
+import { SectionKey, SiteData } from "./types";
+
+export const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  "hero",
+  "roster",
+  "about",
+  "gallery",
+  "ambassadors",
+  "store",
+  "sponsors",
+  "contact",
+];
 
 export const DEFAULT_STORE_WA_TEMPLATE = [
   "*ORDER MERCH GODLIKE NOVUS*",
@@ -29,6 +40,8 @@ export const DEFAULT_CONTACT_WA_TEMPLATE = [
 ].join("\n");
 
 export const DEFAULT_SITE_DATA: SiteData = {
+  sectionOrder: DEFAULT_SECTION_ORDER,
+  hiddenSections: [],
   branding: {
     teamName: "GODLIKE NOVUS",
     estYear: "EST. 2013",
@@ -48,6 +61,8 @@ export const DEFAULT_SITE_DATA: SiteData = {
     navbarLogo: "/images/logo-white.png",
     navbarTitle: "GODLIKE NOVUS",
     navbarSubtitle: "EST. 2013",
+    adminLogo: "",
+    adminTitle: "Godlike Admin",
     navLabels: {
       roster: "Roster",
       about: "About",

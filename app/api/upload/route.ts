@@ -1,8 +1,14 @@
 import fs from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
+import { verifyAdminRequest } from "@/lib/auth";
 
 export async function POST(request: Request) {
+  const admin = await verifyAdminRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

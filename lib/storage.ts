@@ -1,19 +1,36 @@
 import fs from "fs/promises";
 import path from "path";
-import { DEFAULT_SITE_DATA } from "./default-data";
-import { SiteData } from "./types";
+import { DEFAULT_SECTION_ORDER, DEFAULT_SITE_DATA } from "./default-data";
+import { SectionKey, SiteData } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DATA_FILE = path.join(DATA_DIR, "site-data.json");
 
 function stripRoboticPrefix(val: string | undefined, fallback: string): string {
   if (val === undefined) return fallback;
-  // Clean old default "[02] // ..." robotic AI prefixes automatically while preserving real user text
   const cleaned = val.replace(/^\[\d+\]\s*\/\/\s*/i, "").trim();
   if (val.startsWith("[0") && val.includes("//") && !cleaned) {
     return fallback;
   }
   return cleaned || val;
+}
+
+export function normalizeSectionOrder(rawOrder?: SectionKey[]): SectionKey[] {
+  const validSet = new Set<SectionKey>(DEFAULT_SECTION_ORDER);
+  const result: SectionKey[] = [];
+  if (Array.isArray(rawOrder)) {
+    for (const item of rawOrder) {
+      if (validSet.has(item) && !result.includes(item)) {
+        result.push(item);
+      }
+    }
+  }
+  for (const def of DEFAULT_SECTION_ORDER) {
+    if (!result.includes(def)) {
+      result.push(def);
+    }
+  }
+  return result;
 }
 
 export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
@@ -49,6 +66,8 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
   return {
     ...DEFAULT_SITE_DATA,
     ...raw,
+    sectionOrder: normalizeSectionOrder(raw.sectionOrder),
+    hiddenSections: Array.isArray(raw.hiddenSections) ? raw.hiddenSections : [],
     branding: {
       ...DEFAULT_SITE_DATA.branding,
       ...(raw.branding || {}),

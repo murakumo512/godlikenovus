@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DEFAULT_SITE_DATA } from "@/lib/default-data";
+import { verifyAdminRequest } from "@/lib/auth";
 import { getSiteData, saveSiteData } from "@/lib/storage";
 import { SiteData } from "@/lib/types";
 
@@ -17,6 +18,11 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const admin = await verifyAdminRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = (await request.json()) as SiteData;
     if (!body || !body.branding || !Array.isArray(body.games)) {
@@ -37,6 +43,11 @@ export async function PUT(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const admin = await verifyAdminRequest(request);
+  if (!admin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = (await request.json()) as { action?: string };
     if (body.action === "reset") {
