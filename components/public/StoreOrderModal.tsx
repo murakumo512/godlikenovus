@@ -78,54 +78,65 @@ export function StoreOrderModal({
       role="dialog"
       aria-modal="true"
       data-lenis-prevent
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/88 backdrop-blur-sm p-2.5 sm:p-4"
       onClick={onClose}
     >
       <div
         data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain rounded-xl border border-zinc-700 bg-[#0d0d11] p-4 sm:p-6 shadow-2xl"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
       >
-        <button
-          onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition"
-          aria-label="Close modal"
+        {/* Left / Top: Large Uncropped Product Photo (Click like IG for Fullscreen Zoom!) */}
+        <div
+          onClick={() =>
+            onInspectMedia?.({
+              url: product.image,
+              title: product.name,
+              caption: product.description,
+            })
+          }
+          className="md:col-span-5 bg-black flex flex-col justify-center cursor-zoom-in border-b md:border-b-0 md:border-r border-white/10"
+          title="Klik untuk perbesar foto"
         >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-4 border-b border-zinc-800 pb-4 mb-5">
-          <div
-            onClick={() =>
-              onInspectMedia?.({
-                url: product.image,
-                title: product.name,
-                caption: product.description,
-              })
-            }
-            className="cursor-zoom-in shrink-0"
-            title="Klik untuk lihat ukuran asli"
-          >
-            <SmartMedia
-              src={product.image}
-              alt={product.name}
-              fit="contain-ambient"
-              className="w-16 h-16 rounded-xl border border-zinc-800"
-            />
-          </div>
-          <div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-[#E11D2E]">
-              <ShoppingBag className="w-3.5 h-3.5" />{" "}
-              {templates.storeModalBadge || "Form Pemesanan"}
-            </span>
-            <h3 className="font-display text-xl font-bold text-white leading-tight">
-              {product.name}
-            </h3>
-            <p className="text-sm font-semibold text-red-400">
-              {formatRupiah(product.price)}
-            </p>
-          </div>
+          <SmartMedia
+            src={product.image}
+            alt={product.name}
+            fit="contain-ambient"
+            className="w-full max-h-[38vh] md:max-h-none md:h-full aspect-square"
+            controls
+          />
         </div>
+
+        {/* Right / Bottom: Full Product Details & Order Form */}
+        <div className="md:col-span-7 p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3.5 mb-4">
+            <div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-widest text-[#E11D2E]">
+                <ShoppingBag className="w-3.5 h-3.5" />{" "}
+                {templates.storeModalBadge || "Form Pemesanan"}
+              </span>
+              <h3 className="font-display text-2xl font-bold uppercase text-white leading-tight mt-0.5">
+                {product.name}
+              </h3>
+              <p className="text-sm font-semibold text-zinc-200 mt-0.5">
+                {formatRupiah(product.price)}
+              </p>
+              {product.description && (
+                <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                  {product.description}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 text-zinc-400 hover:text-white transition cursor-pointer shrink-0"
+              aria-label="Close modal"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -241,12 +252,16 @@ export function StoreOrderModal({
 
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#E11D2E] hover:bg-red-500 py-3.5 font-display text-base font-bold uppercase tracking-wider text-white shadow-lg shadow-red-900/40 transition cursor-pointer"
+            disabled={!product.inStock}
+            className="w-full flex items-center justify-center gap-2 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 py-3.5 text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
           >
-            <MessageCircle className="w-5 h-5" />
-            {templates.storeSubmitButtonText || "Kirim Pesanan ke WhatsApp"}
+            <MessageCircle className="w-4 h-4" />
+            {product.inStock
+              ? templates.storeSubmitButtonText || "Kirim Pesanan ke WhatsApp"
+              : "Stok Habis"}
           </button>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -66,16 +66,16 @@ export function RosterSection({
 
   return (
     <ScrollSection id="roster" showDivider={true}>
-      <div className="relative py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="relative py-10 sm:py-16 md:py-20 px-3.5 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Clean Editorial Header + Game Tabs */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-10 md:mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6 mb-6 md:mb-10">
           <div>
             {homeSections.rosterBadge && (
-              <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E11D2E] block mb-2">
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-[#E11D2E] block mb-1 sm:mb-2">
                 {homeSections.rosterBadge}
               </span>
             )}
-            <h2 className="font-display text-4xl sm:text-6xl font-bold uppercase text-white leading-[0.94]">
+            <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
               {homeSections.rosterTitleWhite || "TIM &"}{" "}
               <span className="text-[#E11D2E]">
                 {homeSections.rosterTitleAccent || "ROSTER"}
@@ -117,7 +117,7 @@ export function RosterSection({
                 {activeGame.description}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
                 {subTeams.map((team) => {
                   const cardMedia =
                     team.logo || team.bannerImage || activeGame.bannerImage;
@@ -133,9 +133,9 @@ export function RosterSection({
                       key={team.id}
                       type="button"
                       onClick={() => setSelectedSubTeamId(team.id)}
-                      className="group text-left flex flex-col cursor-pointer"
+                      className="group text-left rounded-md overflow-hidden border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col cursor-pointer"
                     >
-                      <div className="relative aspect-[16/10] w-full bg-zinc-900 overflow-hidden">
+                      <div className="relative aspect-square sm:aspect-[16/10] w-full bg-zinc-900 overflow-hidden">
                         <SmartMedia
                           src={cardMedia}
                           alt={team.name}
@@ -146,31 +146,31 @@ export function RosterSection({
                         />
                       </div>
 
-                      <div className="pt-4 pb-3 border-b border-white/12 flex-1 flex flex-col justify-between">
+                      <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
                         <div>
                           {team.shortName && (
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#E11D2E]">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] block truncate">
                               {team.shortName}
                             </span>
                           )}
-                          <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-tight mt-0.5">
+                          <h3 className="font-display text-base sm:text-2xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-tight mt-0.5 truncate">
                             {team.name}
                           </h3>
                           {team.description && (
-                            <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
+                            <p className="hidden sm:line-clamp-2 text-xs text-zinc-400 mt-1 leading-relaxed">
                               {team.description}
                             </p>
                           )}
                         </div>
 
-                        <div className="mt-4 flex items-center justify-between text-xs text-zinc-400">
+                        <div className="mt-2 sm:mt-3 pt-2 border-t border-white/8 flex items-center justify-between text-[10px] sm:text-xs text-zinc-400">
                           <span>
-                            {teamPlayers} Player
-                            {teamCoaches > 0 ? ` · ${teamCoaches} Coach` : ""}
+                            {teamPlayers}P
+                            {teamCoaches > 0 ? ` · ${teamCoaches}C` : ""}
                           </span>
-                          <span className="inline-flex items-center gap-1 font-medium text-white group-hover:text-[#E11D2E] transition">
-                            Lihat Roster
-                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-0.5 font-medium text-zinc-200 group-hover:text-[#E11D2E] transition">
+                            Roster
+                            <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                           </span>
                         </div>
                       </div>
@@ -290,35 +290,35 @@ export function RosterSection({
                 </div>
               )}
 
-              {/* Active Players (Editorial Portrait Grid, No Heavy Boxes) */}
+              {/* Active Players (Compact IG-style Grid on Mobile, 5-Col on Laptop) */}
               <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 mb-4">
+                <div className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 mb-3 sm:mb-4">
                   {homeSections.rosterPlayersHeading || "Daftar Roster"} (
                   {players.length})
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+                <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-5">
                   {players.map((player) => (
                     <div
                       key={player.id}
                       onClick={() => setSelectedMember(player)}
-                      className="group cursor-pointer flex flex-col"
+                      className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                     >
                       <SmartMedia
                         src={player.photo}
                         alt={player.ign}
                         fit="contain-ambient"
-                        className="aspect-[3/3.8] w-full bg-zinc-900"
-                        imgClassName="group-hover:scale-[1.03] transition duration-500"
+                        className="aspect-square sm:aspect-[3/3.6] w-full bg-zinc-900"
+                        imgClassName="group-hover:scale-[1.04] transition duration-500"
                         showVideoBadge
                       />
-                      <div className="pt-3 pb-2 border-b border-white/10 group-hover:border-[#E11D2E] transition">
-                        <span className="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] truncate">
+                      <div className="p-2 sm:p-3 border-t border-white/8">
+                        <span className="block text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] truncate">
                           {player.role}
                         </span>
-                        <h4 className="font-display text-xl sm:text-2xl font-bold text-white uppercase leading-tight truncate mt-0.5">
+                        <h4 className="font-display text-sm sm:text-xl font-bold text-white uppercase leading-tight truncate mt-0.5">
                           {player.ign}
                         </h4>
-                        <p className="text-xs text-zinc-400 truncate">
+                        <p className="hidden sm:block text-xs text-zinc-400 truncate">
                           {player.realName}
                         </p>
                       </div>

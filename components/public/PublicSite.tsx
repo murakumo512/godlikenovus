@@ -443,7 +443,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             </div>
           </div>
 
-          <div className="lg:col-span-7 grid grid-cols-2 gap-3 sm:gap-4">
+          <div className="lg:col-span-7 grid grid-cols-2 gap-2 sm:gap-4">
             {data.about.photos.map((photo, idx) => (
               <div
                 key={photo.id}
@@ -454,8 +454,10 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     caption: photo.caption,
                   })
                 }
-                className={`group relative cursor-pointer overflow-hidden bg-zinc-900 ${
-                  idx === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/3]"
+                className={`group relative cursor-pointer overflow-hidden rounded-md bg-zinc-900 ${
+                  idx === 0
+                    ? "aspect-square sm:col-span-2 sm:aspect-[16/9]"
+                    : "aspect-square sm:aspect-[4/3]"
                 }`}
               >
                 <SmartMedia
@@ -468,8 +470,8 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   showVideoBadge
                 />
                 {photo.caption && (
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-3 sm:p-4 pt-8">
-                    <span className="text-xs sm:text-sm text-zinc-100 block truncate">
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-2 sm:p-4 pt-6">
+                    <span className="text-[10px] sm:text-sm text-zinc-100 block truncate">
                       {photo.caption}
                     </span>
                   </div>
@@ -525,7 +527,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-6">
             {filteredGallery.map((evt) => {
               const hasVideo =
                 isAnyVideoUrl(evt.image) || Boolean(evt.videoUrl);
@@ -533,9 +535,9 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 <article
                   key={evt.id}
                   onClick={() => setActiveEvent(evt)}
-                  className="group cursor-pointer flex flex-col"
+                  className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                 >
-                  <div className="relative aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-zinc-900">
+                  <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-zinc-900">
                     <SmartMedia
                       src={evt.image}
                       alt={evt.title}
@@ -545,26 +547,24 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                       mutedLoop
                     />
                     {hasVideo && (
-                      <span className="absolute top-3 right-3 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full bg-black/75 border border-white/20 text-white">
-                        <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
+                      <span className="absolute top-2 right-2 z-10 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/75 border border-white/20 text-white">
+                        <Play className="w-3 h-3 fill-white ml-0.5" />
                       </span>
                     )}
                   </div>
 
-                  <div className="pt-4 pb-3 border-b border-white/10 flex-1 flex flex-col">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 mb-1.5">
-                      <span className="font-semibold uppercase tracking-wider text-[#E11D2E]">
+                  <div className="p-2.5 sm:p-4 border-t border-white/8 flex-1 flex flex-col">
+                    <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-zinc-400 mb-0.5 truncate">
+                      <span className="font-semibold uppercase tracking-wider text-[#E11D2E] truncate">
                         {evt.category}
                       </span>
-                      <span>·</span>
-                      <span>{evt.date}</span>
-                      <span>·</span>
-                      <span>{evt.location}</span>
+                      <span className="hidden sm:inline">·</span>
+                      <span className="hidden sm:inline truncate">{evt.date}</span>
                     </div>
-                    <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white leading-tight group-hover:text-[#E11D2E] transition line-clamp-2">
+                    <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-tight group-hover:text-[#E11D2E] transition line-clamp-1 sm:line-clamp-2">
                       {evt.title}
                     </h3>
-                    <p className="text-sm text-zinc-400 mt-1.5 line-clamp-2 leading-relaxed">
+                    <p className="hidden sm:line-clamp-2 text-xs text-zinc-400 mt-1 leading-relaxed">
                       {evt.description}
                     </p>
                   </div>
@@ -610,19 +610,14 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
             {data.store.map((product) => (
-              <div key={product.id} className="flex flex-col">
-                <div
-                  onClick={() =>
-                    setLightboxItem({
-                      url: product.image,
-                      title: product.name,
-                      caption: `${product.category} — ${formatRupiah(product.price)}`,
-                    })
-                  }
-                  className="group relative aspect-[4/4.2] bg-zinc-900 overflow-hidden cursor-zoom-in"
-                >
+              <div
+                key={product.id}
+                onClick={() => setOrderProduct(product)}
+                className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+              >
+                <div className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden">
                   <SmartMedia
                     src={product.image}
                     alt={product.name}
@@ -632,41 +627,40 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     showVideoBadge
                   />
                   {product.badge && (
-                    <span className="absolute top-3 left-3 z-10 bg-black/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest text-white">
+                    <span className="absolute top-2 left-2 z-10 bg-black/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-white">
                       {product.badge}
                     </span>
                   )}
                 </div>
 
-                <div className="pt-4 flex-1 flex flex-col">
-                  <span className="text-xs text-zinc-500">
-                    {product.category}
-                  </span>
-                  <h3 className="font-display text-2xl font-bold uppercase text-white leading-tight mt-0.5">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 line-clamp-2 flex-1 leading-relaxed">
-                    {product.description}
-                  </p>
-
-                  <div className="mt-3 flex items-center gap-2 text-xs text-zinc-400">
-                    <span>Size:</span>
-                    <span className="text-zinc-200 font-medium">
-                      {product.sizes.join(" / ")}
+                <div className="p-2.5 sm:p-4 border-t border-white/8 flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="hidden sm:block text-[11px] text-zinc-500">
+                      {product.category}
                     </span>
+                    <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-tight line-clamp-1 sm:line-clamp-2">
+                      {product.name}
+                    </h3>
+                    <p className="hidden sm:line-clamp-2 text-xs text-zinc-400 mt-1 leading-relaxed">
+                      {product.description}
+                    </p>
                   </div>
 
-                  <div className="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between gap-3">
-                    <span className="font-display text-2xl font-bold text-white">
+                  <div className="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-white/8 flex items-center justify-between gap-2">
+                    <span className="font-display text-base sm:text-xl font-bold text-white truncate">
                       {formatRupiah(product.price)}
                     </span>
 
                     <button
-                      onClick={() => setOrderProduct(product)}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOrderProduct(product);
+                      }}
                       disabled={!product.inStock}
-                      className="inline-flex items-center gap-2 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white transition cursor-pointer shrink-0"
+                      className="inline-flex items-center gap-1 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 px-2.5 sm:px-3.5 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-white transition cursor-pointer shrink-0"
                     >
-                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <ShoppingBag className="w-3 h-3 hidden sm:inline" />
                       {product.inStock
                         ? hs.storeOrderButtonText || "Pesan"
                         : hs.storeOutOfStockText || "Habis"}
