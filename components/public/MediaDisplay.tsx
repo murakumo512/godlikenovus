@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, Play } from "lucide-react";
+import { X, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { assetUrl } from "@/lib/base-path";
 import { getYouTubeEmbedUrl, isVideoFileUrl } from "@/lib/media";
 import { useLockBodyAndLenis } from "./SmoothScroll";
@@ -106,6 +106,8 @@ export function SmartMedia({
 
 export interface LightboxMediaItem {
   url: string;
+  items?: string[];
+  initialIndex?: number;
   title?: string;
   caption?: string;
 }
@@ -114,7 +116,7 @@ export interface LightboxMediaItem {
  * Clean Instagram-style Fullscreen Photo / Video Viewer:
  * - Zero cluttered buttons covering the image
  * - Click/tap photo directly to toggle 1:1 native original resolution zoom
- * - Smooth native scrolling & panning when zoomed in
+ * - Supports Next/Prev navigation when viewing multi-photo event albums
  */
 export function MediaLightbox({
   item,
@@ -124,27 +126,46 @@ export function MediaLightbox({
   onClose: () => void;
 }) {
   const [zoomed, setZoomed] = useState(false);
+  const [idx, setIdx] = useState(0);
 
   useLockBodyAndLenis(Boolean(item));
 
+  const mediaList =
+    item?.items && item.items.length > 0
+      ? item.items
+      : item?.url
+        ? [item.url]
+        : [];
+  const total = mediaList.length;
+
   useEffect(() => {
     setZoomed(false);
-  }, [item?.url]);
+    setIdx(item?.initialIndex ?? 0);
+  }, [item?.url, item?.initialIndex]);
 
   useEffect(() => {
     if (!item) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (total > 1 && e.key === "ArrowRight") {
+        setZoomed(false);
+        setIdx((i) => (i + 1) % total);
+      }
+      if (total > 1 && e.key === "ArrowLeft") {
+        setZoomed(false);
+        setIdx((i) => (i - 1 + total) % total);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [item, onClose]);
+  }, [item, total, onClose]);
 
-  if (!item) return null;
+  if (!item || total === 0) return null;
 
-  const ytEmbed = getYouTubeEmbedUrl(item.url);
-  const isVideo = isVideoFileUrl(item.url);
-  const resolved = assetUrl(item.url);
+  const currentUrl = mediaList[idx] || mediaList[0];
+  const ytEmbed = getYouTubeEmbedUrl(currentUrl);
+  const isVideo = isVideoFileUrl(currentUrl);
+  const resolved = assetUrl(currentUrl);
 
   return (
     <div
@@ -154,6 +175,13 @@ export function MediaLightbox({
       className="fixed inset-0 z-[95] bg-black/95 backdrop-blur-md flex flex-col"
       onClick={onClose}
     >
+      {/* Top Counter when multi-photo */}
+      {total > 1 && (
+        <div className="fixed top-4 left-4 z-[100] rounded-full bg-zinc-900/85 border border-white/15 px-3 py-1 text-xs font-medium text-white">
+          {idx + 1} / {total}
+        </div>
+      )}
+
       {/* Minimal Close Button (IG Style) */}
       <button
         type="button"
@@ -166,6 +194,36 @@ export function MediaLightbox({
       >
         <X className="w-5 h-5" />
       </button>
+
+      {/* Prev / Next Arrows when multi-photo */}
+      {total > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomed(false);
+              setIdx((i) => (i - 1 + total) % total);
+            }}
+            className="fixed left-3 sm:left-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+            aria-label="Sebelumnya"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomed(false);
+              setIdx((i) => (i + 1) % total);
+            }}
+            className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+            aria-label="Berikutnya"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
+      )}
 
       {/* Scrollable / Zoomable Original Media Stage */}
       <div

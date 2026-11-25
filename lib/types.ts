@@ -90,6 +90,7 @@ export interface GalleryEvent {
   location: string;
   category: string;
   image: string;
+  images?: string[];
   videoUrl?: string;
   description: string;
 }

@@ -112,7 +112,10 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
         }))
       : DEFAULT_SITE_DATA.games,
     gallery: Array.isArray(raw.gallery)
-      ? raw.gallery
+      ? raw.gallery.map((evt) => ({
+          ...evt,
+          images: Array.isArray(evt.images) ? evt.images.filter(Boolean) : [],
+        }))
       : DEFAULT_SITE_DATA.gallery,
     ambassadors: Array.isArray(raw.ambassadors)
       ? raw.ambassadors.map((ba) => ({

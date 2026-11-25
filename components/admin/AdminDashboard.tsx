@@ -26,6 +26,7 @@ import {
 } from "@/lib/default-data";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { AdminAutoSaveContext, ImageField } from "./ImageField";
+import { MultiMediaField } from "./MultiMediaField";
 import { AdminLogin } from "./AdminLogin";
 import { SectionOrderPanel } from "./SectionOrderPanel";
 import { AdminUsersPanel } from "./AdminUsersPanel";
@@ -2518,7 +2519,7 @@ export function AdminDashboard({
                         />
                       </div>
                       <ImageField
-                        label="Poster / Foto / Video Utama Event (Tampil Utuh Tanpa Terpotong)"
+                        label="Cover / Poster Utama Event (Tampil di Grid Gallery)"
                         value={evt.image}
                         placeholder="Upload poster foto asli, video MP4/MOV, atau link YouTube"
                         onChange={(v) =>
@@ -2528,6 +2529,30 @@ export function AdminDashboard({
                               g.id === evt.id ? { ...g, image: v } : g
                             ),
                           })
+                        }
+                      />
+                      <MultiMediaField
+                        label="Foto & Video Aktivitas Tambahan"
+                        values={evt.images || []}
+                        onChange={(urls) =>
+                          setData((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.map((g) =>
+                              g.id === evt.id ? { ...g, images: urls } : g
+                            ),
+                          }))
+                        }
+                        onPromoteToCover={(url, idx) =>
+                          setData((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.map((g) => {
+                              if (g.id !== evt.id) return g;
+                              const nextExtras = [...(g.images || [])];
+                              if (g.image) nextExtras[idx] = g.image;
+                              else nextExtras.splice(idx, 1);
+                              return { ...g, image: url, images: nextExtras };
+                            }),
+                          }))
                         }
                       />
                       <ImageField

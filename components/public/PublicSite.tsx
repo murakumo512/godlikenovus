@@ -10,6 +10,9 @@ import {
   ShoppingBag,
   Send,
   Play,
+  Images,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   GalleryEvent,
@@ -62,8 +65,18 @@ function PublicSiteInner({ data }: { data: SiteData }) {
   const rawCategories = Array.from(new Set(data.gallery.map((g) => g.category)));
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY_KEY);
   const [activeEvent, setActiveEvent] = useState<GalleryEvent | null>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useLockBodyAndLenis(Boolean(activeEvent));
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [activeEvent?.id]);
+
+  const activeEventMedia = activeEvent
+    ? [activeEvent.image, ...(activeEvent.images || [])].filter(Boolean)
+    : [];
 
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
 
@@ -498,8 +511,12 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-6">
                   {filteredGallery.map((evt) => {
+                    const totalPhotos =
+                      (evt.image ? 1 : 0) + (evt.images?.length || 0);
                     const hasVideo =
-                      isAnyVideoUrl(evt.image) || Boolean(evt.videoUrl);
+                      isAnyVideoUrl(evt.image) ||
+                      Boolean(evt.videoUrl) ||
+                      Boolean(evt.images?.some((u) => isAnyVideoUrl(u)));
                     return (
                       <article
                         key={evt.id}
@@ -515,11 +532,19 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                             imgClassName="group-hover:scale-[1.03] transition duration-500"
                             mutedLoop
                           />
-                          {hasVideo && (
-                            <span className="absolute top-2 right-2 z-10 inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/75 border border-white/20 text-white">
-                              <Play className="w-3 h-3 fill-white ml-0.5" />
-                            </span>
-                          )}
+                          <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+                            {totalPhotos > 1 && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                <Images className="w-3 h-3" />
+                                {totalPhotos}
+                              </span>
+                            )}
+                            {hasVideo && (
+                              <span className="inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/75 border border-white/20 text-white">
+                                <Play className="w-3 h-3 fill-white ml-0.5" />
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="p-2.5 sm:p-4 border-t border-white/8 flex-1 flex flex-col">
@@ -958,36 +983,133 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               data-lenis-prevent
               className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
-              <div
-                onClick={() => {
-                  if (!isAnyVideoUrl(activeEvent.image)) {
-                    setLightboxItem({
-                      url: activeEvent.image,
-                      title: activeEvent.title,
-                      caption: `${activeEvent.date} · ${activeEvent.location}`,
-                    });
-                  }
-                }}
-                className={`md:col-span-7 bg-black flex items-center justify-center md:h-full overflow-hidden ${
-                  isAnyVideoUrl(activeEvent.image) ? "" : "cursor-zoom-in"
-                }`}
-              >
-                {isAnyVideoUrl(activeEvent.image) ? (
-                  <SmartMedia
-                    src={activeEvent.image}
-                    alt={activeEvent.title}
-                    fit="contain"
-                    className="w-full md:h-full aspect-video"
-                    controls
-                    mutedLoop={false}
-                  />
-                ) : (
-                  <img
-                    src={assetUrl(activeEvent.image)}
-                    alt={activeEvent.title}
-                    className="w-full h-auto md:h-full md:w-full object-contain select-none"
-                  />
-                )}
+              {/* IG-Style Multi-Photo / Video Carousel Stage */}
+              <div className="md:col-span-7 bg-black flex flex-col md:h-full overflow-hidden">
+                {(() => {
+                  const totalSlides = activeEventMedia.length;
+                  const safeSlide = Math.min(activeSlide, Math.max(0, totalSlides - 1));
+                  const currentMedia = activeEventMedia[safeSlide] || activeEvent.image;
+                  const isVid = isAnyVideoUrl(currentMedia);
+
+                  return (
+                    <>
+                      <div
+                        onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
+                        onTouchEnd={(e) => {
+                          if (touchStartX === null || totalSlides <= 1) return;
+                          const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX;
+                          if (dx < -40) {
+                            setActiveSlide((s) => (s + 1) % totalSlides);
+                          } else if (dx > 40) {
+                            setActiveSlide((s) => (s - 1 + totalSlides) % totalSlides);
+                          }
+                          setTouchStartX(null);
+                        }}
+                        onClick={() => {
+                          if (!isVid) {
+                            setLightboxItem({
+                              url: currentMedia,
+                              items: activeEventMedia,
+                              initialIndex: safeSlide,
+                              title: activeEvent.title,
+                              caption: `${activeEvent.date} · ${activeEvent.location}`,
+                            });
+                          }
+                        }}
+                        className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[240px] ${
+                          isVid ? "" : "cursor-zoom-in"
+                        }`}
+                      >
+                        {isVid ? (
+                          <SmartMedia
+                            src={currentMedia}
+                            alt={activeEvent.title}
+                            fit="contain"
+                            className="w-full h-full aspect-video"
+                            controls
+                            mutedLoop={false}
+                          />
+                        ) : (
+                          <img
+                            src={assetUrl(currentMedia)}
+                            alt={`${activeEvent.title} (${safeSlide + 1})`}
+                            className="w-full max-h-[55vh] md:max-h-full h-auto md:h-full object-contain select-none"
+                          />
+                        )}
+
+                        {totalSlides > 1 && (
+                          <>
+                            <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-full bg-black/75 border border-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
+                              {safeSlide + 1} / {totalSlides}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveSlide((s) => (s - 1 + totalSlides) % totalSlides);
+                              }}
+                              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
+                              aria-label="Foto sebelumnya"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveSlide((s) => (s + 1) % totalSlides);
+                              }}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
+                              aria-label="Foto berikutnya"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Scrollable Thumbnail Strip for Quick Activity Browsing */}
+                      {totalSlides > 1 && (
+                        <div
+                          data-lenis-prevent
+                          className="flex items-center gap-1.5 px-3 py-2 bg-zinc-950 border-t border-white/10 overflow-x-auto no-scrollbar shrink-0"
+                        >
+                          {activeEventMedia.map((mUrl, mIdx) => {
+                            const selected = mIdx === safeSlide;
+                            const thumbIsVid = isAnyVideoUrl(mUrl);
+                            return (
+                              <button
+                                key={`${mUrl}-${mIdx}`}
+                                type="button"
+                                onClick={() => setActiveSlide(mIdx)}
+                                className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden shrink-0 border-2 transition cursor-pointer bg-zinc-900 ${
+                                  selected
+                                    ? "border-[#E11D2E]"
+                                    : "border-transparent opacity-55 hover:opacity-100"
+                                }`}
+                              >
+                                {thumbIsVid ? (
+                                  <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-white">
+                                    <Play className="w-4 h-4 fill-white" />
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={assetUrl(mUrl)}
+                                    alt={`Thumbnail ${mIdx + 1}`}
+                                    loading="lazy"
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <div
