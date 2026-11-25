@@ -13,6 +13,7 @@ export interface GameSubTeam {
   id: string;
   name: string;
   shortName: string;
+  logo?: string;
   description?: string;
   bannerImage?: string;
   roster: RosterMember[];

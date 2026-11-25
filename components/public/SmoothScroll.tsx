@@ -1,20 +1,51 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import Lenis from "lenis";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+
+const LenisLockContext = createContext<{
+  acquireLock: () => () => void;
+}>({
+  acquireLock: () => () => {},
+});
+
+export function useLockBodyAndLenis(active: boolean) {
+  const { acquireLock } = useContext(LenisLockContext);
+  useEffect(() => {
+    if (!active) return;
+    const release = acquireLock();
+    return () => release();
+  }, [active, acquireLock]);
+}
 
 export function SmoothScrollProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const lenisRef = useRef<Lenis | null>(null);
+  const lockCountRef = useRef(0);
+
   useEffect(() => {
     const lenis = new Lenis({
       lerp: 0.085,
       smoothWheel: true,
       wheelMultiplier: 0.95,
+      prevent: (node: HTMLElement) =>
+        Boolean(node?.closest?.("[data-lenis-prevent], [role='dialog']")),
     });
+    lenisRef.current = lenis;
+
+    if (lockCountRef.current > 0) {
+      lenis.stop();
+    }
 
     let rafId = 0;
     const raf = (time: number) => {
@@ -24,6 +55,7 @@ export function SmoothScrollProvider({
     rafId = requestAnimationFrame(raf);
 
     const handleAnchorClick = (e: MouseEvent) => {
+      if (lockCountRef.current > 0) return;
       const target = (e.target as HTMLElement | null)?.closest("a");
       if (!target) return;
       const href = target.getAttribute("href");
@@ -44,10 +76,32 @@ export function SmoothScrollProvider({
       cancelAnimationFrame(rafId);
       document.removeEventListener("click", handleAnchorClick);
       lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
 
-  return <>{children}</>;
+  const acquireLock = useRef(() => {
+    lockCountRef.current += 1;
+    if (lockCountRef.current === 1) {
+      lenisRef.current?.stop();
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      lockCountRef.current = Math.max(0, lockCountRef.current - 1);
+      if (lockCountRef.current === 0) {
+        lenisRef.current?.start();
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+      }
+    };
+  }).current;
+
+  return (
+    <LenisLockContext.Provider value={{ acquireLock }}>
+      {children}
+    </LenisLockContext.Provider>
+  );
 }
 
 interface ScrollSectionProps {

@@ -1512,9 +1512,133 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
 
                 {activeGame && (
                   <div className="space-y-4 pt-2">
-                    <div className="flex items-center justify-between">
+                    {/* PROMINENT SUB-DIVISI / MULTI-TEAM SWITCHER RIGHT AT TOP */}
+                    <div className="rounded-md border border-red-200 bg-red-50/40 p-3.5 sm:p-4 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
+                            <Users className="w-4 h-4 text-red-600" />
+                            Sub-Divisi / Daftar Tim di Dalam {activeGame.name}
+                          </h4>
+                          <p className="text-xs text-zinc-600 mt-0.5">
+                            {hasSubTeams
+                              ? `Aktif (${activeSubTeams.length} Tim): Saat pengunjung klik ${activeGame.shortName} di web, akan muncul daftar kartu tim ini terlebih dahulu, baru setelah diklik muncul rosternya.`
+                              : `Tidak memakai sub-divisi (seperti RF): Saat pengunjung klik ${activeGame.shortName}, langsung muncul roster. Klik tombol di kanan jika ${activeGame.shortName} punya beberapa tim.`}
+                          </p>
+                        </div>
+
+                        {!hasSubTeams ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const id1 = `sub-${Date.now()}-1`;
+                              const id2 = `sub-${Date.now()}-2`;
+                              const firstTeam: GameSubTeam = {
+                                id: id1,
+                                name: `GODLIKE NOVUS 1`,
+                                shortName: "SQUAD 1",
+                                logo: "",
+                                description: `Skuad utama divisi ${activeGame.name}.`,
+                                bannerImage: "",
+                                roster: [...activeGame.roster],
+                              };
+                              const secondTeam: GameSubTeam = {
+                                id: id2,
+                                name: `GODLIKE NOVUS 2`,
+                                shortName: "SQUAD 2",
+                                logo: "",
+                                description: `Skuad kedua divisi ${activeGame.name}.`,
+                                bannerImage: "",
+                                roster: [],
+                              };
+                              updateGame(activeGame.id, (g) => ({
+                                ...g,
+                                roster: [],
+                                subTeams: [firstTeam, secondTeam],
+                              }));
+                              setSelectedSubTeamId(id1);
+                            }}
+                            className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0 shadow-xs"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Tambah Sub-Divisi / Tim di{" "}
+                            {activeGame.shortName}
+                          </button>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newSubId = `sub-${Date.now()}`;
+                                const nextNum = activeSubTeams.length + 1;
+                                const newSub: GameSubTeam = {
+                                  id: newSubId,
+                                  name: `GODLIKE NOVUS ${nextNum}`,
+                                  shortName: `SQUAD ${nextNum}`,
+                                  logo: "",
+                                  description: "",
+                                  bannerImage: "",
+                                  roster: [],
+                                };
+                                updateGame(activeGame.id, (g) => ({
+                                  ...g,
+                                  subTeams: [...(g.subTeams || []), newSub],
+                                }));
+                                setSelectedSubTeamId(newSubId);
+                              }}
+                              className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Tambah Tim Baru
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (
+                                  !confirm(
+                                    `Matikan mode sub-divisi dan gabungkan semua anggota ke 1 daftar langsung untuk ${activeGame.name}?`
+                                  )
+                                )
+                                  return;
+                                const mergedRoster = activeSubTeams.flatMap(
+                                  (st) => st.roster
+                                );
+                                updateGame(activeGame.id, (g) => ({
+                                  ...g,
+                                  subTeams: [],
+                                  roster: mergedRoster,
+                                }));
+                                setSelectedSubTeamId("");
+                              }}
+                              className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white hover:bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 cursor-pointer"
+                            >
+                              Matikan Sub-Divisi
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {hasSubTeams && (
+                        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+                          {activeSubTeams.map((st) => (
+                            <button
+                              key={st.id}
+                              type="button"
+                              onClick={() => setSelectedSubTeamId(st.id)}
+                              className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer border ${
+                                activeSubTeam?.id === st.id
+                                  ? "bg-red-600 border-red-600 text-white"
+                                  : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                              }`}
+                            >
+                              {st.name} ({st.roster.length})
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
                       <h3 className="text-sm font-semibold text-zinc-800">
-                        Detail Divisi: {activeGame.name}
+                        Detail Divisi Game: {activeGame.name}
                       </h3>
                       {data.games.length > 1 && (
                         <button
@@ -1575,134 +1699,13 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                       }
                     />
 
-                    {/* DYNAMIC SUB-TEAMS / MULTI-SQUAD MANAGER */}
+                    {/* SELECTED SUB-TEAM SETTINGS & ROSTER */}
                     <div className="pt-4 border-t border-zinc-200 space-y-4">
-                      <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3.5 sm:p-4 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
-                              <Users className="w-4 h-4 text-red-600" />
-                              Sub-Tim / Pecahan Tim di {activeGame.shortName}
-                            </h4>
-                            <p className="text-xs text-zinc-500 mt-0.5">
-                              {hasSubTeams
-                                ? `Game ini memiliki ${activeSubTeams.length} sub-tim (muncul pilihan tab tim di web).`
-                                : "Mode Tunggal (tanpa sub-tim). Jika game ini punya beberapa tim (misal Tim Utama, Ladies, Academy), klik tombol di kanan."}
-                            </p>
-                          </div>
-
-                          {!hasSubTeams ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const id1 = `sub-${Date.now()}-1`;
-                                const id2 = `sub-${Date.now()}-2`;
-                                const firstTeam: GameSubTeam = {
-                                  id: id1,
-                                  name: `${activeGame.shortName} Main Squad`,
-                                  shortName: "MAIN SQUAD",
-                                  description: "",
-                                  bannerImage: "",
-                                  roster: [...activeGame.roster],
-                                };
-                                const secondTeam: GameSubTeam = {
-                                  id: id2,
-                                  name: `${activeGame.shortName} Squad 2`,
-                                  shortName: "SQUAD 2",
-                                  description: "",
-                                  bannerImage: "",
-                                  roster: [],
-                                };
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: [],
-                                  subTeams: [firstTeam, secondTeam],
-                                }));
-                                setSelectedSubTeamId(id1);
-                              }}
-                              className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
-                            >
-                              <Plus className="w-3.5 h-3.5" /> Buat Sub-Tim di{" "}
-                              {activeGame.shortName}
-                            </button>
-                          ) : (
-                            <div className="flex flex-wrap items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newSubId = `sub-${Date.now()}`;
-                                  const nextNum = activeSubTeams.length + 1;
-                                  const newSub: GameSubTeam = {
-                                    id: newSubId,
-                                    name: `${activeGame.shortName} Squad ${nextNum}`,
-                                    shortName: `SQUAD ${nextNum}`,
-                                    description: "",
-                                    bannerImage: "",
-                                    roster: [],
-                                  };
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    subTeams: [...(g.subTeams || []), newSub],
-                                  }));
-                                  setSelectedSubTeamId(newSubId);
-                                }}
-                                className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
-                              >
-                                <Plus className="w-3.5 h-3.5" /> Tambah Sub-Tim
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (
-                                    !confirm(
-                                      `Gabungkan semua anggota sub-tim kembali menjadi 1 tim tunggal tanpa sub-tim untuk ${activeGame.name}?`
-                                    )
-                                  )
-                                    return;
-                                  const mergedRoster = activeSubTeams.flatMap(
-                                    (st) => st.roster
-                                  );
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    subTeams: [],
-                                    roster: mergedRoster,
-                                  }));
-                                  setSelectedSubTeamId("");
-                                }}
-                                className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white hover:bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 cursor-pointer"
-                              >
-                                Jadikan Tanpa Sub-Tim
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        {hasSubTeams && (
-                          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
-                            {activeSubTeams.map((st) => (
-                              <button
-                                key={st.id}
-                                type="button"
-                                onClick={() => setSelectedSubTeamId(st.id)}
-                                className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer border ${
-                                  activeSubTeam?.id === st.id
-                                    ? "bg-red-600 border-red-600 text-white"
-                                    : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-                                }`}
-                              >
-                                {st.shortName || st.name} ({st.roster.length})
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Sub-Team Metadata Editor (When Sub-Teams Active) */}
                       {activeSubTeam && (
-                        <div className="rounded-md border border-red-200 bg-red-50/20 p-3.5 sm:p-4 space-y-3">
+                        <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3.5 sm:p-4 space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
-                              Pengaturan Sub-Tim: {activeSubTeam.name}
+                              Detail Tim / Sub-Divisi: {activeSubTeam.name}
                             </span>
                             <button
                               type="button"
@@ -1727,13 +1730,13 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                               }}
                               className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" /> Hapus Sub-Tim Ini
+                              <Trash2 className="w-3.5 h-3.5" /> Hapus Tim Ini
                             </button>
                           </div>
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <InputField
-                              label="Nama Lengkap Sub-Tim (Contoh: Godlike Novus Bekasi)"
+                              label="Nama Tim (Muncul di Kartu Tim — Contoh: GODLIKE BEKASI)"
                               value={activeSubTeam.name}
                               onChange={(v) =>
                                 updateSubTeam(
@@ -1744,7 +1747,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                               }
                             />
                             <InputField
-                              label="Label Tab Singkat (Contoh: BEKASI / LADIES / ACADEMY)"
+                              label="Kode / Badge Tim (Contoh: BEKASI / LADIES / ACADEMY)"
                               value={activeSubTeam.shortName}
                               onChange={(v) =>
                                 updateSubTeam(
@@ -1757,9 +1760,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                           </div>
 
                           <InputField
-                            label="Deskripsi Khusus Sub-Tim (Opsional — kosongkan untuk ikut deskripsi divisi)"
+                            label="Deskripsi Singkat Tim (Muncul di kartu pilihan tim)"
                             value={activeSubTeam.description || ""}
-                            placeholder={activeGame.description}
+                            placeholder={`Deskripsi singkat untuk tim ${activeSubTeam.name}`}
                             onChange={(v) =>
                               updateSubTeam(
                                 activeGame.id,
@@ -1770,7 +1773,21 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                           />
 
                           <ImageField
-                            label="Banner Khusus Sub-Tim (Opsional Foto/Video — kosongkan untuk ikut banner divisi)"
+                            label="Gambar / Logo Kartu Tim (Muncul saat daftar tim ditampilkan)"
+                            value={activeSubTeam.logo || ""}
+                            placeholder="Upload logo/foto tim (kosongkan = ikut banner)"
+                            onChange={(v) =>
+                              updateSubTeam(
+                                activeGame.id,
+                                activeSubTeam.id,
+                                (st) => ({ ...st, logo: v })
+                              )
+                            }
+                            allowClear
+                          />
+
+                          <ImageField
+                            label="Banner Header Tim saat Dibuka (Opsional Foto/Video)"
                             value={activeSubTeam.bannerImage || ""}
                             placeholder={activeGame.bannerImage}
                             onChange={(v) =>

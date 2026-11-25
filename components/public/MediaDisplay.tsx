@@ -1,17 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  X,
-  ZoomIn,
-  ZoomOut,
-  Download,
-  ExternalLink,
-  Play,
-  Maximize2,
-} from "lucide-react";
+import { X, Play } from "lucide-react";
 import { assetUrl } from "@/lib/base-path";
 import { getYouTubeEmbedUrl, isVideoFileUrl } from "@/lib/media";
+import { useLockBodyAndLenis } from "./SmoothScroll";
 
 interface SmartMediaProps {
   src: string;
@@ -69,8 +62,8 @@ export function SmartMedia({
           } ${imgClassName}`}
         />
         {showVideoBadge && !controls && (
-          <span className="pointer-events-none absolute bottom-2 right-2 z-10 inline-flex items-center gap-1 rounded bg-black/80 border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-            <Play className="w-3 h-3 text-[#E11D2E] fill-[#E11D2E]" /> Video
+          <span className="pointer-events-none absolute top-2.5 right-2.5 z-10 inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/75 border border-white/20 text-white">
+            <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
           </span>
         )}
       </div>
@@ -80,7 +73,6 @@ export function SmartMedia({
   if (fit === "contain-ambient") {
     return (
       <div className={`relative bg-zinc-950 overflow-hidden ${className}`}>
-        {/* Subtle blurred ambient fill so portrait/landscape images never get cropped and never leave stark gaps */}
         <img
           src={resolved}
           alt=""
@@ -118,6 +110,12 @@ export interface LightboxMediaItem {
   caption?: string;
 }
 
+/**
+ * Clean Instagram-style Fullscreen Photo / Video Viewer:
+ * - Zero cluttered buttons covering the image
+ * - Click/tap photo directly to toggle 1:1 native original resolution zoom
+ * - Smooth native scrolling & panning when zoomed in
+ */
 export function MediaLightbox({
   item,
   onClose,
@@ -126,13 +124,11 @@ export function MediaLightbox({
   onClose: () => void;
 }) {
   const [zoomed, setZoomed] = useState(false);
-  const [dimensions, setDimensions] = useState<{ w: number; h: number } | null>(
-    null
-  );
+
+  useLockBodyAndLenis(Boolean(item));
 
   useEffect(() => {
     setZoomed(false);
-    setDimensions(null);
   }, [item?.url]);
 
   useEffect(() => {
@@ -152,148 +148,86 @@ export function MediaLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[90] flex flex-col bg-black/95 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      data-lenis-prevent
+      className="fixed inset-0 z-[95] bg-black/95 backdrop-blur-md flex flex-col"
       onClick={onClose}
     >
-      {/* Top Action Bar */}
-      <div
-        className="flex items-center justify-between gap-2 px-3 sm:px-6 py-3 border-b border-white/10 bg-black/80 shrink-0"
-        onClick={(e) => e.stopPropagation()}
+      {/* Minimal Close Button (IG Style) */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="fixed top-4 right-4 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+        aria-label="Tutup"
       >
-        <div className="min-w-0">
-          {item.title && (
-            <div className="font-display text-sm sm:text-base font-bold uppercase text-white truncate">
-              {item.title}
-            </div>
-          )}
-          <div className="text-[10px] sm:text-xs font-mono text-zinc-400 flex items-center gap-2">
-            {dimensions ? (
-              <span className="text-[#E11D2E]">
-                {dimensions.w} × {dimensions.h} px (Original)
-              </span>
-            ) : (
-              <span>ORIGINAL QUALITY</span>
-            )}
-          </div>
-        </div>
+        <X className="w-5 h-5" />
+      </button>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {!ytEmbed && !isVideo && (
-            <button
-              type="button"
-              onClick={() => setZoomed((z) => !z)}
-              className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-900 hover:border-white px-2.5 py-1.5 text-xs font-medium text-white transition cursor-pointer"
-            >
-              {zoomed ? (
-                <>
-                  <ZoomOut className="w-3.5 h-3.5 text-[#E11D2E]" />
-                  <span className="hidden sm:inline">Fit Layar</span>
-                </>
-              ) : (
-                <>
-                  <ZoomIn className="w-3.5 h-3.5 text-[#E11D2E]" />
-                  <span className="hidden sm:inline">Ukuran Asli 1:1</span>
-                </>
-              )}
-            </button>
-          )}
-
-          {!ytEmbed && (
-            <a
-              href={resolved}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="inline-flex items-center gap-1.5 rounded border border-zinc-700 bg-zinc-900 hover:border-white px-2.5 py-1.5 text-xs font-medium text-white transition"
-              title="Buka / Download Resolusi Asli"
-            >
-              <Download className="w-3.5 h-3.5 text-[#E11D2E]" />
-              <span className="hidden sm:inline">Original</span>
-              <ExternalLink className="w-3 h-3 opacity-60 sm:hidden" />
-            </a>
-          )}
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center justify-center rounded bg-[#E11D2E] hover:bg-red-500 p-1.5 text-white transition cursor-pointer"
-            aria-label="Tutup"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Viewport */}
+      {/* Scrollable / Zoomable Original Media Stage */}
       <div
-        className={`flex-1 overflow-auto flex ${
-          zoomed ? "items-start justify-start p-2 sm:p-6" : "items-center justify-center p-2 sm:p-6"
-        }`}
+        data-lenis-prevent
+        className="flex-1 w-full h-full overflow-auto overscroll-contain"
         onClick={onClose}
       >
-        {ytEmbed ? (
-          <div
-            className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <iframe
-              src={`${ytEmbed}&autoplay=1`}
-              title={item.title || "Video"}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full border-0"
+        <div
+          className={`min-h-full min-w-full flex p-3 sm:p-8 ${
+            zoomed
+              ? "items-start justify-start sm:justify-center"
+              : "items-center justify-center"
+          }`}
+        >
+          {ytEmbed ? (
+            <div
+              className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <iframe
+                src={`${ytEmbed}&autoplay=1`}
+                title={item.title || "Video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0"
+              />
+            </div>
+          ) : isVideo ? (
+            <video
+              src={resolved}
+              controls
+              autoPlay
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-[88vh] w-auto h-auto rounded-lg bg-black shadow-2xl"
             />
-          </div>
-        ) : isVideo ? (
-          <video
-            src={resolved}
-            controls
-            autoPlay
-            playsInline
-            onClick={(e) => e.stopPropagation()}
-            className="max-w-full max-h-[82vh] w-auto h-auto rounded-lg bg-black shadow-2xl"
-          />
-        ) : (
-          <img
-            src={resolved}
-            alt={item.title || item.caption || "Preview"}
-            onLoad={(e) =>
-              setDimensions({
-                w: e.currentTarget.naturalWidth,
-                h: e.currentTarget.naturalHeight,
-              })
-            }
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomed((z) => !z);
-            }}
-            className={
-              zoomed
-                ? "max-w-none w-auto h-auto cursor-zoom-out mx-auto"
-                : "max-w-full max-h-[82vh] w-auto h-auto object-contain cursor-zoom-in select-none shadow-2xl"
-            }
-          />
-        )}
+          ) : (
+            <img
+              src={resolved}
+              alt={item.title || item.caption || "Preview"}
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomed((z) => !z);
+              }}
+              className={
+                zoomed
+                  ? "max-w-none w-auto h-auto cursor-zoom-out select-none shadow-2xl"
+                  : "max-w-full max-h-[88vh] w-auto h-auto object-contain cursor-zoom-in select-none shadow-2xl"
+              }
+            />
+          )}
+        </div>
       </div>
 
-      {item.caption && (
+      {item.caption && !zoomed && (
         <div
-          className="px-4 py-2.5 border-t border-white/10 bg-black/85 text-center text-xs sm:text-sm text-zinc-300 shrink-0"
-          onClick={(e) => e.stopPropagation()}
+          className="px-4 py-3 text-center text-xs sm:text-sm text-zinc-300 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none"
         >
           {item.caption}
         </div>
       )}
     </div>
-  );
-}
-
-export function ExpandMediaBadge({ label = "Ukuran Asli" }: { label?: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded bg-black/75 border border-white/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-white group-hover:bg-[#E11D2E] group-hover:border-[#E11D2E] transition">
-      <Maximize2 className="w-3 h-3" />
-      {label}
-    </span>
   );
 }
 

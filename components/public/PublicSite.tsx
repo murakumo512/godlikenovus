@@ -25,7 +25,6 @@ import { StoreOrderModal } from "./StoreOrderModal";
 import { SocialIcon } from "./SocialIcon";
 import { KprPreloader } from "./KprPreloader";
 import {
-  ExpandMediaBadge,
   LightboxMediaItem,
   LinkifiedText,
   MediaLightbox,
@@ -35,11 +34,20 @@ import {
   SmoothScrollProvider,
   ScrollSection,
   ScrollHudRail,
+  useLockBodyAndLenis,
 } from "./SmoothScroll";
 
 const ALL_CATEGORY_KEY = "__ALL__";
 
 export function PublicSite({ data }: { data: SiteData }) {
+  return (
+    <SmoothScrollProvider>
+      <PublicSiteInner data={data} />
+    </SmoothScrollProvider>
+  );
+}
+
+function PublicSiteInner({ data }: { data: SiteData }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 35 });
 
@@ -52,6 +60,8 @@ export function PublicSite({ data }: { data: SiteData }) {
   const rawCategories = Array.from(new Set(data.gallery.map((g) => g.category)));
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY_KEY);
   const [activeEvent, setActiveEvent] = useState<GalleryEvent | null>(null);
+
+  useLockBodyAndLenis(Boolean(activeEvent));
 
   // Store order modal
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
@@ -177,7 +187,6 @@ export function PublicSite({ data }: { data: SiteData }) {
     : `© ${currentYear} ${data.branding.teamName} • ${data.branding.estYear}`;
 
   return (
-    <SmoothScrollProvider>
       <div className="min-h-screen bg-[#070709] text-white overflow-x-hidden">
         <ScrollHudRail sections={hudSections} />
 
@@ -907,109 +916,134 @@ export function PublicSite({ data }: { data: SiteData }) {
           onClose={() => setOrderProduct(null)}
         />
 
-        {/* GALLERY EVENT DETAIL MODAL (100% Uncropped Poster + Scrollable + Full HD Zoom + Video!) */}
+        {/* GALLERY EVENT DETAIL MODAL (Instagram Style: Full Uncropped Image on Left/Top + Smooth Scrollable Caption + Click Photo to Zoom!) */}
         {activeEvent && (
           <div
-            className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm p-3 sm:p-6 flex items-start sm:items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            data-lenis-prevent
+            className="fixed inset-0 z-50 bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
             onClick={() => setActiveEvent(null)}
           >
             <div
-              className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-zinc-700 bg-[#0d0d11] shadow-2xl my-auto"
+              data-lenis-prevent
+              className="relative w-full max-w-5xl max-h-[90vh] md:h-[85vh] rounded-xl overflow-hidden border border-zinc-800 bg-[#0d0d11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setActiveEvent(null)}
-                className="absolute right-3 top-3 z-20 rounded bg-black/80 p-1.5 text-white hover:bg-[#E11D2E] transition cursor-pointer"
-                aria-label="Tutup"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              {/* Main Uncropped Poster / Media */}
-              <div
-                onClick={() => {
-                  if (!isAnyVideoUrl(activeEvent.image)) {
-                    setLightboxItem({
-                      url: activeEvent.image,
-                      title: activeEvent.title,
-                      caption: `${activeEvent.date} • ${activeEvent.location}`,
-                    });
-                  }
-                }}
-                className={`group relative bg-black flex items-center justify-center ${
-                  isAnyVideoUrl(activeEvent.image)
-                    ? ""
-                    : "cursor-zoom-in"
-                }`}
-              >
-                {isAnyVideoUrl(activeEvent.image) ? (
-                  <SmartMedia
-                    src={activeEvent.image}
-                    alt={activeEvent.title}
-                    fit="contain"
-                    className="w-full max-h-[75vh] aspect-video"
-                    controls
-                    mutedLoop={false}
-                  />
-                ) : (
-                  <>
-                    <img
-                      src={assetUrl(activeEvent.image)}
-                      alt={activeEvent.title}
-                      className="w-full max-h-[75vh] h-auto object-contain bg-black select-none"
-                    />
-                    <div className="absolute bottom-3 right-3 z-10">
-                      <ExpandMediaBadge label="Lihat Ukuran Asli (HD)" />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Optional Attached Event Highlight Video */}
-              {activeEvent.videoUrl && (
-                <div className="border-t border-zinc-800 bg-black p-3 sm:p-4">
-                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#E11D2E] mb-2 flex items-center gap-1.5">
-                    <Play className="w-3 h-3 fill-[#E11D2E]" /> Video Highlight / Teaser Event
-                  </div>
-                  <SmartMedia
-                    src={activeEvent.videoUrl}
-                    alt={`${activeEvent.title} Video`}
-                    fit="contain"
-                    className="w-full aspect-video rounded border border-zinc-800"
-                    controls
-                    mutedLoop={false}
-                  />
-                </div>
-              )}
-
-              {/* Event Text Details (With Clickable Links & Line Breaks!) */}
-              <div className="p-4 sm:p-6 border-t border-zinc-800">
+              {/* Mobile Sticky Top Header (So Close X is ALWAYS accessible!) */}
+              <div className="md:hidden flex items-center justify-between px-3.5 py-2.5 border-b border-zinc-800 bg-[#0d0d11] shrink-0">
                 <span className="inline-block rounded bg-[#E11D2E] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                   {activeEvent.category}
                 </span>
-                <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white mt-1.5 leading-tight">
-                  {activeEvent.title}
-                </h3>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 mt-1 mb-3">
-                  <span>{activeEvent.date}</span>
-                  <span>•</span>
-                  <span>{activeEvent.location}</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveEvent(null)}
+                  className="rounded-full p-1 text-zinc-200 hover:bg-zinc-800 hover:text-white transition cursor-pointer"
+                  aria-label="Tutup"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Unified Scroll Container on Mobile / Split Columns on Desktop (IG Web Style!) */}
+              <div
+                data-lenis-prevent
+                className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
+              >
+                {/* LEFT (Desktop) / TOP (Mobile): 100% Uncropped Poster or Video — Click directly like IG to view Fullscreen! */}
+                <div
+                  onClick={() => {
+                    if (!isAnyVideoUrl(activeEvent.image)) {
+                      setLightboxItem({
+                        url: activeEvent.image,
+                        title: activeEvent.title,
+                        caption: `${activeEvent.date} • ${activeEvent.location}`,
+                      });
+                    }
+                  }}
+                  className={`md:col-span-7 bg-black flex items-center justify-center md:h-full overflow-hidden ${
+                    isAnyVideoUrl(activeEvent.image) ? "" : "cursor-zoom-in"
+                  }`}
+                >
+                  {isAnyVideoUrl(activeEvent.image) ? (
+                    <SmartMedia
+                      src={activeEvent.image}
+                      alt={activeEvent.title}
+                      fit="contain"
+                      className="w-full md:h-full aspect-video"
+                      controls
+                      mutedLoop={false}
+                    />
+                  ) : (
+                    <img
+                      src={assetUrl(activeEvent.image)}
+                      alt={activeEvent.title}
+                      className="w-full h-auto md:h-full md:w-full object-contain select-none"
+                    />
+                  )}
                 </div>
-                <LinkifiedText
-                  text={activeEvent.description}
-                  className="text-xs sm:text-sm text-zinc-200 leading-relaxed"
-                />
+
+                {/* RIGHT (Desktop) / BOTTOM (Mobile): Smooth Independently Scrollable Details & Video */}
+                <div
+                  data-lenis-prevent
+                  className="md:col-span-5 md:h-full md:overflow-y-auto overscroll-contain border-t md:border-t-0 md:border-l border-zinc-800 flex flex-col bg-[#0d0d11]"
+                >
+                  {/* Desktop Sticky Header inside Right Column */}
+                  <div className="hidden md:flex items-center justify-between px-5 py-3.5 border-b border-zinc-800 sticky top-0 bg-[#0d0d11]/95 backdrop-blur-xs z-10">
+                    <span className="inline-block rounded bg-[#E11D2E] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                      {activeEvent.category}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveEvent(null)}
+                      className="rounded-full p-1.5 text-zinc-300 hover:bg-zinc-800 hover:text-white transition cursor-pointer"
+                      aria-label="Tutup"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="p-4 sm:p-5 space-y-3.5">
+                    <div>
+                      <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white leading-tight">
+                        {activeEvent.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 mt-1">
+                        <span>{activeEvent.date}</span>
+                        <span>•</span>
+                        <span>{activeEvent.location}</span>
+                      </div>
+                    </div>
+
+                    {activeEvent.videoUrl && (
+                      <div className="rounded-lg overflow-hidden border border-zinc-800 bg-black">
+                        <SmartMedia
+                          src={activeEvent.videoUrl}
+                          alt={`${activeEvent.title} Video`}
+                          fit="contain"
+                          className="w-full aspect-video"
+                          controls
+                          mutedLoop={false}
+                        />
+                      </div>
+                    )}
+
+                    <LinkifiedText
+                      text={activeEvent.description}
+                      className="text-xs sm:text-sm text-zinc-200 leading-relaxed"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* FULL-RESOLUTION ORIGINAL MEDIA LIGHTBOX */}
+        {/* FULL-RESOLUTION ORIGINAL MEDIA LIGHTBOX (IG Click-to-Zoom) */}
         <MediaLightbox
           item={lightboxItem}
           onClose={() => setLightboxItem(null)}
         />
       </div>
-    </SmoothScrollProvider>
   );
 }

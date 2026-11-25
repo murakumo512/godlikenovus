@@ -6,6 +6,7 @@ import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
 import { LightboxMediaItem, SmartMedia } from "./MediaDisplay";
+import { useLockBodyAndLenis } from "./SmoothScroll";
 
 interface StoreOrderModalProps {
   product: StoreProduct | null;
@@ -28,6 +29,8 @@ export function StoreOrderModal({
   const [qty, setQty] = useState(1);
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+
+  useLockBodyAndLenis(Boolean(product));
 
   useEffect(() => {
     if (product?.sizes?.length) {
@@ -71,8 +74,18 @@ export function StoreOrderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-md rounded-lg border border-zinc-700 bg-[#0d0d11] p-4 sm:p-6 shadow-2xl my-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      data-lenis-prevent
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-3 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        data-lenis-prevent
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md max-h-[90vh] overflow-y-auto overscroll-contain rounded-xl border border-zinc-700 bg-[#0d0d11] p-4 sm:p-6 shadow-2xl"
+      >
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white transition"
