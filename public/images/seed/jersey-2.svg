@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 560">
+  <rect width="500" height="560" fill="#f8fafc"/>
+  <path d="M165 95 L110 130 L65 215 L120 245 L145 190 L145 460 L355 460 L355 190 L380 245 L435 215 L390 130 L335 95 L295 115 C265 130 235 130 205 115 Z" fill="#18181b" stroke="#E11D2E" stroke-width="6"/>
+  <path d="M205 115 C235 142 265 142 295 115" fill="none" stroke="#E11D2E" stroke-width="8"/>
+  <text x="250" y="255" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="900" font-size="42" fill="#FFFFFF" letter-spacing="4">GL</text>
+  <text x="250" y="295" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="800" font-size="16" fill="#E11D2E" letter-spacing="5">GODLIKE NOVUS</text>
+  <text x="250" y="420" text-anchor="middle" font-family="system-ui,sans-serif" font-weight="700" font-size="14" fill="#FFFFFF" opacity="0.7" letter-spacing="3">OBSIDIAN STEALTH</text>
+</svg>

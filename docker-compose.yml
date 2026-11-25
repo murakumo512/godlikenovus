@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "if [ ! -d node_modules/next ]; then npm install --include=dev; fi && if [ ! -f .next/BUILD_ID ]; then npm run build; fi && npx next start -H 0.0.0.0 -p 8080"
+    stop_grace_period: 30s
+    environment:
+      TZ: "Asia/Jakarta"
+      PORT: "8080"
+      HOSTNAME: "0.0.0.0"
+    ports:
+      - target: 8080
+        published: 8088
+        protocol: tcp
+        mode: ingress
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - godlike_app_nfs:/app
+      - godlike_uploads_nfs:/app/public/uploads
+      - godlike_data_nfs:/app/data
+    networks:
+      - proxy-net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ubuntu-swarm1
+      restart_policy:
+        condition: any
+
+networks:
+  proxy-net:
+    external: true
+
+volumes:
+  godlike_app_nfs:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.200.2,nfsvers=4,rw,tcp,hard,timeo=600,retrans=2,noatime,nodiratime,rsize=1048576,wsize=1048576,actimeo=60"
+      device: ":/home/godlikenovus/app"
+
+  godlike_uploads_nfs:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.200.2,nfsvers=4,rw,tcp,hard,timeo=600,retrans=2,noatime,nodiratime,rsize=1048576,wsize=1048576,actimeo=60"
+      device: ":/home/godlikenovus/uploads"
+
+  godlike_data_nfs:
+    driver: local
+    driver_opts:
+      type: "nfs"
+      o: "addr=192.168.200.2,nfsvers=4,rw,tcp,hard,timeo=600,retrans=2,noatime,nodiratime,rsize=1048576,wsize=1048576,actimeo=60"
+      device: ":/home/godlikenovus/data"
