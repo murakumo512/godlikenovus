@@ -2,32 +2,40 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { OpeningConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
 
 interface KprPreloaderProps {
+  opening: OpeningConfig;
   teamName: string;
   estYear: string;
   tagline: string;
-  logoWhite: string;
+  fallbackLogo: string;
 }
 
 type Stage = "loading" | "godlike" | "shutter" | "done";
 
-const HERO_WORD = "GODLIKE";
-
 export function KprPreloader({
+  opening,
   teamName,
   estYear,
   tagline,
-  logoWhite,
+  fallbackLogo,
 }: KprPreloaderProps) {
-  const [stage, setStage] = useState<Stage>("loading");
+  const [stage, setStage] = useState<Stage>(
+    opening.enabled === false ? "done" : "loading"
+  );
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    if (opening.enabled === false) {
+      setStage("done");
+      document.body.style.overflow = "";
+      return;
+    }
+
     document.body.style.overflow = "hidden";
 
-    // Stage 1: Fast nonlinear progress 0 -> 100 (~1.25s)
     const start = performance.now();
     const duration = 1200;
     let rafId = 0;
@@ -35,7 +43,6 @@ export function KprPreloader({
     const tick = (now: number) => {
       const elapsed = now - start;
       const t = Math.min(1, elapsed / duration);
-      // Ease-in-out cubic curve like KPR loader
       const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       setProgress(Math.round(eased * 100));
       if (t < 1) {
@@ -44,17 +51,14 @@ export function KprPreloader({
     };
     rafId = requestAnimationFrame(tick);
 
-    // Stage 1 -> Stage 2: Giant GODLIKE takeover
     const toGodlike = setTimeout(() => {
       setStage("godlike");
     }, 1300);
 
-    // Stage 2 -> Stage 3: Zoom-through + staggered column shutter into Home
     const toShutter = setTimeout(() => {
       setStage("shutter");
     }, 3150);
 
-    // Stage 3 -> Done: Unmount overlay
     const toDone = setTimeout(() => {
       setStage("done");
       document.body.style.overflow = "";
@@ -67,7 +71,7 @@ export function KprPreloader({
       clearTimeout(toDone);
       document.body.style.overflow = "";
     };
-  }, []);
+  }, [opening.enabled]);
 
   const handleSkip = () => {
     setStage("shutter");
@@ -77,10 +81,22 @@ export function KprPreloader({
     }, 750);
   };
 
-  if (stage === "done") return null;
+  if (opening.enabled === false || stage === "done") return null;
 
+  const heroWord =
+    (opening.heroWord ?? "").trim() ||
+    teamName.split(/\s+/)[0] ||
+    "GODLIKE";
   const subWord =
-    teamName.replace(/^GODLIKE\s*/i, "").trim() || "NOVUS";
+    (opening.subWord ?? "").trim() ||
+    teamName.replace(/^GODLIKE\s*/i, "").trim() ||
+    "NOVUS";
+  const loadingLogo = opening.loadingLogo || fallbackLogo;
+  const revealLogo = opening.revealLogo || fallbackLogo;
+  const topRight = opening.topRightText || estYear;
+  const badgeLabel = opening.badgeText || `${subWord} • ${estYear}`;
+  const quoteLabel = opening.quoteText || tagline;
+  const loadPrefix = opening.bottomLeftLoadingPrefix || "LOAD";
 
   return (
     <div className="fixed inset-0 z-[100] pointer-events-auto select-none overflow-hidden">
@@ -107,7 +123,19 @@ export function KprPreloader({
         ))}
       </div>
 
-      {/* Crimson Flash Wipe right between Loading -> Giant GODLIKE */}
+      {/* Optional Custom Background Image during Opening */}
+      {opening.backgroundImage && stage !== "shutter" && (
+        <div className="pointer-events-none absolute inset-0 z-[5]">
+          <img
+            src={assetUrl(opening.backgroundImage)}
+            alt=""
+            className="w-full h-full object-cover opacity-25"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060608]/80 via-[#060608]/60 to-[#060608]/90" />
+        </div>
+      )}
+
+      {/* Crimson Flash Wipe right between Loading -> Giant Hero Word */}
       <AnimatePresence>
         {stage === "godlike" && (
           <motion.div
@@ -146,16 +174,18 @@ export function KprPreloader({
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-[#E11D2E] animate-pulse" />
               <span>
-                {stage === "loading" ? "INITIALIZING // SYS" : "ACCESS GRANTED"}
+                {stage === "loading"
+                  ? opening.topLeftLoadingText || "INITIALIZING // SYS"
+                  : opening.topLeftReadyText || "ACCESS GRANTED"}
               </span>
             </div>
             <span className="hidden sm:inline text-zinc-500">
-              PROTOCOL // NOVUS.ARENA
+              {opening.topCenterText}
             </span>
-            <span>{estYear}</span>
+            <span>{topRight}</span>
           </div>
 
-          {/* CENTER STAGE: Stage 1 (Loader) -> Stage 2 (Massive GODLIKE Kinetic Reveal) */}
+          {/* CENTER STAGE */}
           <div className="relative my-auto flex flex-col items-center justify-center py-6">
             <AnimatePresence mode="wait">
               {stage === "loading" && (
@@ -171,11 +201,13 @@ export function KprPreloader({
                   }}
                   className="w-full max-w-md flex flex-col items-center text-center"
                 >
-                  <img
-                    src={assetUrl(logoWhite)}
-                    alt={teamName}
-                    className="h-12 sm:h-16 w-auto object-contain mb-5 opacity-90"
-                  />
+                  {loadingLogo && (
+                    <img
+                      src={assetUrl(loadingLogo)}
+                      alt={teamName}
+                      className="h-12 sm:h-16 w-auto object-contain mb-5 opacity-90"
+                    />
+                  )}
 
                   <div className="font-mono text-3xl sm:text-5xl font-bold tracking-[0.15em] text-white tabular-nums">
                     {String(progress).padStart(3, "0")}
@@ -190,9 +222,11 @@ export function KprPreloader({
                     />
                   </div>
 
-                  <span className="mt-3 text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-500">
-                    SYNCING ROSTER &amp; ARENA DATA
-                  </span>
+                  {opening.loadingStatusText && (
+                    <span className="mt-3 text-[10px] font-mono uppercase tracking-[0.3em] text-zinc-500">
+                      {opening.loadingStatusText}
+                    </span>
+                  )}
                 </motion.div>
               )}
 
@@ -212,65 +246,87 @@ export function KprPreloader({
                   className="relative w-full flex flex-col items-center justify-center text-center"
                 >
                   {/* Outlined Background Echo Word */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 1.12 }}
-                    animate={{ opacity: 0.14, scale: 1 }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    aria-hidden="true"
-                    className="pointer-events-none select-none absolute font-display font-bold uppercase tracking-[0.12em] text-transparent whitespace-nowrap"
-                    style={{
-                      fontSize: "clamp(4.5rem, 24vw, 19rem)",
-                      WebkitTextStroke: "1.5px #E11D2E",
-                    }}
-                  >
-                    {subWord}
-                  </motion.div>
+                  {subWord && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 1.12 }}
+                      animate={{ opacity: 0.14, scale: 1 }}
+                      transition={{ duration: 0.6, ease: "easeOut" }}
+                      aria-hidden="true"
+                      className="pointer-events-none select-none absolute font-display font-bold uppercase tracking-[0.12em] text-transparent whitespace-nowrap"
+                      style={{
+                        fontSize: "clamp(4.5rem, 24vw, 19rem)",
+                        WebkitTextStroke: "1.5px #E11D2E",
+                      }}
+                    >
+                      {subWord}
+                    </motion.div>
+                  )}
 
                   {/* Crest Stamp Above */}
-                  <motion.img
-                    src={assetUrl(logoWhite)}
-                    alt={teamName}
-                    initial={{ y: -18, opacity: 0, scale: 0.85 }}
-                    animate={{ y: 0, opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.38, delay: 0.08, ease: "easeOut" }}
-                    className="h-12 sm:h-16 w-auto object-contain mb-2 drop-shadow-[0_0_25px_rgba(225,29,46,0.55)]"
-                  />
+                  {revealLogo && (
+                    <motion.img
+                      src={assetUrl(revealLogo)}
+                      alt={teamName}
+                      initial={{ y: -18, opacity: 0, scale: 0.85 }}
+                      animate={{ y: 0, opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.38, delay: 0.08, ease: "easeOut" }}
+                      className="h-12 sm:h-16 w-auto object-contain mb-2 drop-shadow-[0_0_25px_rgba(225,29,46,0.55)]"
+                    />
+                  )}
 
-                  {/* MASSIVE Staggered Letter-by-Letter "GODLIKE" */}
-                  <div className="flex items-center justify-center overflow-hidden leading-[0.86] py-1">
-                    {HERO_WORD.split("").map((char, i) => (
-                      <motion.span
-                        key={i}
-                        initial={{ y: "115%", rotateX: -40 }}
-                        animate={{ y: "0%", rotateX: 0 }}
-                        transition={{
-                          duration: 0.52,
-                          delay: 0.04 + i * 0.045,
-                          ease: [0.16, 1, 0.3, 1],
-                        }}
-                        className="inline-block font-display font-bold uppercase tracking-tight text-white drop-shadow-[0_8px_32px_rgba(225,29,46,0.35)]"
-                        style={{
-                          fontSize: "clamp(3.6rem, 18.5vw, 14.5rem)",
-                        }}
-                      >
-                        {char}
-                      </motion.span>
-                    ))}
-                  </div>
+                  {/* Optional Custom Hero Graphic or Massive Staggered Hero Word */}
+                  {opening.heroImage ? (
+                    <motion.img
+                      src={assetUrl(opening.heroImage)}
+                      alt={heroWord}
+                      initial={{ y: 30, opacity: 0, scale: 0.92 }}
+                      animate={{ y: 0, opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                      className="max-h-40 sm:max-h-60 w-auto object-contain my-2 drop-shadow-[0_8px_32px_rgba(225,29,46,0.35)]"
+                    />
+                  ) : (
+                    <div className="flex flex-wrap items-center justify-center overflow-hidden leading-[0.86] py-1 px-2">
+                      {heroWord.split("").map((char, i) => (
+                        <motion.span
+                          key={i}
+                          initial={{ y: "115%", rotateX: -40 }}
+                          animate={{ y: "0%", rotateX: 0 }}
+                          transition={{
+                            duration: 0.52,
+                            delay: 0.04 + i * 0.045,
+                            ease: [0.16, 1, 0.3, 1],
+                          }}
+                          className="inline-block font-display font-bold uppercase tracking-tight text-white drop-shadow-[0_8px_32px_rgba(225,29,46,0.35)]"
+                          style={{
+                            fontSize:
+                              heroWord.length > 10
+                                ? "clamp(2.4rem, 11vw, 9.5rem)"
+                                : "clamp(3.4rem, 17.5vw, 14rem)",
+                          }}
+                        >
+                          {char === " " ? "\u00A0" : char}
+                        </motion.span>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Crimson Sub-bar: NOVUS + Tagline */}
+                  {/* Crimson Sub-bar + Quote */}
                   <motion.div
                     initial={{ opacity: 0, y: 14 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.38 }}
                     className="mt-2 flex flex-col items-center gap-1.5"
                   >
-                    <span className="px-3 py-0.5 bg-[#E11D2E] font-display text-xs sm:text-base font-bold uppercase tracking-[0.35em] text-white">
-                      {subWord} • {estYear}
-                    </span>
-                    <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.22em] text-zinc-400 max-w-xs sm:max-w-lg truncate">
-                      &ldquo;{tagline}&rdquo;
-                    </span>
+                    {badgeLabel && (
+                      <span className="px-3 py-0.5 bg-[#E11D2E] font-display text-xs sm:text-base font-bold uppercase tracking-[0.35em] text-white">
+                        {badgeLabel}
+                      </span>
+                    )}
+                    {quoteLabel && (
+                      <span className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.22em] text-zinc-400 max-w-xs sm:max-w-lg truncate">
+                        &ldquo;{quoteLabel}&rdquo;
+                      </span>
+                    )}
                   </motion.div>
                 </motion.div>
               )}
@@ -281,15 +337,15 @@ export function KprPreloader({
           <div className="flex items-center justify-between text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-zinc-400">
             <span>
               {stage === "loading"
-                ? `[LOAD ${String(progress).padStart(3, "0")}%]`
-                : "[READY // ENTERING ARENA]"}
+                ? `[${loadPrefix} ${String(progress).padStart(3, "0")}%]`
+                : opening.bottomLeftReadyText || "[READY // ENTERING ARENA]"}
             </span>
             <button
               type="button"
               onClick={handleSkip}
               className="text-zinc-300 hover:text-[#E11D2E] transition cursor-pointer uppercase tracking-[0.2em]"
             >
-              SKIP [→]
+              {opening.skipButtonText || "SKIP [→]"}
             </button>
           </div>
         </div>

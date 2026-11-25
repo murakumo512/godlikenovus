@@ -23,7 +23,6 @@ export function SmoothScrollProvider({
     };
     rafId = requestAnimationFrame(raf);
 
-    // Intercept anchor clicks (#roster, #store, etc.) for silky eased scrolling
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement | null)?.closest("a");
       if (!target) return;
@@ -98,7 +97,13 @@ export function ScrollSection({
   );
 }
 
-const SECTIONS = [
+export interface HudRailSectionItem {
+  id: string;
+  code: string;
+  name: string;
+}
+
+const DEFAULT_SECTIONS: HudRailSectionItem[] = [
   { id: "top", code: "01", name: "HERO" },
   { id: "roster", code: "02", name: "ROSTER" },
   { id: "about", code: "03", name: "ABOUT" },
@@ -108,7 +113,11 @@ const SECTIONS = [
   { id: "contact", code: "07", name: "CONTACT" },
 ];
 
-export function ScrollHudRail() {
+export function ScrollHudRail({
+  sections = DEFAULT_SECTIONS,
+}: {
+  sections?: HudRailSectionItem[];
+}) {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 160,
@@ -120,7 +129,7 @@ export function ScrollHudRail() {
 
   useEffect(() => {
     const observers: IntersectionObserver[] = [];
-    SECTIONS.forEach((sec) => {
+    sections.forEach((sec) => {
       const el = document.getElementById(sec.id);
       if (!el) return;
       const obs = new IntersectionObserver(
@@ -137,19 +146,17 @@ export function ScrollHudRail() {
       observers.push(obs);
     });
     return () => observers.forEach((o) => o.disconnect());
-  }, []);
+  }, [sections]);
 
   return (
     <>
-      {/* Top Navbar Scroll Progress Hairline */}
       <motion.div
         style={{ scaleX, transformOrigin: "left" }}
         className="fixed top-14 sm:top-16 left-0 right-0 h-[2px] bg-[#E11D2E] z-40 pointer-events-none"
       />
 
-      {/* Interactive Right HUD Section Navigator (Desktop) */}
       <div className="hidden xl:flex fixed right-4 top-1/2 -translate-y-1/2 z-30 flex-col items-end gap-2">
-        {SECTIONS.map((sec) => {
+        {sections.map((sec) => {
           const active = activeId === sec.id;
           return (
             <a
@@ -159,7 +166,7 @@ export function ScrollHudRail() {
               title={sec.name}
             >
               <span
-                className={`text-[9px] font-mono tracking-[0.2em] transition-all ${
+                className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-all ${
                   active
                     ? "text-[#E11D2E] opacity-100 translate-x-0"
                     : "text-zinc-500 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0"

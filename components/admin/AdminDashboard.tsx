@@ -17,11 +17,18 @@ import {
   SiteData,
   SocialLink,
 } from "@/lib/types";
+import {
+  DEFAULT_CONTACT_WA_TEMPLATE,
+  DEFAULT_STORE_WA_TEMPLATE,
+} from "@/lib/default-data";
+import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { ImageField } from "./ImageField";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
 type TabId =
+  | "opening"
   | "branding"
+  | "templates"
   | "games"
   | "about"
   | "gallery"
@@ -29,9 +36,28 @@ type TabId =
   | "sponsors"
   | "contact";
 
+const STORE_TEMPLATE_VARS = [
+  ["{product}", "Nama Produk"],
+  ["{category}", "Kategori"],
+  ["{price}", "Harga Satuan"],
+  ["{size}", "Ukuran"],
+  ["{qty}", "Jumlah"],
+  ["{total}", "Total Harga"],
+  ["{name}", "Nama Pemesan"],
+  ["{phone}", "No. WA Pemesan"],
+  ["{address}", "Alamat"],
+  ["{notes}", "Catatan"],
+] as const;
+
+const CONTACT_TEMPLATE_VARS = [
+  ["{name}", "Nama Pengirim"],
+  ["{email}", "Email Pengirim"],
+  ["{message}", "Isi Pesan"],
+] as const;
+
 export function AdminDashboard({ initialData }: { initialData: SiteData }) {
   const [data, setData] = useState<SiteData>(initialData);
-  const [activeTab, setActiveTab] = useState<TabId>("branding");
+  const [activeTab, setActiveTab] = useState<TabId>("opening");
   const [selectedGameId, setSelectedGameId] = useState<string>(
     initialData.games[0]?.id || ""
   );
@@ -57,7 +83,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
       if (!res.ok) throw new Error("Save failed");
       const saved = (await res.json()) as SiteData;
       setData(saved);
-      showToast("success", "Perubahan tersimpan.");
+      showToast("success", "Perubahan berhasil disimpan.");
     } catch {
       showToast("error", "Gagal menyimpan perubahan.");
     } finally {
@@ -87,7 +113,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
   };
 
   const tabs: { id: TabId; label: string }[] = [
-    { id: "branding", label: "Branding & Navbar" },
+    { id: "opening", label: "Opening & Loading" },
+    { id: "branding", label: "Home & Branding" },
+    { id: "templates", label: "Template Pesan" },
     { id: "games", label: "Games & Roster" },
     { id: "about", label: "About Us" },
     { id: "gallery", label: "Gallery" },
@@ -109,9 +137,34 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
     }));
   };
 
+  const storePreviewMessage = renderWhatsappTemplate(
+    data.templates.storeWhatsappTemplate || DEFAULT_STORE_WA_TEMPLATE,
+    {
+      product: data.store[0]?.name || "GODLIKE PRO JERSEY 2026",
+      category: data.store[0]?.category || "Official Jersey",
+      price: "Rp 249.000",
+      size: "L",
+      qty: 2,
+      total: "Rp 498.000",
+      name: "Budi Santoso",
+      phone: "081234567890",
+      address: "Jl. Asia Afrika No. 10, Bandung",
+      notes: "Custom nickname: GL.BUDI",
+    }
+  );
+
+  const contactPreviewMessage = renderWhatsappTemplate(
+    data.templates.contactWhatsappTemplate || DEFAULT_CONTACT_WA_TEMPLATE,
+    {
+      name: "Raka (Team Manager)",
+      email: "raka@example.com",
+      message: "Halo min, mau ajak scrim divisi HoK Jumat malam jam 20.00 WIB.",
+    }
+  );
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 overflow-x-hidden">
-      {/* Clean Responsive Top Bar (Zero mobile overflow) */}
+      {/* Clean Responsive Top Bar */}
       <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -218,16 +271,253 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
 
         {/* Form Panels */}
         <main className="lg:col-span-9 min-w-0 space-y-5">
-          {/* 1. BRANDING & NAVBAR */}
+          {/* 0. OPENING & LOADING */}
+          {activeTab === "opening" && (
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      Layar Opening &amp; Loading (KPR Style)
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Atur semua tulisan, logo, dan gambar pada animasi loading (0–100%) serta transisi sebelum masuk ke Home.
+                    </p>
+                  </div>
+
+                  <label className="inline-flex items-center gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-800 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={data.opening.enabled !== false}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          opening: {
+                            ...data.opening,
+                            enabled: e.target.checked,
+                          },
+                        })
+                      }
+                      className="accent-red-600 w-3.5 h-3.5"
+                    />
+                    Aktifkan Opening
+                  </label>
+                </div>
+
+                <div className="space-y-3.5">
+                  <ImageField
+                    label="Logo saat Loading (0–100%)"
+                    value={data.opening.loadingLogo}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, loadingLogo: v },
+                      })
+                    }
+                    allowClear
+                  />
+                  <ImageField
+                    label="Logo di Atas Tulisan Besar (Tahap 2)"
+                    value={data.opening.revealLogo}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, revealLogo: v },
+                      })
+                    }
+                    allowClear
+                  />
+                  <ImageField
+                    label="Gambar Background Opening/Loading (Opsional)"
+                    value={data.opening.backgroundImage}
+                    placeholder="Kosongkan untuk latar gelap bersih"
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, backgroundImage: v },
+                      })
+                    }
+                    allowClear
+                  />
+                </div>
+              </section>
+
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Tahap 1: Tulisan saat Loading (0% – 100%)
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <InputField
+                    label="Teks Kiri Atas (Saat Loading)"
+                    value={data.opening.topLeftLoadingText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, topLeftLoadingText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Tengah Atas HUD"
+                    value={data.opening.topCenterText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, topCenterText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Kanan Atas HUD (Kosongkan = ikut Tahun Berdiri)"
+                    value={data.opening.topRightText}
+                    placeholder={data.branding.estYear}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, topRightText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Tulisan di Bawah Garis Loading"
+                    value={data.opening.loadingStatusText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, loadingStatusText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Prefix Persentase Kiri Bawah (Contoh: LOAD)"
+                    value={data.opening.bottomLeftLoadingPrefix}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: {
+                          ...data.opening,
+                          bottomLeftLoadingPrefix: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Tombol Skip Kanan Bawah"
+                    value={data.opening.skipButtonText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, skipButtonText: v },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Tahap 2: Tulisan Besar Transisi Sebelum Masuk Home
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Muncul setelah loading selesai sebelum tirai terbuka masuk ke halaman utama.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <InputField
+                    label="Tulisan Raksasa Utama (Contoh: GODLIKE)"
+                    value={data.opening.heroWord}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, heroWord: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Tulisan Bayangan Belakang / Outline Merah (Contoh: NOVUS)"
+                    value={data.opening.subWord}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, subWord: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Pita Merah (Kosongkan = otomatis)"
+                    value={data.opening.badgeText}
+                    placeholder={`${data.opening.subWord || "NOVUS"} • ${data.branding.estYear}`}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, badgeText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Kutipan Bawah (Kosongkan = ikut Tagline Utama)"
+                    value={data.opening.quoteText}
+                    placeholder={data.branding.tagline}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, quoteText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Kiri Atas saat Selesai Loading"
+                    value={data.opening.topLeftReadyText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, topLeftReadyText: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Kiri Bawah saat Masuk Home"
+                    value={data.opening.bottomLeftReadyText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        opening: { ...data.opening, bottomLeftReadyText: v },
+                      })
+                    }
+                  />
+                </div>
+
+                <ImageField
+                  label="Gambar Pengganti Tulisan Raksasa (Opsional — isi jika ingin memakai gambar/tipografi custom)"
+                  value={data.opening.heroImage}
+                  placeholder="Kosongkan jika tetap memakai teks raksasa di atas"
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      opening: { ...data.opening, heroImage: v },
+                    })
+                  }
+                  allowClear
+                />
+              </section>
+            </div>
+          )}
+
+          {/* 1. HOME, BRANDING & NAVBAR */}
           {activeTab === "branding" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
-                    Identitas &amp; Hero Utama
+                    Identitas &amp; Konten Hero Home
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    Atur nama tim, tagline, deskripsi hero, dan nomor WhatsApp utama.
+                    Atur semua teks utama di bagian atas halaman Home serta nomor WhatsApp utama.
                   </p>
                 </div>
 
@@ -253,7 +543,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <InputField
-                    label="Tagline Utama"
+                    label="Judul Besar Hero / Tagline Utama"
                     value={data.branding.tagline}
                     onChange={(v) =>
                       setData({
@@ -263,7 +553,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <InputField
-                    label="Nomor WhatsApp (Format 628xxx)"
+                    label="Nomor WhatsApp Utama (Format 628xxx)"
                     value={data.branding.whatsappNumber}
                     onChange={(v) =>
                       setData({
@@ -273,7 +563,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <InputField
-                    label="Teks Tombol Utama"
+                    label="Teks Tombol Utama Hero"
                     value={data.branding.heroCtaPrimary}
                     onChange={(v) =>
                       setData({
@@ -283,12 +573,40 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <InputField
-                    label="Teks Tombol Kedua"
+                    label="Link Tombol Utama Hero"
+                    value={data.homeSections.heroCtaPrimaryHref}
+                    placeholder="#roster"
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          heroCtaPrimaryHref: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Tombol Kedua Hero"
                     value={data.branding.heroCtaSecondary}
                     onChange={(v) =>
                       setData({
                         ...data,
                         branding: { ...data.branding, heroCtaSecondary: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Link Tombol Kedua Hero"
+                    value={data.homeSections.heroCtaSecondaryHref}
+                    placeholder="#store"
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          heroCtaSecondaryHref: v,
+                        },
                       })
                     }
                   />
@@ -309,10 +627,111 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
-                    Logo &amp; Aset Gambar
+                    Baris HUD Hero, Teks Berjalan (Ticker) &amp; Footer
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
-                    Masukkan path gambar atau upload langsung dari HP/laptop.
+                    Edit semua detail tulisan dekoratif di bingkai Hero Home dan teks hak cipta di bagian paling bawah.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <InputField
+                    label="HUD Kiri Atas Hero (Kosongkan = otomatis)"
+                    value={data.homeSections.heroHudLeft}
+                    placeholder={`[01 // ${data.branding.teamName}]`}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, heroHudLeft: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="HUD Tengah Atas Hero"
+                    value={data.homeSections.heroHudCenter}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          heroHudCenter: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="HUD Kanan Atas Hero (Kosongkan = ikut Tahun)"
+                    value={data.homeSections.heroHudRight}
+                    placeholder={data.branding.estYear}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, heroHudRight: v },
+                      })
+                    }
+                  />
+                </div>
+
+                <InputField
+                  label="Teks Berjalan / Marquee Bawah Hero (Pisahkan tiap item dengan tanda | — kosongkan untuk otomatis)"
+                  value={data.homeSections.heroTickerText}
+                  placeholder="★ GODLIKE NOVUS | GAMERS DON'T DIE, THEY RESPAWN | // HONOR OF KINGS | // EST. 2013"
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: { ...data.homeSections, heroTickerText: v },
+                    })
+                  }
+                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <InputField
+                    label="Teks Panah Scroll di Bawah Hero"
+                    value={data.homeSections.heroScrollCueText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          heroScrollCueText: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Label Titik 01 di Navigasi Samping"
+                    value={data.homeSections.heroNavLabel}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, heroNavLabel: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Copyright Footer (Kosongkan = otomatis)"
+                    value={data.homeSections.footerCopyright}
+                    placeholder={`© {year} ${data.branding.teamName} • ${data.branding.estYear}`}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          footerCopyright: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Semua Logo &amp; Gambar di Home, Navbar &amp; Footer
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Masukkan path gambar atau klik Upload dari HP/laptop.
                   </p>
                 </div>
 
@@ -328,7 +747,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <ImageField
-                    label="Favicon (Icon Tab Browser)"
+                    label="Favicon (Icon di Tab Browser)"
                     value={data.branding.favicon || data.branding.logoRed}
                     onChange={(v) =>
                       setData({
@@ -338,17 +757,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <ImageField
-                    label="Logo Putih (Footer)"
-                    value={data.branding.logoWhite}
-                    onChange={(v) =>
-                      setData({
-                        ...data,
-                        branding: { ...data.branding, logoWhite: v },
-                      })
-                    }
-                  />
-                  <ImageField
-                    label="Logo Merah (Mobile Hero & Admin)"
+                    label="Logo Merah (Tampil di Hero HP & Admin)"
                     value={data.branding.logoRed}
                     onChange={(v) =>
                       setData({
@@ -358,12 +767,35 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     }
                   />
                   <ImageField
-                    label="Gambar Tagline Hero (Desktop)"
+                    label="Gambar Utama Kanan Hero (Tampil di Desktop)"
                     value={data.branding.logoTagline}
                     onChange={(v) =>
                       setData({
                         ...data,
                         branding: { ...data.branding, logoTagline: v },
+                      })
+                    }
+                    allowClear
+                  />
+                  <ImageField
+                    label="Gambar Background Hero Home (Opsional)"
+                    value={data.homeSections.heroBgImage}
+                    placeholder="Kosongkan untuk tetap memakai grid esports gelap"
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, heroBgImage: v },
+                      })
+                    }
+                    allowClear
+                  />
+                  <ImageField
+                    label="Logo Putih (Footer Bawah)"
+                    value={data.branding.logoWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        branding: { ...data.branding, logoWhite: v },
                       })
                     }
                   />
@@ -373,7 +805,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
-                    Tulisan Navbar &amp; Tab Browser
+                    Tulisan Navbar &amp; Tab Browser (SEO)
                   </h2>
                 </div>
 
@@ -387,6 +819,17 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     setData({
                       ...data,
                       branding: { ...data.branding, siteTitle: v },
+                    })
+                  }
+                />
+
+                <TextareaField
+                  label="Deskripsi Website (Meta Description)"
+                  value={data.branding.siteDescription || ""}
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      branding: { ...data.branding, siteDescription: v },
                     })
                   }
                 />
@@ -459,286 +902,819 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
             </div>
           )}
 
-          {/* 2. GAMES & ROSTER */}
-          {activeTab === "games" && (
-            <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
-                <div>
-                  <h2 className="text-base font-semibold text-zinc-900">
-                    Divisi Game &amp; Roster
-                  </h2>
-                  <p className="text-xs text-zinc-500">
-                    Kelola divisi game serta daftar player &amp; coach.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newId = `game-${Date.now()}`;
-                    const newGame: GameDivision = {
-                      id: newId,
-                      slug: `game-${data.games.length + 1}`,
-                      name: "Divisi Baru",
-                      shortName: "NEW",
-                      description: "Deskripsi divisi game baru.",
-                      bannerImage: "/images/seed/banner-hok.svg",
-                      roster: [],
-                    };
-                    setData((prev) => ({
-                      ...prev,
-                      games: [...prev.games, newGame],
-                    }));
-                    setSelectedGameId(newId);
-                  }}
-                  className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Divisi
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-                {data.games.map((g) => (
+          {/* 2. TEMPLATE KIRIM PESAN */}
+          {activeTab === "templates" && (
+            <div className="space-y-5">
+              {/* Store Order WA Template */}
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      1. Template Pesan Order Store (WhatsApp)
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Atur format pesan otomatis saat pembeli klik tombol pesan produk di Store.
+                    </p>
+                  </div>
                   <button
-                    key={g.id}
                     type="button"
-                    onClick={() => setSelectedGameId(g.id)}
-                    className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer border ${
-                      activeGame?.id === g.id
-                        ? "bg-red-600 border-red-600 text-white"
-                        : "bg-zinc-50 border-zinc-300 text-zinc-700 hover:bg-zinc-100"
-                    }`}
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        templates: {
+                          ...data.templates,
+                          storeWhatsappTemplate: DEFAULT_STORE_WA_TEMPLATE,
+                        },
+                      })
+                    }
+                    className="text-xs font-medium text-red-600 hover:underline cursor-pointer"
                   >
-                    {g.shortName} — {g.name}
+                    Reset Template Default
                   </button>
-                ))}
-              </div>
+                </div>
 
-              {activeGame && (
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-zinc-800">
-                      Detail Divisi: {activeGame.name}
-                    </h3>
-                    {data.games.length > 1 && (
+                <div>
+                  <span className="block text-xs font-medium text-zinc-700 mb-1.5">
+                    Klik variabel untuk menyisipkan ke akhir template:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {STORE_TEMPLATE_VARS.map(([token, desc]) => (
                       <button
+                        key={token}
                         type="button"
-                        onClick={() => {
-                          const remaining = data.games.filter(
-                            (g) => g.id !== activeGame.id
-                          );
-                          setData((prev) => ({ ...prev, games: remaining }));
-                          setSelectedGameId(remaining[0]?.id || "");
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 cursor-pointer"
+                        onClick={() =>
+                          setData({
+                            ...data,
+                            templates: {
+                              ...data.templates,
+                              storeWhatsappTemplate: `${data.templates.storeWhatsappTemplate}${token}`,
+                            },
+                          })
+                        }
+                        className="px-2 py-1 rounded border border-zinc-300 bg-zinc-50 hover:border-red-500 hover:text-red-600 text-[11px] font-mono text-zinc-700 transition cursor-pointer"
+                        title={desc}
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Hapus Divisi
+                        {token} <span className="font-sans text-zinc-400">({desc})</span>
                       </button>
-                    )}
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
+                      Isi Template Pesan Order
+                    </label>
+                    <textarea
+                      rows={13}
+                      value={data.templates.storeWhatsappTemplate}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeWhatsappTemplate: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-xs sm:text-sm font-mono text-zinc-900 focus:border-red-600 focus:outline-none"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <span className="block text-xs font-medium text-zinc-700 mb-1">
+                      Preview Tampilan di WhatsApp
+                    </span>
+                    <pre className="w-full rounded border border-emerald-200 bg-emerald-50/60 p-3 text-xs font-mono text-zinc-800 whitespace-pre-wrap overflow-x-auto min-h-[16rem]">
+                      {storePreviewMessage}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                    Label &amp; Placeholder Form Pemesanan Store
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <InputField
-                      label="Nama Game"
-                      value={activeGame.name}
+                      label="Judul Kecil Modal"
+                      value={data.templates.storeModalBadge}
                       onChange={(v) =>
-                        updateGame(activeGame.id, (g) => ({ ...g, name: v }))
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeModalBadge: v },
+                        })
                       }
                     />
                     <InputField
-                      label="Kode Singkat (Tab)"
-                      value={activeGame.shortName}
+                      label="Teks Tombol Kirim Order"
+                      value={data.templates.storeSubmitButtonText}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeSubmitButtonText: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Nama Pemesan"
+                      value={data.templates.storeNameLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeNameLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Nama Pemesan"
+                      value={data.templates.storeNamePlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeNamePlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Nomor WhatsApp"
+                      value={data.templates.storePhoneLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storePhoneLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Nomor WhatsApp"
+                      value={data.templates.storePhonePlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storePhonePlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Ukuran"
+                      value={data.templates.storeSizeLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeSizeLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Jumlah (Qty)"
+                      value={data.templates.storeQtyLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeQtyLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Alamat Pengiriman"
+                      value={data.templates.storeAddressLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeAddressLabel: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Alamat Pengiriman"
+                      value={data.templates.storeAddressPlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeAddressPlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Catatan"
+                      value={data.templates.storeNotesLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeNotesLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Catatan"
+                      value={data.templates.storeNotesPlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            storeNotesPlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Total Harga"
+                      value={data.templates.storeTotalLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, storeTotalLabel: v },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </section>
+
+              {/* Contact Us WA Template */}
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      2. Template Pesan Contact Us (WhatsApp)
+                    </h2>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Atur format pesan saat pengunjung mengirim pesan lewat form Contact Us di bawah halaman.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        templates: {
+                          ...data.templates,
+                          contactWhatsappTemplate: DEFAULT_CONTACT_WA_TEMPLATE,
+                        },
+                      })
+                    }
+                    className="text-xs font-medium text-red-600 hover:underline cursor-pointer"
+                  >
+                    Reset Template Default
+                  </button>
+                </div>
+
+                <div>
+                  <span className="block text-xs font-medium text-zinc-700 mb-1.5">
+                    Klik variabel untuk menyisipkan ke akhir template:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {CONTACT_TEMPLATE_VARS.map(([token, desc]) => (
+                      <button
+                        key={token}
+                        type="button"
+                        onClick={() =>
+                          setData({
+                            ...data,
+                            templates: {
+                              ...data.templates,
+                              contactWhatsappTemplate: `${data.templates.contactWhatsappTemplate}${token}`,
+                            },
+                          })
+                        }
+                        className="px-2 py-1 rounded border border-zinc-300 bg-zinc-50 hover:border-red-500 hover:text-red-600 text-[11px] font-mono text-zinc-700 transition cursor-pointer"
+                      >
+                        {token} <span className="font-sans text-zinc-400">({desc})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
+                      Isi Template Pesan Kontak
+                    </label>
+                    <textarea
+                      rows={9}
+                      value={data.templates.contactWhatsappTemplate}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactWhatsappTemplate: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full rounded border border-zinc-300 bg-white px-3 py-2 text-xs sm:text-sm font-mono text-zinc-900 focus:border-red-600 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <span className="block text-xs font-medium text-zinc-700 mb-1">
+                      Preview Tampilan di WhatsApp
+                    </span>
+                    <pre className="w-full rounded border border-emerald-200 bg-emerald-50/60 p-3 text-xs font-mono text-zinc-800 whitespace-pre-wrap overflow-x-auto min-h-[12rem]">
+                      {contactPreviewMessage}
+                    </pre>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-100 space-y-3">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                    Label &amp; Placeholder Form Contact Us
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <InputField
+                      label="Label Input Nama"
+                      value={data.templates.contactNameLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: { ...data.templates, contactNameLabel: v },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Input Nama"
+                      value={data.templates.contactNamePlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactNamePlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Input Email"
+                      value={data.templates.contactEmailLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactEmailLabel: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Input Email"
+                      value={data.templates.contactEmailPlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactEmailPlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Label Input Pesan"
+                      value={data.templates.contactMessageLabel}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactMessageLabel: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Placeholder Input Pesan"
+                      value={data.templates.contactMessagePlaceholder}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactMessagePlaceholder: v,
+                          },
+                        })
+                      }
+                    />
+                    <InputField
+                      label="Teks Tombol Kirim Pesan"
+                      value={data.templates.contactSubmitButtonText}
+                      onChange={(v) =>
+                        setData({
+                          ...data,
+                          templates: {
+                            ...data.templates,
+                            contactSubmitButtonText: v,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* 3. GAMES & ROSTER */}
+          {activeTab === "games" && (
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Judul &amp; Label Seksi Roster di Home
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <InputField
+                    label="Badge Atas Seksi"
+                    value={data.homeSections.rosterBadge}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, rosterBadge: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Putih"
+                    value={data.homeSections.rosterTitleWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          rosterTitleWhite: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Merah"
+                    value={data.homeSections.rosterTitleAccent}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          rosterTitleAccent: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Akhiran Banner (Contoh: DIVISION)"
+                    value={data.homeSections.rosterDivisionSuffix}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          rosterDivisionSuffix: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Subjudul Coach"
+                    value={data.homeSections.rosterCoachesHeading}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          rosterCoachesHeading: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Subjudul Daftar Player"
+                    value={data.homeSections.rosterPlayersHeading}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          rosterPlayersHeading: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <InputField
+                  label="Petunjuk Klik Kartu Player (Kosongkan jika ingin disembunyikan)"
+                  value={data.homeSections.rosterTapBioHint}
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: {
+                        ...data.homeSections,
+                        rosterTapBioHint: v,
+                      },
+                    })
+                  }
+                />
+              </section>
+
+              <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      Divisi Game &amp; Anggota Roster
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Kelola divisi game serta daftar player &amp; coach.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newId = `game-${Date.now()}`;
+                      const newGame: GameDivision = {
+                        id: newId,
+                        slug: `game-${data.games.length + 1}`,
+                        name: "Divisi Baru",
+                        shortName: "NEW",
+                        description: "Deskripsi divisi game baru.",
+                        bannerImage: "/images/seed/banner-hok.svg",
+                        roster: [],
+                      };
+                      setData((prev) => ({
+                        ...prev,
+                        games: [...prev.games, newGame],
+                      }));
+                      setSelectedGameId(newId);
+                    }}
+                    className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Divisi
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                  {data.games.map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setSelectedGameId(g.id)}
+                      className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer border ${
+                        activeGame?.id === g.id
+                          ? "bg-red-600 border-red-600 text-white"
+                          : "bg-zinc-50 border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                      }`}
+                    >
+                      {g.shortName} — {g.name}
+                    </button>
+                  ))}
+                </div>
+
+                {activeGame && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-zinc-800">
+                        Detail Divisi: {activeGame.name}
+                      </h3>
+                      {data.games.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const remaining = data.games.filter(
+                              (g) => g.id !== activeGame.id
+                            );
+                            setData((prev) => ({ ...prev, games: remaining }));
+                            setSelectedGameId(remaining[0]?.id || "");
+                          }}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Hapus Divisi
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <InputField
+                        label="Nama Game"
+                        value={activeGame.name}
+                        onChange={(v) =>
+                          updateGame(activeGame.id, (g) => ({ ...g, name: v }))
+                        }
+                      />
+                      <InputField
+                        label="Kode Singkat (Tab)"
+                        value={activeGame.shortName}
+                        onChange={(v) =>
+                          updateGame(activeGame.id, (g) => ({
+                            ...g,
+                            shortName: v,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <TextareaField
+                      label="Deskripsi Divisi"
+                      value={activeGame.description}
                       onChange={(v) =>
                         updateGame(activeGame.id, (g) => ({
                           ...g,
-                          shortName: v,
+                          description: v,
                         }))
                       }
                     />
-                  </div>
 
-                  <TextareaField
-                    label="Deskripsi Divisi"
-                    value={activeGame.description}
-                    onChange={(v) =>
-                      updateGame(activeGame.id, (g) => ({
-                        ...g,
-                        description: v,
-                      }))
-                    }
-                  />
+                    <ImageField
+                      label="Banner Divisi"
+                      value={activeGame.bannerImage}
+                      onChange={(v) =>
+                        updateGame(activeGame.id, (g) => ({
+                          ...g,
+                          bannerImage: v,
+                        }))
+                      }
+                    />
 
-                  <ImageField
-                    label="Banner Divisi"
-                    value={activeGame.bannerImage}
-                    onChange={(v) =>
-                      updateGame(activeGame.id, (g) => ({
-                        ...g,
-                        bannerImage: v,
-                      }))
-                    }
-                  />
+                    {/* Roster List */}
+                    <div className="pt-4 border-t border-zinc-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-zinc-900">
+                          Anggota Roster ({activeGame.roster.length})
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newMember: RosterMember = {
+                              id: `mem-${Date.now()}`,
+                              ign: "GL.PLAYER",
+                              realName: "Nama Lengkap",
+                              role: "Player",
+                              isCoach: false,
+                              photo: "/images/seed/player-1.svg",
+                              bio: "Bio singkat.",
+                              achievements: "",
+                            };
+                            updateGame(activeGame.id, (g) => ({
+                              ...g,
+                              roster: [...g.roster, newMember],
+                            }));
+                          }}
+                          className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Tambah Anggota
+                        </button>
+                      </div>
 
-                  {/* Roster List */}
-                  <div className="pt-4 border-t border-zinc-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold text-zinc-900">
-                        Anggota Roster ({activeGame.roster.length})
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newMember: RosterMember = {
-                            id: `mem-${Date.now()}`,
-                            ign: "GL.PLAYER",
-                            realName: "Nama Lengkap",
-                            role: "Player",
-                            isCoach: false,
-                            photo: "/images/seed/player-1.svg",
-                            bio: "Bio singkat.",
-                            achievements: "",
-                          };
-                          updateGame(activeGame.id, (g) => ({
-                            ...g,
-                            roster: [...g.roster, newMember],
-                          }));
-                        }}
-                        className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Tambah Anggota
-                      </button>
-                    </div>
+                      <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                        {activeGame.roster.map((member) => (
+                          <div
+                            key={member.id}
+                            className="p-3.5 sm:p-4 space-y-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={member.isCoach}
+                                  onChange={(e) =>
+                                    updateGame(activeGame.id, (g) => ({
+                                      ...g,
+                                      roster: g.roster.map((m) =>
+                                        m.id === member.id
+                                          ? { ...m, isCoach: e.target.checked }
+                                          : m
+                                      ),
+                                    }))
+                                  }
+                                  className="accent-red-600 w-3.5 h-3.5"
+                                />
+                                Coach / Pelatih
+                              </label>
 
-                    <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
-                      {activeGame.roster.map((member) => (
-                        <div key={member.id} className="p-3.5 sm:p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={member.isCoach}
-                                onChange={(e) =>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: g.roster.filter(
+                                      (m) => m.id !== member.id
+                                    ),
+                                  }))
+                                }
+                                className="text-xs font-medium text-red-600 hover:text-red-800 inline-flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Hapus
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <InputField
+                                label="IGN / Nickname"
+                                value={member.ign}
+                                onChange={(v) =>
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: g.roster.map((m) =>
+                                      m.id === member.id ? { ...m, ign: v } : m
+                                    ),
+                                  }))
+                                }
+                              />
+                              <InputField
+                                label="Nama Lengkap"
+                                value={member.realName}
+                                onChange={(v) =>
                                   updateGame(activeGame.id, (g) => ({
                                     ...g,
                                     roster: g.roster.map((m) =>
                                       m.id === member.id
-                                        ? { ...m, isCoach: e.target.checked }
+                                        ? { ...m, realName: v }
                                         : m
                                     ),
                                   }))
                                 }
-                                className="accent-red-600 w-3.5 h-3.5"
                               />
-                              Coach / Pelatih
-                            </label>
+                              <InputField
+                                label="Role / Posisi"
+                                value={member.role}
+                                onChange={(v) =>
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: g.roster.map((m) =>
+                                      m.id === member.id ? { ...m, role: v } : m
+                                    ),
+                                  }))
+                                }
+                              />
+                            </div>
 
-                            <button
-                              type="button"
-                              onClick={() =>
+                            <ImageField
+                              label="Foto"
+                              value={member.photo}
+                              onChange={(v) =>
                                 updateGame(activeGame.id, (g) => ({
                                   ...g,
-                                  roster: g.roster.filter(
-                                    (m) => m.id !== member.id
+                                  roster: g.roster.map((m) =>
+                                    m.id === member.id ? { ...m, photo: v } : m
                                   ),
                                 }))
                               }
-                              className="text-xs font-medium text-red-600 hover:text-red-800 inline-flex items-center gap-1 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" /> Hapus
-                            </button>
+                            />
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <InputField
+                                label="Bio Singkat"
+                                value={member.bio}
+                                onChange={(v) =>
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: g.roster.map((m) =>
+                                      m.id === member.id ? { ...m, bio: v } : m
+                                    ),
+                                  }))
+                                }
+                              />
+                              <InputField
+                                label="Prestasi"
+                                value={member.achievements}
+                                onChange={(v) =>
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: g.roster.map((m) =>
+                                      m.id === member.id
+                                        ? { ...m, achievements: v }
+                                        : m
+                                    ),
+                                  }))
+                                }
+                              />
+                            </div>
                           </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <InputField
-                              label="IGN / Nickname"
-                              value={member.ign}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id ? { ...m, ign: v } : m
-                                  ),
-                                }))
-                              }
-                            />
-                            <InputField
-                              label="Nama Lengkap"
-                              value={member.realName}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id
-                                      ? { ...m, realName: v }
-                                      : m
-                                  ),
-                                }))
-                              }
-                            />
-                            <InputField
-                              label="Role / Posisi"
-                              value={member.role}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id ? { ...m, role: v } : m
-                                  ),
-                                }))
-                              }
-                            />
-                          </div>
-
-                          <ImageField
-                            label="Foto"
-                            value={member.photo}
-                            onChange={(v) =>
-                              updateGame(activeGame.id, (g) => ({
-                                ...g,
-                                roster: g.roster.map((m) =>
-                                  m.id === member.id ? { ...m, photo: v } : m
-                                ),
-                              }))
-                            }
-                          />
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <InputField
-                              label="Bio Singkat"
-                              value={member.bio}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id ? { ...m, bio: v } : m
-                                  ),
-                                }))
-                              }
-                            />
-                            <InputField
-                              label="Prestasi"
-                              value={member.achievements}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id
-                                      ? { ...m, achievements: v }
-                                      : m
-                                  ),
-                                }))
-                              }
-                            />
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
-          {/* 3. ABOUT US */}
+          {/* 4. ABOUT US */}
           {activeTab === "about" && (
             <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
               <div className="border-b border-zinc-100 pb-3">
@@ -747,7 +1723,21 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <InputField
+                  label="Prefix Kode Seksi"
+                  value={data.homeSections.aboutBadgePrefix}
+                  placeholder="[03] //"
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: {
+                        ...data.homeSections,
+                        aboutBadgePrefix: v,
+                      },
+                    })
+                  }
+                />
                 <InputField
                   label="Label Seksi"
                   value={data.about.title}
@@ -773,6 +1763,19 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     about: { ...data.about, description: v },
                   })
                 }
+              />
+
+              <ImageField
+                label="Gambar Background Seksi About Us (Opsional)"
+                value={data.homeSections.aboutBgImage}
+                placeholder="Kosongkan untuk latar gelap standar"
+                onChange={(v) =>
+                  setData({
+                    ...data,
+                    homeSections: { ...data.homeSections, aboutBgImage: v },
+                  })
+                }
+                allowClear
               />
 
               {/* Stats */}
@@ -943,438 +1946,652 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
             </div>
           )}
 
-          {/* 4. GALLERY EVENTS */}
+          {/* 5. GALLERY EVENTS */}
           {activeTab === "gallery" && (
-            <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <h2 className="text-base font-semibold text-zinc-900">
-                  Gallery Event
-                </h2>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setData({
-                      ...data,
-                      gallery: [
-                        ...data.gallery,
-                        {
-                          id: `evt-${Date.now()}`,
-                          title: "Nama Event Baru",
-                          date: "2026",
-                          location: "Indonesia",
-                          category: "Tournament",
-                          image: "/images/seed/event-1.svg",
-                          description: "Deskripsi singkat event.",
-                        },
-                      ],
-                    })
-                  }
-                  className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Event
-                </button>
-              </div>
-
-              <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
-                {data.gallery.map((evt) => (
-                  <div key={evt.id} className="p-3.5 sm:p-4 space-y-3">
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setData({
-                            ...data,
-                            gallery: data.gallery.filter(
-                              (g) => g.id !== evt.id
-                            ),
-                          })
-                        }
-                        className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Hapus
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <InputField
-                        label="Judul Event"
-                        value={evt.title}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            gallery: data.gallery.map((g) =>
-                              g.id === evt.id ? { ...g, title: v } : g
-                            ),
-                          })
-                        }
-                      />
-                      <InputField
-                        label="Kategori"
-                        value={evt.category}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            gallery: data.gallery.map((g) =>
-                              g.id === evt.id ? { ...g, category: v } : g
-                            ),
-                          })
-                        }
-                      />
-                      <InputField
-                        label="Tanggal"
-                        value={evt.date}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            gallery: data.gallery.map((g) =>
-                              g.id === evt.id ? { ...g, date: v } : g
-                            ),
-                          })
-                        }
-                      />
-                      <InputField
-                        label="Lokasi"
-                        value={evt.location}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            gallery: data.gallery.map((g) =>
-                              g.id === evt.id ? { ...g, location: v } : g
-                            ),
-                          })
-                        }
-                      />
-                    </div>
-                    <ImageField
-                      label="Foto Event"
-                      value={evt.image}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          gallery: data.gallery.map((g) =>
-                            g.id === evt.id ? { ...g, image: v } : g
-                          ),
-                        })
-                      }
-                    />
-                    <TextareaField
-                      label="Deskripsi"
-                      value={evt.description}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          gallery: data.gallery.map((g) =>
-                            g.id === evt.id ? { ...g, description: v } : g
-                          ),
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 5. OFFICIAL STORE */}
-          {activeTab === "store" && (
-            <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <div>
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
-                    Produk Store
+                    Judul &amp; Label Seksi Gallery di Home
                   </h2>
-                  <p className="text-xs text-zinc-500">
-                    Order dari pengunjung otomatis diteruskan ke WhatsApp.
-                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setData({
-                      ...data,
-                      store: [
-                        ...data.store,
-                        {
-                          id: `prod-${Date.now()}`,
-                          name: "Produk Baru",
-                          price: 199000,
-                          category: "Merchandise",
-                          badge: "NEW",
-                          image: "/images/seed/jersey-1.svg",
-                          description: "Deskripsi singkat produk.",
-                          sizes: ["S", "M", "L", "XL"],
-                          inStock: true,
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <InputField
+                    label="Badge Atas Seksi"
+                    value={data.homeSections.galleryBadge}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, galleryBadge: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Putih"
+                    value={data.homeSections.galleryTitleWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          galleryTitleWhite: v,
                         },
-                      ],
-                    })
-                  }
-                  className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambah
-                </button>
-              </div>
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Merah"
+                    value={data.homeSections.galleryTitleAccent}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          galleryTitleAccent: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Label Filter Semua (All)"
+                    value={data.homeSections.galleryAllLabel}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          galleryAllLabel: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </section>
 
-              <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
-                {data.store.map((prod) => (
-                  <div key={prod.id} className="p-3.5 sm:p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={prod.inStock}
-                          onChange={(e) =>
+              <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Daftar Event Gallery
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        gallery: [
+                          ...data.gallery,
+                          {
+                            id: `evt-${Date.now()}`,
+                            title: "Nama Event Baru",
+                            date: "2026",
+                            location: "Indonesia",
+                            category: "Tournament",
+                            image: "/images/seed/event-1.svg",
+                            description: "Deskripsi singkat event.",
+                          },
+                        ],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Event
+                  </button>
+                </div>
+
+                <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                  {data.gallery.map((evt) => (
+                    <div key={evt.id} className="p-3.5 sm:p-4 space-y-3">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
                             setData({
                               ...data,
-                              store: data.store.map((p) =>
-                                p.id === prod.id
-                                  ? { ...p, inStock: e.target.checked }
-                                  : p
+                              gallery: data.gallery.filter(
+                                (g) => g.id !== evt.id
                               ),
                             })
                           }
-                          className="accent-red-600 w-3.5 h-3.5"
+                          className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Hapus
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputField
+                          label="Judul Event"
+                          value={evt.title}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              gallery: data.gallery.map((g) =>
+                                g.id === evt.id ? { ...g, title: v } : g
+                              ),
+                            })
+                          }
                         />
-                        Stok Tersedia
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setData({
-                            ...data,
-                            store: data.store.filter((p) => p.id !== prod.id),
-                          })
-                        }
-                        className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Hapus
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <InputField
-                        label="Nama Produk"
-                        value={prod.name}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            store: data.store.map((p) =>
-                              p.id === prod.id ? { ...p, name: v } : p
-                            ),
-                          })
-                        }
-                      />
-                      <div className="min-w-0">
-                        <label className="block text-xs font-medium text-zinc-700 mb-1">
-                          Harga (IDR)
-                        </label>
-                        <input
-                          type="number"
-                          value={prod.price}
-                          onChange={(e) =>
+                        <InputField
+                          label="Kategori"
+                          value={evt.category}
+                          onChange={(v) =>
                             setData({
                               ...data,
-                              store: data.store.map((p) =>
-                                p.id === prod.id
-                                  ? { ...p, price: Number(e.target.value) || 0 }
-                                  : p
+                              gallery: data.gallery.map((g) =>
+                                g.id === evt.id ? { ...g, category: v } : g
                               ),
                             })
                           }
-                          className="w-full min-w-0 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
+                        />
+                        <InputField
+                          label="Tanggal"
+                          value={evt.date}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              gallery: data.gallery.map((g) =>
+                                g.id === evt.id ? { ...g, date: v } : g
+                              ),
+                            })
+                          }
+                        />
+                        <InputField
+                          label="Lokasi"
+                          value={evt.location}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              gallery: data.gallery.map((g) =>
+                                g.id === evt.id ? { ...g, location: v } : g
+                              ),
+                            })
+                          }
                         />
                       </div>
-                      <InputField
-                        label="Kategori"
-                        value={prod.category}
+                      <ImageField
+                        label="Foto Event"
+                        value={evt.image}
                         onChange={(v) =>
                           setData({
                             ...data,
-                            store: data.store.map((p) =>
-                              p.id === prod.id ? { ...p, category: v } : p
+                            gallery: data.gallery.map((g) =>
+                              g.id === evt.id ? { ...g, image: v } : g
                             ),
                           })
                         }
                       />
-                      <InputField
-                        label="Label Badge (opsional)"
-                        value={prod.badge}
+                      <TextareaField
+                        label="Deskripsi"
+                        value={evt.description}
                         onChange={(v) =>
                           setData({
                             ...data,
-                            store: data.store.map((p) =>
-                              p.id === prod.id ? { ...p, badge: v } : p
+                            gallery: data.gallery.map((g) =>
+                              g.id === evt.id ? { ...g, description: v } : g
                             ),
                           })
                         }
                       />
                     </div>
-
-                    <InputField
-                      label="Ukuran (pisahkan dengan koma)"
-                      value={prod.sizes.join(", ")}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          store: data.store.map((p) =>
-                            p.id === prod.id
-                              ? {
-                                  ...p,
-                                  sizes: v
-                                    .split(",")
-                                    .map((s) => s.trim())
-                                    .filter(Boolean),
-                                }
-                              : p
-                          ),
-                        })
-                      }
-                    />
-
-                    <ImageField
-                      label="Foto Produk"
-                      value={prod.image}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          store: data.store.map((p) =>
-                            p.id === prod.id ? { ...p, image: v } : p
-                          ),
-                        })
-                      }
-                    />
-
-                    <TextareaField
-                      label="Deskripsi Produk"
-                      value={prod.description}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          store: data.store.map((p) =>
-                            p.id === prod.id ? { ...p, description: v } : p
-                          ),
-                        })
-                      }
-                    />
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* 6. SPONSORS */}
-          {activeTab === "sponsors" && (
-            <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
-                <h2 className="text-base font-semibold text-zinc-900">
-                  Sponsors &amp; Partners
-                </h2>
-                <button
-                  type="button"
-                  onClick={() =>
+          {/* 6. OFFICIAL STORE */}
+          {activeTab === "store" && (
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Judul, Deskripsi &amp; Tombol Seksi Store di Home
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <InputField
+                    label="Badge Atas Seksi"
+                    value={data.homeSections.storeBadge}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, storeBadge: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Putih"
+                    value={data.homeSections.storeTitleWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          storeTitleWhite: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Merah"
+                    value={data.homeSections.storeTitleAccent}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          storeTitleAccent: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <InputField
+                  label="Subteks Petunjuk di Kanan Judul Store"
+                  value={data.homeSections.storeSubtitle}
+                  onChange={(v) =>
                     setData({
                       ...data,
-                      sponsors: [
-                        ...data.sponsors,
-                        {
-                          id: `sp-${Date.now()}`,
-                          name: "Sponsor Baru",
-                          tier: "Official Partner",
-                          logo: "/images/seed/sponsor-1.svg",
-                          website: "https://example.com",
-                        },
-                      ],
+                      homeSections: { ...data.homeSections, storeSubtitle: v },
                     })
                   }
-                  className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Sponsor
-                </button>
-              </div>
+                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <InputField
+                    label="Teks Tombol Pesan (Saat Stok Ada)"
+                    value={data.homeSections.storeOrderButtonText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          storeOrderButtonText: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Tombol Habis (Saat Stok Kosong)"
+                    value={data.homeSections.storeOutOfStockText}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          storeOutOfStockText: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </section>
 
-              <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
-                {data.sponsors.map((sp) => (
-                  <div key={sp.id} className="p-3.5 sm:p-4 space-y-3">
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setData({
-                            ...data,
-                            sponsors: data.sponsors.filter(
-                              (s) => s.id !== sp.id
-                            ),
-                          })
-                        }
-                        className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Hapus
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <InputField
-                        label="Nama Sponsor"
-                        value={sp.name}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            sponsors: data.sponsors.map((s) =>
-                              s.id === sp.id ? { ...s, name: v } : s
-                            ),
-                          })
-                        }
-                      />
-                      <InputField
-                        label="Tier"
-                        value={sp.tier}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            sponsors: data.sponsors.map((s) =>
-                              s.id === sp.id ? { ...s, tier: v } : s
-                            ),
-                          })
-                        }
-                      />
-                      <InputField
-                        label="Link Website"
-                        value={sp.website}
-                        onChange={(v) =>
-                          setData({
-                            ...data,
-                            sponsors: data.sponsors.map((s) =>
-                              s.id === sp.id ? { ...s, website: v } : s
-                            ),
-                          })
-                        }
-                      />
-                    </div>
-                    <ImageField
-                      label="Logo Sponsor"
-                      value={sp.logo}
-                      onChange={(v) =>
-                        setData({
-                          ...data,
-                          sponsors: data.sponsors.map((s) =>
-                            s.id === sp.id ? { ...s, logo: v } : s
-                          ),
-                        })
-                      }
-                    />
+              <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      Daftar Produk Store
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Format pesan order dapat diatur di tab &ldquo;Template Pesan&rdquo;.
+                    </p>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        store: [
+                          ...data.store,
+                          {
+                            id: `prod-${Date.now()}`,
+                            name: "Produk Baru",
+                            price: 199000,
+                            category: "Merchandise",
+                            badge: "NEW",
+                            image: "/images/seed/jersey-1.svg",
+                            description: "Deskripsi singkat produk.",
+                            sizes: ["S", "M", "L", "XL"],
+                            inStock: true,
+                          },
+                        ],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah
+                  </button>
+                </div>
+
+                <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                  {data.store.map((prod) => (
+                    <div key={prod.id} className="p-3.5 sm:p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={prod.inStock}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                store: data.store.map((p) =>
+                                  p.id === prod.id
+                                    ? { ...p, inStock: e.target.checked }
+                                    : p
+                                ),
+                              })
+                            }
+                            className="accent-red-600 w-3.5 h-3.5"
+                          />
+                          Stok Tersedia
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setData({
+                              ...data,
+                              store: data.store.filter((p) => p.id !== prod.id),
+                            })
+                          }
+                          className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Hapus
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <InputField
+                          label="Nama Produk"
+                          value={prod.name}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              store: data.store.map((p) =>
+                                p.id === prod.id ? { ...p, name: v } : p
+                              ),
+                            })
+                          }
+                        />
+                        <div className="min-w-0">
+                          <label className="block text-xs font-medium text-zinc-700 mb-1">
+                            Harga (IDR)
+                          </label>
+                          <input
+                            type="number"
+                            value={prod.price}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                store: data.store.map((p) =>
+                                  p.id === prod.id
+                                    ? {
+                                        ...p,
+                                        price: Number(e.target.value) || 0,
+                                      }
+                                    : p
+                                ),
+                              })
+                            }
+                            className="w-full min-w-0 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
+                          />
+                        </div>
+                        <InputField
+                          label="Kategori"
+                          value={prod.category}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              store: data.store.map((p) =>
+                                p.id === prod.id ? { ...p, category: v } : p
+                              ),
+                            })
+                          }
+                        />
+                        <InputField
+                          label="Label Badge (opsional)"
+                          value={prod.badge}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              store: data.store.map((p) =>
+                                p.id === prod.id ? { ...p, badge: v } : p
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+
+                      <InputField
+                        label="Ukuran (pisahkan dengan koma)"
+                        value={prod.sizes.join(", ")}
+                        onChange={(v) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id
+                                ? {
+                                    ...p,
+                                    sizes: v
+                                      .split(",")
+                                      .map((s) => s.trim())
+                                      .filter(Boolean),
+                                  }
+                                : p
+                            ),
+                          })
+                        }
+                      />
+
+                      <ImageField
+                        label="Foto Produk"
+                        value={prod.image}
+                        onChange={(v) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id ? { ...p, image: v } : p
+                            ),
+                          })
+                        }
+                      />
+
+                      <TextareaField
+                        label="Deskripsi Produk"
+                        value={prod.description}
+                        onChange={(v) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id ? { ...p, description: v } : p
+                            ),
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
 
-          {/* 7. CONTACT & SOCIAL MEDIA */}
+          {/* 7. SPONSORS */}
+          {activeTab === "sponsors" && (
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Judul Seksi Sponsors di Home
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <InputField
+                    label="Badge Atas Seksi"
+                    value={data.homeSections.sponsorsBadge}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          sponsorsBadge: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Putih"
+                    value={data.homeSections.sponsorsTitleWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          sponsorsTitleWhite: v,
+                        },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Merah"
+                    value={data.homeSections.sponsorsTitleAccent}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          sponsorsTitleAccent: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
+              <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Daftar Sponsors &amp; Partners
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setData({
+                        ...data,
+                        sponsors: [
+                          ...data.sponsors,
+                          {
+                            id: `sp-${Date.now()}`,
+                            name: "Sponsor Baru",
+                            tier: "Official Partner",
+                            logo: "/images/seed/sponsor-1.svg",
+                            website: "https://example.com",
+                          },
+                        ],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah Sponsor
+                  </button>
+                </div>
+
+                <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                  {data.sponsors.map((sp) => (
+                    <div key={sp.id} className="p-3.5 sm:p-4 space-y-3">
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setData({
+                              ...data,
+                              sponsors: data.sponsors.filter(
+                                (s) => s.id !== sp.id
+                              ),
+                            })
+                          }
+                          className="text-xs font-medium text-red-600 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Hapus
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <InputField
+                          label="Nama Sponsor"
+                          value={sp.name}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              sponsors: data.sponsors.map((s) =>
+                                s.id === sp.id ? { ...s, name: v } : s
+                              ),
+                            })
+                          }
+                        />
+                        <InputField
+                          label="Tier"
+                          value={sp.tier}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              sponsors: data.sponsors.map((s) =>
+                                s.id === sp.id ? { ...s, tier: v } : s
+                              ),
+                            })
+                          }
+                        />
+                        <InputField
+                          label="Link Website"
+                          value={sp.website}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              sponsors: data.sponsors.map((s) =>
+                                s.id === sp.id ? { ...s, website: v } : s
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                      <ImageField
+                        label="Logo Sponsor"
+                        value={sp.logo}
+                        onChange={(v) =>
+                          setData({
+                            ...data,
+                            sponsors: data.sponsors.map((s) =>
+                              s.id === sp.id ? { ...s, logo: v } : s
+                            ),
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 8. CONTACT & SOCIAL MEDIA */}
           {activeTab === "contact" && (
             <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
               <div className="border-b border-zinc-100 pb-3">
                 <h2 className="text-base font-semibold text-zinc-900">
                   Kontak &amp; Sosial Media
                 </h2>
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  Format pesan &amp; label form Contact Us juga bisa diatur di tab &ldquo;Template Pesan&rdquo;.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <InputField
+                  label="Badge Atas Seksi Kontak"
+                  value={data.homeSections.contactBadge}
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: { ...data.homeSections, contactBadge: v },
+                    })
+                  }
+                />
                 <InputField
                   label="Judul Seksi Kontak"
                   value={data.contact.title}
@@ -1550,10 +2767,12 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
 function InputField({
   label,
   value,
+  placeholder,
   onChange,
 }: {
   label: string;
   value: string;
+  placeholder?: string;
   onChange: (val: string) => void;
 }) {
   return (
@@ -1564,8 +2783,9 @@ function InputField({
       <input
         type="text"
         value={value}
+        placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full min-w-0 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
+        className="w-full min-w-0 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-red-600 focus:outline-none"
       />
     </div>
   );

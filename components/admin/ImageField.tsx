@@ -1,16 +1,24 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, X } from "lucide-react";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
 interface ImageFieldProps {
   label: string;
   value: string;
   onChange: (url: string) => void;
+  placeholder?: string;
+  allowClear?: boolean;
 }
 
-export function ImageField({ label, value, onChange }: ImageFieldProps) {
+export function ImageField({
+  label,
+  value,
+  onChange,
+  placeholder = "/images/...",
+  allowClear = false,
+}: ImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -31,6 +39,7 @@ export function ImageField({ label, value, onChange }: ImageFieldProps) {
       }
     } finally {
       setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -53,9 +62,19 @@ export function ImageField({ label, value, onChange }: ImageFieldProps) {
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="/images/..."
+          placeholder={placeholder}
           className="min-w-0 flex-1 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
         />
+        {allowClear && value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            title="Kosongkan gambar"
+            className="inline-flex items-center justify-center rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-500 hover:text-red-600 p-1.5 transition cursor-pointer shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
         <input
           ref={inputRef}
           type="file"
