@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { X, ShoppingBag, MessageCircle } from "lucide-react";
 import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
-import { assetUrl } from "@/lib/base-path";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
+import { LightboxMediaItem, SmartMedia } from "./MediaDisplay";
 
 interface StoreOrderModalProps {
   product: StoreProduct | null;
   whatsappNumber: string;
   templates: MessageTemplatesConfig;
+  onInspectMedia?: (item: LightboxMediaItem) => void;
   onClose: () => void;
 }
 
@@ -18,6 +19,7 @@ export function StoreOrderModal({
   product,
   whatsappNumber,
   templates,
+  onInspectMedia,
   onClose,
 }: StoreOrderModalProps) {
   const [name, setName] = useState("");
@@ -80,11 +82,24 @@ export function StoreOrderModal({
         </button>
 
         <div className="flex items-center gap-4 border-b border-zinc-800 pb-4 mb-5">
-          <img
-            src={assetUrl(product.image)}
-            alt={product.name}
-            className="w-16 h-16 rounded-xl object-cover bg-zinc-900 border border-zinc-800"
-          />
+          <div
+            onClick={() =>
+              onInspectMedia?.({
+                url: product.image,
+                title: product.name,
+                caption: product.description,
+              })
+            }
+            className="cursor-zoom-in shrink-0"
+            title="Klik untuk lihat ukuran asli"
+          >
+            <SmartMedia
+              src={product.image}
+              alt={product.name}
+              fit="contain-ambient"
+              className="w-16 h-16 rounded-xl border border-zinc-800"
+            />
+          </div>
           <div>
             <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-[#E11D2E]">
               <ShoppingBag className="w-3.5 h-3.5" />{" "}

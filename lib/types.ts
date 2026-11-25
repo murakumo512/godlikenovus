@@ -9,6 +9,15 @@ export interface RosterMember {
   achievements: string;
 }
 
+export interface GameSubTeam {
+  id: string;
+  name: string;
+  shortName: string;
+  description?: string;
+  bannerImage?: string;
+  roster: RosterMember[];
+}
+
 export interface GameDivision {
   id: string;
   slug: string;
@@ -16,6 +25,7 @@ export interface GameDivision {
   shortName: string;
   description: string;
   bannerImage: string;
+  subTeams?: GameSubTeam[];
   roster: RosterMember[];
 }
 
@@ -45,6 +55,7 @@ export interface GalleryEvent {
   location: string;
   category: string;
   image: string;
+  videoUrl?: string;
   description: string;
 }
 

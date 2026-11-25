@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { OpeningConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
+import { SmartMedia } from "./MediaDisplay";
 
 interface KprPreloaderProps {
   opening: OpeningConfig;
@@ -123,13 +124,15 @@ export function KprPreloader({
         ))}
       </div>
 
-      {/* Optional Custom Background Image during Opening */}
+      {/* Optional Custom Background Image or Video during Opening */}
       {opening.backgroundImage && stage !== "shutter" && (
         <div className="pointer-events-none absolute inset-0 z-[5]">
-          <img
-            src={assetUrl(opening.backgroundImage)}
+          <SmartMedia
+            src={opening.backgroundImage}
             alt=""
-            className="w-full h-full object-cover opacity-25"
+            fit="cover"
+            className="w-full h-full opacity-30"
+            mutedLoop
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#060608]/80 via-[#060608]/60 to-[#060608]/90" />
         </div>

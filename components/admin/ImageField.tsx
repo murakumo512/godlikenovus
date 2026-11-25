@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, Loader2, X } from "lucide-react";
+import { Upload, Loader2, X, Film, PlaySquare } from "lucide-react";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
+import { getYouTubeEmbedUrl, isVideoFileUrl } from "@/lib/media";
 
 interface ImageFieldProps {
   label: string;
@@ -10,22 +11,33 @@ interface ImageFieldProps {
   onChange: (url: string) => void;
   placeholder?: string;
   allowClear?: boolean;
+  acceptMedia?: "image" | "media" | "video";
 }
 
 export function ImageField({
   label,
   value,
   onChange,
-  placeholder = "/images/...",
+  placeholder = "/images/... atau upload foto/video",
   allowClear = false,
+  acceptMedia = "media",
 }: ImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const acceptAttr =
+    acceptMedia === "image"
+      ? "image/*"
+      : acceptMedia === "video"
+        ? "video/mp4,video/webm,video/quicktime,video/*"
+        : "image/*,video/mp4,video/webm,video/quicktime";
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setErrorMsg(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -33,15 +45,21 @@ export function ImageField({
         method: "POST",
         body: formData,
       });
-      if (res.ok) {
-        const json = (await res.json()) as { url: string };
-        onChange(json.url);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
       }
+      const json = (await res.json()) as { url: string };
+      onChange(json.url);
+    } catch {
+      setErrorMsg("Gagal upload file. Pastikan ukuran file didukung server.");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   };
+
+  const isVideoFile = isVideoFileUrl(value);
+  const isYt = Boolean(getYouTubeEmbedUrl(value));
 
   return (
     <div className="min-w-0">
@@ -50,12 +68,24 @@ export function ImageField({
       </label>
       <div className="flex items-center gap-2 min-w-0">
         {value && (
-          <div className="w-9 h-9 rounded border border-zinc-200 bg-zinc-900 p-1 flex items-center justify-center shrink-0 overflow-hidden">
-            <img
-              src={assetUrl(value)}
-              alt={label}
-              className="max-w-full max-h-full object-contain"
-            />
+          <div className="w-10 h-10 rounded border border-zinc-200 bg-zinc-900 p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
+            {isYt ? (
+              <PlaySquare className="w-5 h-5 text-red-500" />
+            ) : isVideoFile ? (
+              <video
+                src={assetUrl(value)}
+                muted
+                playsInline
+                preload="metadata"
+                className="w-full h-full object-cover rounded-xs"
+              />
+            ) : (
+              <img
+                src={assetUrl(value)}
+                alt={label}
+                className="max-w-full max-h-full object-contain"
+              />
+            )}
           </div>
         )}
         <input
@@ -63,13 +93,13 @@ export function ImageField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="min-w-0 flex-1 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
+          className="min-w-0 flex-1 rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 focus:border-red-600 focus:outline-none"
         />
         {allowClear && value && (
           <button
             type="button"
             onClick={() => onChange("")}
-            title="Kosongkan gambar"
+            title="Kosongkan media"
             className="inline-flex items-center justify-center rounded border border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-500 hover:text-red-600 p-1.5 transition cursor-pointer shrink-0"
           >
             <X className="w-3.5 h-3.5" />
@@ -78,7 +108,7 @@ export function ImageField({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={acceptAttr}
           onChange={handleFile}
           className="hidden"
         />
@@ -90,12 +120,19 @@ export function ImageField({
         >
           {uploading ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : acceptMedia === "video" ? (
+            <Film className="w-3.5 h-3.5" />
           ) : (
             <Upload className="w-3.5 h-3.5" />
           )}
-          <span className="hidden sm:inline">Upload</span>
+          <span className="hidden sm:inline">
+            {uploading ? "Uploading..." : "Upload"}
+          </span>
         </button>
       </div>
+      {errorMsg && (
+        <p className="text-[11px] text-red-600 mt-1">{errorMsg}</p>
+      )}
     </div>
   );
 }

@@ -13,15 +13,24 @@ import {
   Send,
   ExternalLink,
   Camera,
+  Play,
 } from "lucide-react";
 import { GalleryEvent, SiteData, StoreProduct } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
+import { isAnyVideoUrl } from "@/lib/media";
 import { DEFAULT_CONTACT_WA_TEMPLATE } from "@/lib/default-data";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { RosterSection } from "./RosterSection";
 import { StoreOrderModal } from "./StoreOrderModal";
 import { SocialIcon } from "./SocialIcon";
 import { KprPreloader } from "./KprPreloader";
+import {
+  ExpandMediaBadge,
+  LightboxMediaItem,
+  LinkifiedText,
+  MediaLightbox,
+  SmartMedia,
+} from "./MediaDisplay";
 import {
   SmoothScrollProvider,
   ScrollSection,
@@ -34,13 +43,12 @@ export function PublicSite({ data }: { data: SiteData }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 50, y: 35 });
 
-  // About photo lightbox
-  const [activeAboutPhoto, setActiveAboutPhoto] = useState<{
-    url: string;
-    caption: string;
-  } | null>(null);
+  // Universal Full-Resolution Original Media Lightbox
+  const [lightboxItem, setLightboxItem] = useState<LightboxMediaItem | null>(
+    null
+  );
 
-  // Gallery filter & lightbox
+  // Gallery filter & detail modal
   const rawCategories = Array.from(new Set(data.gallery.map((g) => g.category)));
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY_KEY);
   const [activeEvent, setActiveEvent] = useState<GalleryEvent | null>(null);
@@ -228,7 +236,6 @@ export function PublicSite({ data }: { data: SiteData }) {
             </button>
           </div>
 
-          {/* Compact Mobile Drawer */}
           {mobileMenuOpen && (
             <div className="md:hidden border-t border-zinc-800 bg-[#0b0b10] px-4 py-3 grid grid-cols-2 gap-2">
               {navItems.map((item) => (
@@ -245,7 +252,7 @@ export function PublicSite({ data }: { data: SiteData }) {
           )}
         </header>
 
-        {/* HERO SECTION */}
+        {/* HERO SECTION (Supports Photo or Video Background & Right Media!) */}
         <section
           id="top"
           onMouseMove={handleHeroMouseMove}
@@ -253,10 +260,12 @@ export function PublicSite({ data }: { data: SiteData }) {
         >
           {hs.heroBgImage && (
             <div className="pointer-events-none absolute inset-0">
-              <img
-                src={assetUrl(hs.heroBgImage)}
+              <SmartMedia
+                src={hs.heroBgImage}
                 alt=""
-                className="w-full h-full object-cover opacity-30"
+                fit="cover"
+                className="w-full h-full opacity-35"
+                mutedLoop
               />
               <div className="absolute inset-0 bg-gradient-to-b from-[#070709]/80 via-[#070709]/65 to-[#070709]" />
             </div>
@@ -335,13 +344,30 @@ export function PublicSite({ data }: { data: SiteData }) {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="hidden lg:flex lg:col-span-5 justify-center"
+                  onClick={() =>
+                    setLightboxItem({
+                      url: data.branding.logoTagline,
+                      title: data.branding.teamName,
+                    })
+                  }
+                  className="hidden lg:flex lg:col-span-5 justify-center cursor-zoom-in"
                 >
-                  <img
-                    src={assetUrl(data.branding.logoTagline)}
-                    alt={data.branding.teamName}
-                    className="w-full max-w-md mx-auto drop-shadow-[0_0_36px_rgba(225,29,46,0.28)]"
-                  />
+                  {isAnyVideoUrl(data.branding.logoTagline) ? (
+                    <SmartMedia
+                      src={data.branding.logoTagline}
+                      alt={data.branding.teamName}
+                      fit="contain"
+                      className="w-full max-w-md rounded-lg overflow-hidden border border-white/10"
+                      mutedLoop
+                      showVideoBadge
+                    />
+                  ) : (
+                    <img
+                      src={assetUrl(data.branding.logoTagline)}
+                      alt={data.branding.teamName}
+                      className="w-full max-w-md mx-auto object-contain drop-shadow-[0_0_36px_rgba(225,29,46,0.28)]"
+                    />
+                  )}
                 </motion.div>
               )}
             </div>
@@ -359,7 +385,9 @@ export function PublicSite({ data }: { data: SiteData }) {
                         .map((item, i) => (
                           <span
                             key={`${idx}-${i}`}
-                            className={i === 0 ? "text-[#E11D2E]" : "text-zinc-300"}
+                            className={
+                              i === 0 ? "text-[#E11D2E]" : "text-zinc-300"
+                            }
                           >
                             {item}
                           </span>
@@ -384,7 +412,6 @@ export function PublicSite({ data }: { data: SiteData }) {
             </div>
           </div>
 
-          {/* Smooth Scroll Cue to Next Section */}
           {hs.heroScrollCueText && (
             <div className="max-w-7xl mx-auto pt-3 flex justify-center">
               <a
@@ -400,10 +427,14 @@ export function PublicSite({ data }: { data: SiteData }) {
           )}
         </section>
 
-        {/* ROSTER SECTION */}
-        <RosterSection games={data.games} homeSections={hs} />
+        {/* ROSTER SECTION (Dynamic Sub-Teams + Uncropped Photos + Video Banner!) */}
+        <RosterSection
+          games={data.games}
+          homeSections={hs}
+          onInspectMedia={(item) => setLightboxItem(item)}
+        />
 
-        {/* ABOUT US SECTION */}
+        {/* ABOUT US SECTION (Supports Photos & Videos, Uncropped + Full-Res Lightbox) */}
         <ScrollSection
           id="about"
           showDivider={true}
@@ -411,10 +442,12 @@ export function PublicSite({ data }: { data: SiteData }) {
         >
           {hs.aboutBgImage && (
             <div className="pointer-events-none absolute inset-0">
-              <img
-                src={assetUrl(hs.aboutBgImage)}
+              <SmartMedia
+                src={hs.aboutBgImage}
                 alt=""
-                className="w-full h-full object-cover opacity-20"
+                fit="cover"
+                className="w-full h-full opacity-20"
+                mutedLoop
               />
               <div className="absolute inset-0 bg-[#0b0b10]/80" />
             </div>
@@ -429,11 +462,11 @@ export function PublicSite({ data }: { data: SiteData }) {
               <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase tracking-tight text-white leading-none">
                 {data.about.headline}
               </h2>
-              <p className="text-zinc-300 text-xs sm:text-base leading-relaxed">
-                {data.about.description}
-              </p>
+              <LinkifiedText
+                text={data.about.description}
+                className="text-zinc-300 text-xs sm:text-base leading-relaxed"
+              />
 
-              {/* Compact 4-column Stats Strip on Mobile */}
               <div className="grid grid-cols-4 sm:grid-cols-2 gap-2 sm:gap-3 pt-2">
                 {data.about.stats.map((stat, i) => (
                   <div
@@ -451,34 +484,51 @@ export function PublicSite({ data }: { data: SiteData }) {
               </div>
             </div>
 
-            {/* Photo Showcase Grid */}
+            {/* Photo & Video Showcase Grid (Uncropped ambient frame + click for full original!) */}
             <div className="lg:col-span-7 grid grid-cols-2 gap-2.5 sm:gap-4">
-              {data.about.photos.map((photo, idx) => (
-                <div
-                  key={photo.id}
-                  onClick={() => setActiveAboutPhoto(photo)}
-                  className={`group relative cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 ${
-                    idx === 0 ? "col-span-2 aspect-[16/8.5]" : "aspect-[4/3]"
-                  }`}
-                >
-                  <img
-                    src={assetUrl(photo.url)}
-                    alt={photo.caption}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent flex items-end p-2.5 sm:p-4">
-                    <div className="flex items-center gap-1.5 text-[11px] sm:text-sm font-medium text-white truncate">
-                      <Camera className="w-3.5 h-3.5 text-[#E11D2E] shrink-0" />
-                      <span className="truncate">{photo.caption}</span>
+              {data.about.photos.map((photo, idx) => {
+                const isVid = isAnyVideoUrl(photo.url);
+                return (
+                  <div
+                    key={photo.id}
+                    onClick={() =>
+                      setLightboxItem({
+                        url: photo.url,
+                        title: data.about.title,
+                        caption: photo.caption,
+                      })
+                    }
+                    className={`group relative cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 hover:border-[#E11D2E] transition ${
+                      idx === 0 ? "col-span-2 aspect-[16/9]" : "aspect-[4/3]"
+                    }`}
+                  >
+                    <SmartMedia
+                      src={photo.url}
+                      alt={photo.caption}
+                      fit="contain-ambient"
+                      className="w-full h-full"
+                      imgClassName="group-hover:scale-[1.03] transition duration-500"
+                      mutedLoop
+                      showVideoBadge
+                    />
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/90 via-black/45 to-transparent flex items-end justify-between gap-2 p-2.5 sm:p-4 pt-8">
+                      <div className="flex items-center gap-1.5 text-[11px] sm:text-sm font-medium text-white min-w-0">
+                        {isVid ? (
+                          <Play className="w-3.5 h-3.5 text-[#E11D2E] fill-[#E11D2E] shrink-0" />
+                        ) : (
+                          <Camera className="w-3.5 h-3.5 text-[#E11D2E] shrink-0" />
+                        )}
+                        <span className="truncate">{photo.caption}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </ScrollSection>
 
-        {/* GALLERY EVENTS SECTION */}
+        {/* GALLERY EVENTS SECTION (Uncropped Posters & Videos!) */}
         <ScrollSection id="gallery" showDivider={true}>
           <div className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 md:mb-10">
@@ -521,48 +571,63 @@ export function PublicSite({ data }: { data: SiteData }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-6">
-              {filteredGallery.map((evt) => (
-                <div
-                  key={evt.id}
-                  onClick={() => setActiveEvent(evt)}
-                  className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 hover:border-[#E11D2E] transition flex flex-col"
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-zinc-900">
-                    <img
-                      src={assetUrl(evt.image)}
-                      alt={evt.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    />
-                    <span className="absolute top-2 left-2 sm:top-3 sm:left-3 rounded bg-[#E11D2E] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white">
-                      {evt.category}
-                    </span>
-                  </div>
-                  <div className="p-3 sm:p-5 flex-1 flex flex-col">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs text-zinc-400 mb-1.5">
-                      <span className="inline-flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[#E11D2E]" />
-                        {evt.date}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {filteredGallery.map((evt) => {
+                const hasVideo =
+                  isAnyVideoUrl(evt.image) || Boolean(evt.videoUrl);
+                return (
+                  <div
+                    key={evt.id}
+                    onClick={() => setActiveEvent(evt)}
+                    className="group cursor-pointer overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 hover:border-[#E11D2E] transition flex flex-col"
+                  >
+                    {/* Uncropped Poster / Video Frame with Ambient Backdrop */}
+                    <div className="relative aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-zinc-950">
+                      <SmartMedia
+                        src={evt.image}
+                        alt={evt.title}
+                        fit="contain-ambient"
+                        className="w-full h-full"
+                        imgClassName="group-hover:scale-[1.03] transition duration-500"
+                        mutedLoop
+                      />
+                      <span className="absolute top-2.5 left-2.5 z-10 rounded bg-[#E11D2E] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-white">
+                        {evt.category}
                       </span>
-                      <span className="hidden sm:inline-flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-[#E11D2E]" />
-                        {evt.location}
-                      </span>
+                      {hasVideo && (
+                        <span className="absolute bottom-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded bg-black/80 border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                          <Play className="w-3 h-3 text-[#E11D2E] fill-[#E11D2E]" />
+                          Video
+                        </span>
+                      )}
                     </div>
-                    <h3 className="font-display text-sm sm:text-2xl font-bold uppercase text-white leading-tight group-hover:text-red-400 transition line-clamp-2">
-                      {evt.title}
-                    </h3>
-                    <p className="text-[11px] sm:text-sm text-zinc-400 mt-1 line-clamp-2">
-                      {evt.description}
-                    </p>
+
+                    <div className="p-3.5 sm:p-5 flex-1 flex flex-col border-t border-zinc-800/80">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-xs text-zinc-400 mb-1.5">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-[#E11D2E]" />
+                          {evt.date}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-[#E11D2E]" />
+                          {evt.location}
+                        </span>
+                      </div>
+                      <h3 className="font-display text-lg sm:text-2xl font-bold uppercase text-white leading-tight group-hover:text-red-400 transition line-clamp-2">
+                        {evt.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-zinc-400 mt-1 line-clamp-2">
+                        {evt.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </ScrollSection>
 
-        {/* OFFICIAL STORE SECTION */}
+        {/* OFFICIAL STORE SECTION (Uncropped Merch + Clickable Full-Res Preview) */}
         <ScrollSection
           id="store"
           showDivider={true}
@@ -594,14 +659,27 @@ export function PublicSite({ data }: { data: SiteData }) {
                   key={product.id}
                   className="flex flex-row md:flex-col rounded-lg border border-zinc-800 bg-zinc-950 overflow-hidden hover:border-[#E11D2E] transition"
                 >
-                  <div className="relative w-28 sm:w-36 md:w-full shrink-0 md:aspect-[4/4.1] bg-zinc-900 overflow-hidden">
-                    <img
-                      src={assetUrl(product.image)}
+                  <div
+                    onClick={() =>
+                      setLightboxItem({
+                        url: product.image,
+                        title: product.name,
+                        caption: `${product.category} — ${formatRupiah(product.price)}`,
+                      })
+                    }
+                    className="group relative w-32 sm:w-40 md:w-full shrink-0 md:aspect-[4/4.1] bg-zinc-950 overflow-hidden cursor-zoom-in"
+                    title="Klik untuk perbesar foto produk"
+                  >
+                    <SmartMedia
+                      src={product.image}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      fit="contain-ambient"
+                      className="w-full h-full"
+                      imgClassName="group-hover:scale-105 transition duration-500"
+                      showVideoBadge
                     />
                     {product.badge && (
-                      <span className="absolute top-2 left-2 rounded bg-[#E11D2E] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                      <span className="absolute top-2 left-2 z-10 rounded bg-[#E11D2E] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
                         {product.badge}
                       </span>
                     )}
@@ -820,80 +898,117 @@ export function PublicSite({ data }: { data: SiteData }) {
           </div>
         </footer>
 
-        {/* MODALS */}
+        {/* STORE ORDER MODAL */}
         <StoreOrderModal
           product={orderProduct}
           whatsappNumber={data.branding.whatsappNumber}
           templates={data.templates}
+          onInspectMedia={(item) => setLightboxItem(item)}
           onClose={() => setOrderProduct(null)}
         />
 
-        {activeAboutPhoto && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
-            onClick={() => setActiveAboutPhoto(null)}
-          >
-            <div
-              className="relative max-w-3xl w-full rounded-lg overflow-hidden border border-zinc-800 bg-zinc-950"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setActiveAboutPhoto(null)}
-                className="absolute right-3 top-3 rounded bg-black/70 p-1.5 text-white hover:bg-[#E11D2E] transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
-              <img
-                src={assetUrl(activeAboutPhoto.url)}
-                alt={activeAboutPhoto.caption}
-                className="w-full max-h-[70vh] object-contain bg-black"
-              />
-              <div className="p-3 sm:p-4 text-xs sm:text-sm font-medium text-zinc-200 border-t border-zinc-800">
-                {activeAboutPhoto.caption}
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* GALLERY EVENT DETAIL MODAL (100% Uncropped Poster + Scrollable + Full HD Zoom + Video!) */}
         {activeEvent && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm p-3 sm:p-6 flex items-start sm:items-center justify-center"
             onClick={() => setActiveEvent(null)}
           >
             <div
-              className="relative max-w-xl w-full rounded-lg overflow-hidden border border-zinc-700 bg-[#0d0d11]"
+              className="relative max-w-2xl w-full rounded-lg overflow-hidden border border-zinc-700 bg-[#0d0d11] shadow-2xl my-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setActiveEvent(null)}
-                className="absolute right-3 top-3 rounded bg-black/70 p-1.5 text-white hover:bg-[#E11D2E] transition"
+                className="absolute right-3 top-3 z-20 rounded bg-black/80 p-1.5 text-white hover:bg-[#E11D2E] transition cursor-pointer"
+                aria-label="Tutup"
               >
                 <X className="w-4 h-4" />
               </button>
-              <img
-                src={assetUrl(activeEvent.image)}
-                alt={activeEvent.title}
-                className="w-full max-h-[45vh] object-cover"
-              />
-              <div className="p-4 sm:p-6">
+
+              {/* Main Uncropped Poster / Media */}
+              <div
+                onClick={() => {
+                  if (!isAnyVideoUrl(activeEvent.image)) {
+                    setLightboxItem({
+                      url: activeEvent.image,
+                      title: activeEvent.title,
+                      caption: `${activeEvent.date} • ${activeEvent.location}`,
+                    });
+                  }
+                }}
+                className={`group relative bg-black flex items-center justify-center ${
+                  isAnyVideoUrl(activeEvent.image)
+                    ? ""
+                    : "cursor-zoom-in"
+                }`}
+              >
+                {isAnyVideoUrl(activeEvent.image) ? (
+                  <SmartMedia
+                    src={activeEvent.image}
+                    alt={activeEvent.title}
+                    fit="contain"
+                    className="w-full max-h-[75vh] aspect-video"
+                    controls
+                    mutedLoop={false}
+                  />
+                ) : (
+                  <>
+                    <img
+                      src={assetUrl(activeEvent.image)}
+                      alt={activeEvent.title}
+                      className="w-full max-h-[75vh] h-auto object-contain bg-black select-none"
+                    />
+                    <div className="absolute bottom-3 right-3 z-10">
+                      <ExpandMediaBadge label="Lihat Ukuran Asli (HD)" />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Optional Attached Event Highlight Video */}
+              {activeEvent.videoUrl && (
+                <div className="border-t border-zinc-800 bg-black p-3 sm:p-4">
+                  <div className="text-[10px] font-mono uppercase tracking-widest text-[#E11D2E] mb-2 flex items-center gap-1.5">
+                    <Play className="w-3 h-3 fill-[#E11D2E]" /> Video Highlight / Teaser Event
+                  </div>
+                  <SmartMedia
+                    src={activeEvent.videoUrl}
+                    alt={`${activeEvent.title} Video`}
+                    fit="contain"
+                    className="w-full aspect-video rounded border border-zinc-800"
+                    controls
+                    mutedLoop={false}
+                  />
+                </div>
+              )}
+
+              {/* Event Text Details (With Clickable Links & Line Breaks!) */}
+              <div className="p-4 sm:p-6 border-t border-zinc-800">
                 <span className="inline-block rounded bg-[#E11D2E] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                   {activeEvent.category}
                 </span>
-                <h3 className="font-display text-2xl font-bold uppercase text-white mt-1.5">
+                <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white mt-1.5 leading-tight">
                   {activeEvent.title}
                 </h3>
-                <div className="flex items-center gap-3 text-xs text-zinc-400 mt-1 mb-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 mt-1 mb-3">
                   <span>{activeEvent.date}</span>
                   <span>•</span>
                   <span>{activeEvent.location}</span>
                 </div>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  {activeEvent.description}
-                </p>
+                <LinkifiedText
+                  text={activeEvent.description}
+                  className="text-xs sm:text-sm text-zinc-200 leading-relaxed"
+                />
               </div>
             </div>
           </div>
         )}
+
+        {/* FULL-RESOLUTION ORIGINAL MEDIA LIGHTBOX */}
+        <MediaLightbox
+          item={lightboxItem}
+          onClose={() => setLightboxItem(null)}
+        />
       </div>
     </SmoothScrollProvider>
   );

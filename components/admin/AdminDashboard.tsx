@@ -10,9 +10,11 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
+  Users,
 } from "lucide-react";
 import {
   GameDivision,
+  GameSubTeam,
   RosterMember,
   SiteData,
   SocialLink,
@@ -60,6 +62,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
   const [activeTab, setActiveTab] = useState<TabId>("opening");
   const [selectedGameId, setSelectedGameId] = useState<string>(
     initialData.games[0]?.id || ""
+  );
+  const [selectedSubTeamId, setSelectedSubTeamId] = useState<string>(
+    initialData.games[0]?.subTeams?.[0]?.id || ""
   );
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
@@ -127,6 +132,13 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
   const activeGame =
     data.games.find((g) => g.id === selectedGameId) || data.games[0] || null;
 
+  const activeSubTeams = activeGame?.subTeams || [];
+  const hasSubTeams = activeSubTeams.length > 0;
+  const activeSubTeam: GameSubTeam | null = hasSubTeams
+    ? activeSubTeams.find((st) => st.id === selectedSubTeamId) ||
+      activeSubTeams[0]
+    : null;
+
   const updateGame = (
     gameId: string,
     updater: (g: GameDivision) => GameDivision
@@ -134,6 +146,19 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
     setData((prev) => ({
       ...prev,
       games: prev.games.map((g) => (g.id === gameId ? updater(g) : g)),
+    }));
+  };
+
+  const updateSubTeam = (
+    gameId: string,
+    subTeamId: string,
+    updater: (st: GameSubTeam) => GameSubTeam
+  ) => {
+    updateGame(gameId, (g) => ({
+      ...g,
+      subTeams: (g.subTeams || []).map((st) =>
+        st.id === subTeamId ? updater(st) : st
+      ),
     }));
   };
 
@@ -1540,7 +1565,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                     />
 
                     <ImageField
-                      label="Banner Divisi"
+                      label="Banner Divisi (Foto atau Video MP4/WebM)"
                       value={activeGame.bannerImage}
                       onChange={(v) =>
                         updateGame(activeGame.id, (g) => ({
@@ -1550,163 +1575,415 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                       }
                     />
 
-                    {/* Roster List */}
-                    <div className="pt-4 border-t border-zinc-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-semibold text-zinc-900">
-                          Anggota Roster ({activeGame.roster.length})
-                        </h4>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newMember: RosterMember = {
-                              id: `mem-${Date.now()}`,
-                              ign: "GL.PLAYER",
-                              realName: "Nama Lengkap",
-                              role: "Player",
-                              isCoach: false,
-                              photo: "/images/seed/player-1.svg",
-                              bio: "Bio singkat.",
-                              achievements: "",
-                            };
-                            updateGame(activeGame.id, (g) => ({
-                              ...g,
-                              roster: [...g.roster, newMember],
-                            }));
-                          }}
-                          className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> Tambah Anggota
-                        </button>
-                      </div>
+                    {/* DYNAMIC SUB-TEAMS / MULTI-SQUAD MANAGER */}
+                    <div className="pt-4 border-t border-zinc-200 space-y-4">
+                      <div className="rounded-md border border-zinc-200 bg-zinc-50 p-3.5 sm:p-4 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <h4 className="text-sm font-semibold text-zinc-900 flex items-center gap-1.5">
+                              <Users className="w-4 h-4 text-red-600" />
+                              Sub-Tim / Pecahan Tim di {activeGame.shortName}
+                            </h4>
+                            <p className="text-xs text-zinc-500 mt-0.5">
+                              {hasSubTeams
+                                ? `Game ini memiliki ${activeSubTeams.length} sub-tim (muncul pilihan tab tim di web).`
+                                : "Mode Tunggal (tanpa sub-tim). Jika game ini punya beberapa tim (misal Tim Utama, Ladies, Academy), klik tombol di kanan."}
+                            </p>
+                          </div>
 
-                      <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
-                        {activeGame.roster.map((member) => (
-                          <div
-                            key={member.id}
-                            className="p-3.5 sm:p-4 space-y-3"
-                          >
-                            <div className="flex items-center justify-between">
-                              <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={member.isCoach}
-                                  onChange={(e) =>
-                                    updateGame(activeGame.id, (g) => ({
-                                      ...g,
-                                      roster: g.roster.map((m) =>
-                                        m.id === member.id
-                                          ? { ...m, isCoach: e.target.checked }
-                                          : m
-                                      ),
-                                    }))
-                                  }
-                                  className="accent-red-600 w-3.5 h-3.5"
-                                />
-                                Coach / Pelatih
-                              </label>
-
+                          {!hasSubTeams ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const id1 = `sub-${Date.now()}-1`;
+                                const id2 = `sub-${Date.now()}-2`;
+                                const firstTeam: GameSubTeam = {
+                                  id: id1,
+                                  name: `${activeGame.shortName} Main Squad`,
+                                  shortName: "MAIN SQUAD",
+                                  description: "",
+                                  bannerImage: "",
+                                  roster: [...activeGame.roster],
+                                };
+                                const secondTeam: GameSubTeam = {
+                                  id: id2,
+                                  name: `${activeGame.shortName} Squad 2`,
+                                  shortName: "SQUAD 2",
+                                  description: "",
+                                  bannerImage: "",
+                                  roster: [],
+                                };
+                                updateGame(activeGame.id, (g) => ({
+                                  ...g,
+                                  roster: [],
+                                  subTeams: [firstTeam, secondTeam],
+                                }));
+                                setSelectedSubTeamId(id1);
+                              }}
+                              className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
+                            >
+                              <Plus className="w-3.5 h-3.5" /> Buat Sub-Tim di{" "}
+                              {activeGame.shortName}
+                            </button>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() =>
+                                onClick={() => {
+                                  const newSubId = `sub-${Date.now()}`;
+                                  const nextNum = activeSubTeams.length + 1;
+                                  const newSub: GameSubTeam = {
+                                    id: newSubId,
+                                    name: `${activeGame.shortName} Squad ${nextNum}`,
+                                    shortName: `SQUAD ${nextNum}`,
+                                    description: "",
+                                    bannerImage: "",
+                                    roster: [],
+                                  };
                                   updateGame(activeGame.id, (g) => ({
                                     ...g,
-                                    roster: g.roster.filter(
-                                      (m) => m.id !== member.id
-                                    ),
-                                  }))
-                                }
-                                className="text-xs font-medium text-red-600 hover:text-red-800 inline-flex items-center gap-1 cursor-pointer"
+                                    subTeams: [...(g.subTeams || []), newSub],
+                                  }));
+                                  setSelectedSubTeamId(newSubId);
+                                }}
+                                className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
                               >
-                                <Trash2 className="w-3.5 h-3.5" /> Hapus
+                                <Plus className="w-3.5 h-3.5" /> Tambah Sub-Tim
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (
+                                    !confirm(
+                                      `Gabungkan semua anggota sub-tim kembali menjadi 1 tim tunggal tanpa sub-tim untuk ${activeGame.name}?`
+                                    )
+                                  )
+                                    return;
+                                  const mergedRoster = activeSubTeams.flatMap(
+                                    (st) => st.roster
+                                  );
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    subTeams: [],
+                                    roster: mergedRoster,
+                                  }));
+                                  setSelectedSubTeamId("");
+                                }}
+                                className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white hover:bg-zinc-100 px-2.5 py-1.5 text-xs font-medium text-zinc-700 cursor-pointer"
+                              >
+                                Jadikan Tanpa Sub-Tim
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {hasSubTeams && (
+                          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
+                            {activeSubTeams.map((st) => (
+                              <button
+                                key={st.id}
+                                type="button"
+                                onClick={() => setSelectedSubTeamId(st.id)}
+                                className={`shrink-0 px-3 py-1.5 rounded text-xs font-medium transition cursor-pointer border ${
+                                  activeSubTeam?.id === st.id
+                                    ? "bg-red-600 border-red-600 text-white"
+                                    : "bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-100"
+                                }`}
+                              >
+                                {st.shortName || st.name} ({st.roster.length})
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Sub-Team Metadata Editor (When Sub-Teams Active) */}
+                      {activeSubTeam && (
+                        <div className="rounded-md border border-red-200 bg-red-50/20 p-3.5 sm:p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
+                              Pengaturan Sub-Tim: {activeSubTeam.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (activeSubTeams.length <= 1) {
+                                  updateGame(activeGame.id, (g) => ({
+                                    ...g,
+                                    roster: activeSubTeam.roster,
+                                    subTeams: [],
+                                  }));
+                                  setSelectedSubTeamId("");
+                                  return;
+                                }
+                                const remaining = activeSubTeams.filter(
+                                  (s) => s.id !== activeSubTeam.id
+                                );
+                                updateGame(activeGame.id, (g) => ({
+                                  ...g,
+                                  subTeams: remaining,
+                                }));
+                                setSelectedSubTeamId(remaining[0]?.id || "");
+                              }}
+                              className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-800 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Hapus Sub-Tim Ini
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <InputField
+                              label="Nama Lengkap Sub-Tim (Contoh: Godlike Novus Bekasi)"
+                              value={activeSubTeam.name}
+                              onChange={(v) =>
+                                updateSubTeam(
+                                  activeGame.id,
+                                  activeSubTeam.id,
+                                  (st) => ({ ...st, name: v })
+                                )
+                              }
+                            />
+                            <InputField
+                              label="Label Tab Singkat (Contoh: BEKASI / LADIES / ACADEMY)"
+                              value={activeSubTeam.shortName}
+                              onChange={(v) =>
+                                updateSubTeam(
+                                  activeGame.id,
+                                  activeSubTeam.id,
+                                  (st) => ({ ...st, shortName: v })
+                                )
+                              }
+                            />
+                          </div>
+
+                          <InputField
+                            label="Deskripsi Khusus Sub-Tim (Opsional — kosongkan untuk ikut deskripsi divisi)"
+                            value={activeSubTeam.description || ""}
+                            placeholder={activeGame.description}
+                            onChange={(v) =>
+                              updateSubTeam(
+                                activeGame.id,
+                                activeSubTeam.id,
+                                (st) => ({ ...st, description: v })
+                              )
+                            }
+                          />
+
+                          <ImageField
+                            label="Banner Khusus Sub-Tim (Opsional Foto/Video — kosongkan untuk ikut banner divisi)"
+                            value={activeSubTeam.bannerImage || ""}
+                            placeholder={activeGame.bannerImage}
+                            onChange={(v) =>
+                              updateSubTeam(
+                                activeGame.id,
+                                activeSubTeam.id,
+                                (st) => ({ ...st, bannerImage: v })
+                              )
+                            }
+                            allowClear
+                          />
+                        </div>
+                      )}
+
+                      {/* Roster List (Operates on activeSubTeam.roster if hasSubTeams, else activeGame.roster!) */}
+                      {(() => {
+                        const targetRoster = activeSubTeam
+                          ? activeSubTeam.roster
+                          : activeGame.roster;
+
+                        const setTargetRoster = (
+                          updater: (list: RosterMember[]) => RosterMember[]
+                        ) => {
+                          if (activeSubTeam) {
+                            updateSubTeam(
+                              activeGame.id,
+                              activeSubTeam.id,
+                              (st) => ({
+                                ...st,
+                                roster: updater(st.roster),
+                              })
+                            );
+                          } else {
+                            updateGame(activeGame.id, (g) => ({
+                              ...g,
+                              roster: updater(g.roster),
+                            }));
+                          }
+                        };
+
+                        return (
+                          <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <h4 className="text-sm font-semibold text-zinc-900">
+                                Anggota Roster{" "}
+                                {activeSubTeam
+                                  ? `(${activeSubTeam.shortName || activeSubTeam.name})`
+                                  : `(${activeGame.shortName})`}{" "}
+                                — {targetRoster.length} Orang
+                              </h4>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newMember: RosterMember = {
+                                    id: `mem-${Date.now()}`,
+                                    ign: "GL.PLAYER",
+                                    realName: "Nama Lengkap",
+                                    role: "Player",
+                                    isCoach: false,
+                                    photo: "/images/seed/player-1.svg",
+                                    bio: "Bio singkat.",
+                                    achievements: "",
+                                  };
+                                  setTargetRoster((list) => [
+                                    ...list,
+                                    newMember,
+                                  ]);
+                                }}
+                                className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                              >
+                                <Plus className="w-3.5 h-3.5" /> Tambah Anggota
                               </button>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <InputField
-                                label="IGN / Nickname"
-                                value={member.ign}
-                                onChange={(v) =>
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    roster: g.roster.map((m) =>
-                                      m.id === member.id ? { ...m, ign: v } : m
-                                    ),
-                                  }))
-                                }
-                              />
-                              <InputField
-                                label="Nama Lengkap"
-                                value={member.realName}
-                                onChange={(v) =>
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    roster: g.roster.map((m) =>
-                                      m.id === member.id
-                                        ? { ...m, realName: v }
-                                        : m
-                                    ),
-                                  }))
-                                }
-                              />
-                              <InputField
-                                label="Role / Posisi"
-                                value={member.role}
-                                onChange={(v) =>
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    roster: g.roster.map((m) =>
-                                      m.id === member.id ? { ...m, role: v } : m
-                                    ),
-                                  }))
-                                }
-                              />
-                            </div>
+                            {targetRoster.length === 0 ? (
+                              <div className="rounded-md border border-dashed border-zinc-300 p-6 text-center text-xs text-zinc-500">
+                                Belum ada anggota di tim ini. Klik &ldquo;+ Tambah Anggota&rdquo; untuk menambahkan player atau coach.
+                              </div>
+                            ) : (
+                              <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                                {targetRoster.map((member) => (
+                                  <div
+                                    key={member.id}
+                                    className="p-3.5 sm:p-4 space-y-3"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
+                                        <input
+                                          type="checkbox"
+                                          checked={member.isCoach}
+                                          onChange={(e) =>
+                                            setTargetRoster((list) =>
+                                              list.map((m) =>
+                                                m.id === member.id
+                                                  ? {
+                                                      ...m,
+                                                      isCoach: e.target.checked,
+                                                    }
+                                                  : m
+                                              )
+                                            )
+                                          }
+                                          className="accent-red-600 w-3.5 h-3.5"
+                                        />
+                                        Coach / Pelatih
+                                      </label>
 
-                            <ImageField
-                              label="Foto"
-                              value={member.photo}
-                              onChange={(v) =>
-                                updateGame(activeGame.id, (g) => ({
-                                  ...g,
-                                  roster: g.roster.map((m) =>
-                                    m.id === member.id ? { ...m, photo: v } : m
-                                  ),
-                                }))
-                              }
-                            />
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          setTargetRoster((list) =>
+                                            list.filter(
+                                              (m) => m.id !== member.id
+                                            )
+                                          )
+                                        }
+                                        className="text-xs font-medium text-red-600 hover:text-red-800 inline-flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" /> Hapus
+                                      </button>
+                                    </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              <InputField
-                                label="Bio Singkat"
-                                value={member.bio}
-                                onChange={(v) =>
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    roster: g.roster.map((m) =>
-                                      m.id === member.id ? { ...m, bio: v } : m
-                                    ),
-                                  }))
-                                }
-                              />
-                              <InputField
-                                label="Prestasi"
-                                value={member.achievements}
-                                onChange={(v) =>
-                                  updateGame(activeGame.id, (g) => ({
-                                    ...g,
-                                    roster: g.roster.map((m) =>
-                                      m.id === member.id
-                                        ? { ...m, achievements: v }
-                                        : m
-                                    ),
-                                  }))
-                                }
-                              />
-                            </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                      <InputField
+                                        label="IGN / Nickname"
+                                        value={member.ign}
+                                        onChange={(v) =>
+                                          setTargetRoster((list) =>
+                                            list.map((m) =>
+                                              m.id === member.id
+                                                ? { ...m, ign: v }
+                                                : m
+                                            )
+                                          )
+                                        }
+                                      />
+                                      <InputField
+                                        label="Nama Lengkap"
+                                        value={member.realName}
+                                        onChange={(v) =>
+                                          setTargetRoster((list) =>
+                                            list.map((m) =>
+                                              m.id === member.id
+                                                ? { ...m, realName: v }
+                                                : m
+                                            )
+                                          )
+                                        }
+                                      />
+                                      <InputField
+                                        label="Role / Posisi"
+                                        value={member.role}
+                                        onChange={(v) =>
+                                          setTargetRoster((list) =>
+                                            list.map((m) =>
+                                              m.id === member.id
+                                                ? { ...m, role: v }
+                                                : m
+                                            )
+                                          )
+                                        }
+                                      />
+                                    </div>
+
+                                    <ImageField
+                                      label="Foto / Video Anggota (Resolusi Asli Utuh)"
+                                      value={member.photo}
+                                      onChange={(v) =>
+                                        setTargetRoster((list) =>
+                                          list.map((m) =>
+                                            m.id === member.id
+                                              ? { ...m, photo: v }
+                                              : m
+                                          )
+                                        )
+                                      }
+                                    />
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                      <InputField
+                                        label="Bio Singkat"
+                                        value={member.bio}
+                                        onChange={(v) =>
+                                          setTargetRoster((list) =>
+                                            list.map((m) =>
+                                              m.id === member.id
+                                                ? { ...m, bio: v }
+                                                : m
+                                            )
+                                          )
+                                        }
+                                      />
+                                      <InputField
+                                        label="Prestasi"
+                                        value={member.achievements}
+                                        onChange={(v) =>
+                                          setTargetRoster((list) =>
+                                            list.map((m) =>
+                                              m.id === member.id
+                                                ? { ...m, achievements: v }
+                                                : m
+                                            )
+                                          )
+                                        }
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -1857,12 +2134,17 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                 </div>
               </div>
 
-              {/* About Photos */}
+              {/* About Photos & Videos */}
               <div className="pt-3 border-t border-zinc-200">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-zinc-800">
-                    Foto Showcase
-                  </span>
+                  <div>
+                    <span className="text-xs font-semibold text-zinc-800 block">
+                      Foto &amp; Video Showcase
+                    </span>
+                    <span className="text-[11px] text-zinc-500">
+                      Bisa upload foto resolusi penuh, video MP4/MOV/WebM, atau paste link YouTube.
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() =>
@@ -1881,9 +2163,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                         },
                       })
                     }
-                    className="inline-flex items-center gap-1 rounded bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Tambah Foto
+                    <Plus className="w-3.5 h-3.5" /> Tambah Media
                   </button>
                 </div>
 
@@ -1910,8 +2192,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                         </button>
                       </div>
                       <ImageField
-                        label="File / URL Foto"
+                        label="File / URL Foto atau Video (MP4 / MOV / YouTube)"
                         value={ph.url}
+                        placeholder="/images/... atau upload foto/video atau link YouTube"
                         onChange={(v) =>
                           setData({
                             ...data,
@@ -2108,13 +2391,29 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                         />
                       </div>
                       <ImageField
-                        label="Foto Event"
+                        label="Poster / Foto / Video Utama Event (Tampil Utuh Tanpa Terpotong)"
                         value={evt.image}
+                        placeholder="Upload poster foto asli, video MP4/MOV, atau link YouTube"
                         onChange={(v) =>
                           setData({
                             ...data,
                             gallery: data.gallery.map((g) =>
                               g.id === evt.id ? { ...g, image: v } : g
+                            ),
+                          })
+                        }
+                      />
+                      <ImageField
+                        label="Video Highlight / Teaser Tambahan (Opsional — muncul di bawah poster saat event diklik)"
+                        value={evt.videoUrl || ""}
+                        placeholder="Kosongkan jika tidak ada, atau upload MP4/MOV / link YouTube"
+                        acceptMedia="video"
+                        allowClear
+                        onChange={(v) =>
+                          setData({
+                            ...data,
+                            gallery: data.gallery.map((g) =>
+                              g.id === evt.id ? { ...g, videoUrl: v } : g
                             ),
                           })
                         }

@@ -44,7 +44,18 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
       ...DEFAULT_SITE_DATA.contact,
       ...(raw.contact || {}),
     },
-    games: Array.isArray(raw.games) ? raw.games : DEFAULT_SITE_DATA.games,
+    games: Array.isArray(raw.games)
+      ? raw.games.map((g) => ({
+          ...g,
+          roster: Array.isArray(g.roster) ? g.roster : [],
+          subTeams: Array.isArray(g.subTeams)
+            ? g.subTeams.map((st) => ({
+                ...st,
+                roster: Array.isArray(st.roster) ? st.roster : [],
+              }))
+            : [],
+        }))
+      : DEFAULT_SITE_DATA.games,
     gallery: Array.isArray(raw.gallery)
       ? raw.gallery
       : DEFAULT_SITE_DATA.gallery,
