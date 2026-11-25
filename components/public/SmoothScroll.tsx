@@ -158,13 +158,14 @@ export interface HudRailSectionItem {
 }
 
 const DEFAULT_SECTIONS: HudRailSectionItem[] = [
-  { id: "top", code: "01", name: "HERO" },
-  { id: "roster", code: "02", name: "ROSTER" },
-  { id: "about", code: "03", name: "ABOUT" },
-  { id: "gallery", code: "04", name: "GALLERY" },
-  { id: "store", code: "05", name: "STORE" },
-  { id: "sponsors", code: "06", name: "SPONSORS" },
-  { id: "contact", code: "07", name: "CONTACT" },
+  { id: "top", code: "01", name: "Home" },
+  { id: "roster", code: "02", name: "Roster" },
+  { id: "about", code: "03", name: "About" },
+  { id: "gallery", code: "04", name: "Gallery" },
+  { id: "ambassadors", code: "05", name: "Ambassador" },
+  { id: "store", code: "06", name: "Store" },
+  { id: "sponsors", code: "07", name: "Sponsors" },
+  { id: "contact", code: "08", name: "Contact" },
 ];
 
 export function ScrollHudRail({
@@ -209,30 +210,30 @@ export function ScrollHudRail({
         className="fixed top-14 sm:top-16 left-0 right-0 h-[2px] bg-[#E11D2E] z-40 pointer-events-none"
       />
 
-      <div className="hidden xl:flex fixed right-4 top-1/2 -translate-y-1/2 z-30 flex-col items-end gap-2">
+      <div className="hidden xl:flex fixed right-5 top-1/2 -translate-y-1/2 z-30 flex-col items-end gap-2.5">
         {sections.map((sec) => {
           const active = activeId === sec.id;
           return (
             <a
               key={sec.id}
               href={`#${sec.id}`}
-              className="group flex items-center gap-2 py-0.5"
+              className="group flex items-center gap-2.5 py-0.5"
               title={sec.name}
             >
               <span
-                className={`text-[9px] font-mono uppercase tracking-[0.2em] transition-all ${
+                className={`text-[11px] font-medium tracking-wide transition-all ${
                   active
-                    ? "text-[#E11D2E] opacity-100 translate-x-0"
-                    : "text-zinc-500 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0"
+                    ? "text-white opacity-100"
+                    : "text-zinc-500 opacity-0 group-hover:opacity-100"
                 }`}
               >
-                {sec.code} // {sec.name}
+                {sec.name}
               </span>
               <span
                 className={`block h-[2px] transition-all duration-300 ${
                   active
-                    ? "w-6 bg-[#E11D2E]"
-                    : "w-2.5 bg-zinc-700 group-hover:w-4 group-hover:bg-zinc-400"
+                    ? "w-5 bg-[#E11D2E]"
+                    : "w-2 bg-zinc-700 group-hover:w-3.5 group-hover:bg-zinc-400"
                 }`}
               />
             </a>

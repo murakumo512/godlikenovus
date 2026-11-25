@@ -30,6 +30,24 @@ export interface GameDivision {
   roster: RosterMember[];
 }
 
+export interface SocialLink {
+  id: string;
+  platform: "instagram" | "tiktok" | "youtube" | "discord" | "twitter" | "facebook";
+  label: string;
+  url: string;
+}
+
+export interface BrandAmbassador {
+  id: string;
+  name: string;
+  nickname: string;
+  team: string;
+  photo: string;
+  games: string[];
+  bio: string;
+  socials: SocialLink[];
+}
+
 export interface AboutStat {
   label: string;
   value: string;
@@ -80,17 +98,11 @@ export interface SponsorItem {
   website: string;
 }
 
-export interface SocialLink {
-  id: string;
-  platform: "instagram" | "tiktok" | "youtube" | "discord" | "twitter" | "facebook";
-  label: string;
-  url: string;
-}
-
 export interface NavLabels {
   roster: string;
   about: string;
   gallery: string;
+  ambassadors?: string;
   store: string;
   sponsors: string;
   contact: string;
@@ -164,6 +176,10 @@ export interface HomeSectionsConfig {
   galleryTitleWhite: string;
   galleryTitleAccent: string;
   galleryAllLabel: string;
+  baBadge: string;
+  baTitleWhite: string;
+  baTitleAccent: string;
+  baSubtitle: string;
   storeBadge: string;
   storeTitleWhite: string;
   storeTitleAccent: string;
@@ -213,6 +229,7 @@ export interface SiteData {
   games: GameDivision[];
   about: AboutSection;
   gallery: GalleryEvent[];
+  ambassadors: BrandAmbassador[];
   store: StoreProduct[];
   sponsors: SponsorItem[];
   contact: ContactConfig;

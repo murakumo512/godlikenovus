@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import {
+  BrandAmbassador,
   GameDivision,
   GameSubTeam,
   RosterMember,
@@ -34,6 +35,7 @@ type TabId =
   | "games"
   | "about"
   | "gallery"
+  | "ambassadors"
   | "store"
   | "sponsors"
   | "contact";
@@ -124,6 +126,7 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
     { id: "games", label: "Games & Roster" },
     { id: "about", label: "About Us" },
     { id: "gallery", label: "Gallery" },
+    { id: "ambassadors", label: "Brand Ambassador" },
     { id: "store", label: "Store" },
     { id: "sponsors", label: "Sponsors" },
     { id: "contact", label: "Contact & Sosmed" },
@@ -890,9 +893,10 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                       ["roster", "Label Menu 1", "Roster"],
                       ["about", "Label Menu 2", "About"],
                       ["gallery", "Label Menu 3", "Gallery"],
-                      ["store", "Label Menu 4", "Store"],
-                      ["sponsors", "Label Menu 5", "Sponsors"],
-                      ["contact", "Label Menu 6", "Contact"],
+                      ["ambassadors", "Label Menu 4", "Ambassador"],
+                      ["store", "Label Menu 5", "Store"],
+                      ["sponsors", "Label Menu 6", "Sponsors"],
+                      ["contact", "Label Menu 7", "Contact"],
                     ] as const
                   ).map(([key, label, fallback]) => (
                     <InputField
@@ -910,6 +914,9 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                               about: data.branding.navLabels?.about || "About",
                               gallery:
                                 data.branding.navLabels?.gallery || "Gallery",
+                              ambassadors:
+                                data.branding.navLabels?.ambassadors ||
+                                "Ambassador",
                               store: data.branding.navLabels?.store || "Store",
                               sponsors:
                                 data.branding.navLabels?.sponsors || "Sponsors",
@@ -2451,6 +2458,326 @@ export function AdminDashboard({ initialData }: { initialData: SiteData }) {
                   ))}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 5B. BRAND AMBASSADOR */}
+          {activeTab === "ambassadors" && (
+            <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Judul &amp; Subjudul Seksi Brand Ambassador
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Seksi ini tampil tepat di atas Official Store.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <InputField
+                    label="Label Kecil Atas"
+                    value={data.homeSections.baBadge}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, baBadge: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Putih"
+                    value={data.homeSections.baTitleWhite}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, baTitleWhite: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Kata Merah"
+                    value={data.homeSections.baTitleAccent}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: {
+                          ...data.homeSections,
+                          baTitleAccent: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+
+                <InputField
+                  label="Deskripsi Singkat Seksi"
+                  value={data.homeSections.baSubtitle}
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: { ...data.homeSections, baSubtitle: v },
+                    })
+                  }
+                />
+              </section>
+
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+                  <div>
+                    <h2 className="text-base font-semibold text-zinc-900">
+                      Daftar Brand Ambassador ({data.ambassadors.length})
+                    </h2>
+                    <p className="text-xs text-zinc-500">
+                      Foto tampil besar bersama nama, di bawahnya tampil nama tim, dan saat diklik muncul nickname, game yang dimainkan, serta sosial media.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newBa: BrandAmbassador = {
+                        id: `ba-${Date.now()}`,
+                        name: "NAMA BRAND AMBASSADOR",
+                        nickname: "GL.NICKNAME",
+                        team: "Godlike Novus Talent",
+                        photo: "/images/seed/ba-1.svg",
+                        games: ["Honor of Kings", "RF Online"],
+                        bio: "",
+                        socials: [
+                          {
+                            id: `basoc-${Date.now()}`,
+                            platform: "instagram",
+                            label: "@username",
+                            url: "https://instagram.com/",
+                          },
+                        ],
+                      };
+                      setData({
+                        ...data,
+                        ambassadors: [...data.ambassadors, newBa],
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 rounded bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-medium text-white cursor-pointer shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah BA
+                  </button>
+                </div>
+
+                {data.ambassadors.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-zinc-300 p-6 text-center text-xs text-zinc-500">
+                    Belum ada Brand Ambassador. Klik &ldquo;+ Tambah BA&rdquo; untuk menambahkan.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                    {data.ambassadors.map((ba) => {
+                      const updateBa = (
+                        updater: (item: BrandAmbassador) => BrandAmbassador
+                      ) => {
+                        setData((prev) => ({
+                          ...prev,
+                          ambassadors: prev.ambassadors.map((item) =>
+                            item.id === ba.id ? updater(item) : item
+                          ),
+                        }));
+                      };
+
+                      return (
+                        <div key={ba.id} className="p-4 space-y-3.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                              {ba.name || "Brand Ambassador"}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setData({
+                                  ...data,
+                                  ambassadors: data.ambassadors.filter(
+                                    (item) => item.id !== ba.id
+                                  ),
+                                })
+                              }
+                              className="text-xs font-medium text-red-600 hover:text-red-800 inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Hapus BA
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <InputField
+                              label="Nama Lengkap / Panggung (Tampil Besar)"
+                              value={ba.name}
+                              onChange={(v) =>
+                                updateBa((item) => ({ ...item, name: v }))
+                              }
+                            />
+                            <InputField
+                              label="Nickname / IGN (Muncul saat Diklik)"
+                              value={ba.nickname}
+                              onChange={(v) =>
+                                updateBa((item) => ({ ...item, nickname: v }))
+                              }
+                            />
+                            <InputField
+                              label="Team / Asal Tim"
+                              value={ba.team}
+                              onChange={(v) =>
+                                updateBa((item) => ({ ...item, team: v }))
+                              }
+                            />
+                          </div>
+
+                          <ImageField
+                            label="Foto / Video Besar Brand Ambassador (Resolusi Asli Utuh)"
+                            value={ba.photo}
+                            onChange={(v) =>
+                              updateBa((item) => ({ ...item, photo: v }))
+                            }
+                          />
+
+                          <InputField
+                            label="Main Game Apa Saja (Pisahkan dengan koma — contoh: Honor of Kings, RF Online, Valorant)"
+                            value={ba.games.join(", ")}
+                            onChange={(v) =>
+                              updateBa((item) => ({
+                                ...item,
+                                games: v
+                                  .split(",")
+                                  .map((g) => g.trim())
+                                  .filter(Boolean),
+                              }))
+                            }
+                          />
+
+                          <TextareaField
+                            label="Bio / Cerita Singkat (Opsional)"
+                            value={ba.bio}
+                            onChange={(v) =>
+                              updateBa((item) => ({ ...item, bio: v }))
+                            }
+                          />
+
+                          {/* BA Social Links */}
+                          <div className="pt-2 border-t border-zinc-100 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-zinc-700">
+                                Sosial Media {ba.name}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateBa((item) => ({
+                                    ...item,
+                                    socials: [
+                                      ...item.socials,
+                                      {
+                                        id: `basoc-${Date.now()}`,
+                                        platform: "instagram",
+                                        label: "@username",
+                                        url: "https://instagram.com/",
+                                      },
+                                    ],
+                                  }))
+                                }
+                                className="text-xs font-medium text-red-600 hover:underline cursor-pointer"
+                              >
+                                + Tambah Sosmed BA
+                              </button>
+                            </div>
+
+                            {ba.socials.map((soc) => (
+                              <div
+                                key={soc.id}
+                                className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end rounded border border-zinc-200 bg-zinc-50 p-2.5"
+                              >
+                                <div className="sm:col-span-3 min-w-0">
+                                  <label className="block text-xs font-medium text-zinc-700 mb-1">
+                                    Platform
+                                  </label>
+                                  <select
+                                    value={soc.platform}
+                                    onChange={(e) =>
+                                      updateBa((item) => ({
+                                        ...item,
+                                        socials: item.socials.map((s) =>
+                                          s.id === soc.id
+                                            ? {
+                                                ...s,
+                                                platform: e.target
+                                                  .value as SocialLink["platform"],
+                                              }
+                                            : s
+                                        ),
+                                      }))
+                                    }
+                                    className="w-full rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900"
+                                  >
+                                    <option value="instagram">Instagram</option>
+                                    <option value="tiktok">TikTok</option>
+                                    <option value="youtube">YouTube</option>
+                                    <option value="discord">Discord</option>
+                                    <option value="twitter">Twitter / X</option>
+                                    <option value="facebook">Facebook</option>
+                                  </select>
+                                </div>
+                                <div className="sm:col-span-4 min-w-0">
+                                  <InputField
+                                    label="Username / Nama Akun"
+                                    value={soc.label}
+                                    placeholder="@username"
+                                    onChange={(v) =>
+                                      updateBa((item) => ({
+                                        ...item,
+                                        socials: item.socials.map((s) =>
+                                          s.id === soc.id
+                                            ? { ...s, label: v }
+                                            : s
+                                        ),
+                                      }))
+                                    }
+                                  />
+                                </div>
+                                <div className="sm:col-span-4 min-w-0">
+                                  <InputField
+                                    label="Link URL"
+                                    value={soc.url}
+                                    onChange={(v) =>
+                                      updateBa((item) => ({
+                                        ...item,
+                                        socials: item.socials.map((s) =>
+                                          s.id === soc.id
+                                            ? { ...s, url: v }
+                                            : s
+                                        ),
+                                      }))
+                                    }
+                                  />
+                                </div>
+                                <div className="sm:col-span-1 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateBa((item) => ({
+                                        ...item,
+                                        socials: item.socials.filter(
+                                          (s) => s.id !== soc.id
+                                        ),
+                                      }))
+                                    }
+                                    className="p-1.5 text-zinc-400 hover:text-red-600 cursor-pointer"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
             </div>
           )}
 
