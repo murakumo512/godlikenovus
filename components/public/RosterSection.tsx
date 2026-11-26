@@ -10,6 +10,7 @@ import {
   LightboxMediaItem,
   LinkifiedText,
   MediaCarousel,
+  ModalPortal,
   SmartMedia,
 } from "./MediaDisplay";
 
@@ -351,11 +352,12 @@ export function RosterSection({
 
         {/* Player / Coach Detail Modal */}
         {selectedMember && (
+          <ModalPortal>
           <div
             role="dialog"
             aria-modal="true"
             data-lenis-prevent
-            className="fixed inset-0 z-50 bg-black/88 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center"
+            className="fixed inset-0 z-[80] bg-black/88 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center"
             onClick={() => setSelectedMember(null)}
           >
             <div
@@ -379,7 +381,7 @@ export function RosterSection({
 
               <div
                 data-lenis-prevent
-                className="flex-1 overflow-y-auto overscroll-contain"
+                className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
               >
                 <MediaCarousel
                   items={collectMediaList(
@@ -426,6 +428,7 @@ export function RosterSection({
               </div>
             </div>
           </div>
+          </ModalPortal>
         )}
       </div>
     </ScrollSection>

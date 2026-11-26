@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { assetUrl } from "@/lib/base-path";
 import {
@@ -9,6 +10,19 @@ import {
   isVideoFileUrl,
 } from "@/lib/media";
 import { useLockBodyAndLenis } from "./SmoothScroll";
+
+/**
+ * Renders modals directly into document.body so parent CSS transforms /
+ * perspective (e.g. ScrollSection 3D transitions) never trap `position: fixed`.
+ */
+export function ModalPortal({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted || typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
 
 interface SmartMediaProps {
   src: string;
@@ -194,6 +208,7 @@ export function MediaLightbox({
   };
 
   return (
+    <ModalPortal>
     <div
       role="dialog"
       aria-modal="true"
@@ -331,6 +346,7 @@ export function MediaLightbox({
         </div>
       )}
     </div>
+    </ModalPortal>
   );
 }
 

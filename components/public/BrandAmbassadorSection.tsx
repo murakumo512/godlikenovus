@@ -10,6 +10,7 @@ import {
   LightboxMediaItem,
   LinkifiedText,
   MediaCarousel,
+  ModalPortal,
   SmartMedia,
 } from "./MediaDisplay";
 import { SocialIcon } from "./SocialIcon";
@@ -270,11 +271,12 @@ export function BrandAmbassadorSection({
 
       {/* Detail Modal on Click: Nickname, Team, Games Played, Social Media */}
       {selectedBa && (
+        <ModalPortal>
         <div
           role="dialog"
           aria-modal="true"
           data-lenis-prevent
-          className="fixed inset-0 z-50 bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
+          className="fixed inset-0 z-[80] bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
           onClick={() => setSelectedBa(null)}
         >
           <div
@@ -298,7 +300,7 @@ export function BrandAmbassadorSection({
 
             <div
               data-lenis-prevent
-              className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
               <MediaCarousel
                 items={collectMediaList(
@@ -308,7 +310,7 @@ export function BrandAmbassadorSection({
                 )}
                 alt={selectedBa.name}
                 fit="contain"
-                className="md:col-span-6 md:h-full"
+                className="md:col-span-6 min-h-0 md:h-full"
                 onInspect={(url, idx) =>
                   onInspectMedia({
                     url,
@@ -326,7 +328,7 @@ export function BrandAmbassadorSection({
 
               <div
                 data-lenis-prevent
-                className="md:col-span-6 md:h-full md:overflow-y-auto overscroll-contain border-t md:border-t-0 md:border-l border-white/10 flex flex-col bg-[#0e0e11]"
+                className="md:col-span-6 min-h-0 md:h-full md:overflow-y-auto overscroll-contain border-t md:border-t-0 md:border-l border-white/10 flex flex-col bg-[#0e0e11]"
               >
                 <div className="hidden md:flex items-center justify-between px-6 py-4 border-b border-white/10 sticky top-0 bg-[#0e0e11]/95 backdrop-blur-xs z-10">
                   <span className="text-xs font-medium uppercase tracking-widest text-zinc-400">
@@ -418,6 +420,7 @@ export function BrandAmbassadorSection({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </ScrollSection>
   );

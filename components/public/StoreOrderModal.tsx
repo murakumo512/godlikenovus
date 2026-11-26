@@ -6,7 +6,7 @@ import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
 import { collectMediaList } from "@/lib/media";
-import { LightboxMediaItem, MediaCarousel } from "./MediaDisplay";
+import { LightboxMediaItem, MediaCarousel, ModalPortal } from "./MediaDisplay";
 import { useLockBodyAndLenis } from "./SmoothScroll";
 
 interface StoreOrderModalProps {
@@ -75,11 +75,12 @@ export function StoreOrderModal({
   };
 
   return (
+    <ModalPortal>
     <div
       role="dialog"
       aria-modal="true"
       data-lenis-prevent
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/88 backdrop-blur-sm p-2.5 sm:p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/88 backdrop-blur-sm p-2.5 sm:p-4"
       onClick={onClose}
     >
       <div
@@ -262,5 +263,6 @@ export function StoreOrderModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

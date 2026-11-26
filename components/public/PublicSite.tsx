@@ -35,6 +35,7 @@ import {
   LinkifiedText,
   MediaCarousel,
   MediaLightbox,
+  ModalPortal,
   SmartMedia,
 } from "./MediaDisplay";
 import {
@@ -981,11 +982,12 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
       {/* GALLERY EVENT DETAIL MODAL (Instagram Style) */}
       {activeEvent && (
+        <ModalPortal>
         <div
           role="dialog"
           aria-modal="true"
           data-lenis-prevent
-          className="fixed inset-0 z-50 bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
+          className="fixed inset-0 z-[80] bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
           onClick={() => setActiveEvent(null)}
         >
           <div
@@ -1009,7 +1011,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
             <div
               data-lenis-prevent
-              className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
               {/* IG-Style Multi-Photo / Video Carousel Stage */}
               <MediaCarousel
@@ -1079,6 +1081,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       <MediaLightbox
