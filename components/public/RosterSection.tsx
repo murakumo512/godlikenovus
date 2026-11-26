@@ -83,7 +83,7 @@ export function RosterSection({
             )}
             <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
               {homeSections.rosterTitleWhite || "TIM &"}{" "}
-              <span className="text-[#E11D2E]">
+              <span className="godlike-gradient-text">
                 {homeSections.rosterTitleAccent || "ROSTER"}
               </span>
             </h2>

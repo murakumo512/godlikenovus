@@ -252,7 +252,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     </span>
                   </div>
 
-                  <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl font-bold uppercase text-white leading-[0.92]">
+                  <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl font-bold uppercase leading-[0.92] bg-gradient-to-r from-white via-rose-100 to-[#E11D2E] bg-clip-text text-transparent">
                     {data.branding.tagline}
                   </h1>
 
@@ -264,7 +264,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     {data.branding.heroCtaPrimary && (
                       <a
                         href={hs.heroCtaPrimaryHref || "#roster"}
-                        className="inline-flex items-center gap-2.5 bg-[#E11D2E] hover:bg-red-600 px-6 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white transition"
+                        className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#E11D2E] via-rose-600 to-rose-400 hover:brightness-110 px-6 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(225,29,46,0.35)] transition"
                       >
                         {data.branding.heroCtaPrimary}
                         <ArrowRight className="w-4 h-4" />
@@ -484,7 +484,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     )}
                     <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
                       {hs.galleryTitleWhite || "KEGIATAN &"}{" "}
-                      <span className="text-[#E11D2E]">
+                      <span className="godlike-gradient-text">
                         {hs.galleryTitleAccent || "TURNAMEN"}
                       </span>
                     </h2>
@@ -611,7 +611,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     )}
                     <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
                       {hs.storeTitleWhite || "GODLIKE"}{" "}
-                      <span className="text-[#E11D2E]">
+                      <span className="godlike-gradient-text">
                         {hs.storeTitleAccent || "STORE"}
                       </span>
                     </h2>
@@ -834,7 +834,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
                   <button
                     type="submit"
-                    className="inline-flex items-center gap-2.5 bg-[#E11D2E] hover:bg-red-600 px-7 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
+                    className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#E11D2E] via-rose-600 to-rose-400 hover:brightness-110 px-7 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(225,29,46,0.3)] transition cursor-pointer"
                   >
                     <Send className="w-4 h-4" />
                     {tpl.contactSubmitButtonText || "Kirim via WhatsApp"}
@@ -851,7 +851,16 @@ function PublicSiteInner({ data }: { data: SiteData }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-zinc-100 overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#09090b] text-zinc-100 overflow-x-hidden">
+      {/* Godlike Red-to-White Ambient Atmospheric Gradient */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 45% at 15% 0%, rgba(225,29,46,0.14) 0%, transparent 65%), radial-gradient(ellipse 70% 45% at 85% 100%, rgba(255,255,255,0.06) 0%, transparent 65%)",
+        }}
+      />
       <ScrollHudRail sections={hudSections} />
 
       <KprPreloader

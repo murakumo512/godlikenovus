@@ -38,7 +38,7 @@ export function KprPreloader({
     document.body.style.overflow = "hidden";
 
     const start = performance.now();
-    const duration = 1200;
+    const duration = 950;
     let rafId = 0;
 
     const tick = (now: number) => {
@@ -54,16 +54,16 @@ export function KprPreloader({
 
     const toGodlike = setTimeout(() => {
       setStage("godlike");
-    }, 1300);
+    }, 1020);
 
     const toShutter = setTimeout(() => {
       setStage("shutter");
-    }, 3150);
+    }, 2350);
 
     const toDone = setTimeout(() => {
       setStage("done");
       document.body.style.overflow = "";
-    }, 4000);
+    }, 3050);
 
     return () => {
       cancelAnimationFrame(rafId);
@@ -79,7 +79,7 @@ export function KprPreloader({
     setTimeout(() => {
       setStage("done");
       document.body.style.overflow = "";
-    }, 750);
+    }, 600);
   };
 
   if (opening.enabled === false || stage === "done") return null;
@@ -100,71 +100,46 @@ export function KprPreloader({
   const loadPrefix = opening.bottomLeftLoadingPrefix || "LOAD";
 
   return (
-    <div className="fixed inset-0 z-[100] pointer-events-auto select-none overflow-hidden">
-      {/* 5 Architectural Vertical Columns (KPR-style staggered shutter exit into Home) */}
-      <div className="absolute inset-0 grid grid-cols-5 pointer-events-none">
-        {[0, 1, 2, 3, 4].map((col) => (
-          <motion.div
-            key={col}
-            initial={{ y: "0%" }}
-            animate={
-              stage === "shutter"
-                ? {
-                    y: "-102%",
-                    transition: {
-                      duration: 0.72,
-                      delay: col * 0.055,
-                      ease: [0.76, 0, 0.24, 1],
-                    },
-                  }
-                : { y: "0%" }
+    <motion.div
+      initial={{ opacity: 1 }}
+      animate={
+        stage === "shutter"
+          ? {
+              opacity: 0,
+              scale: 1.03,
+              transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
             }
-            className="h-full w-full bg-[#060608] border-r border-white/[0.06] last:border-r-0"
-          />
-        ))}
-      </div>
+          : { opacity: 1, scale: 1 }
+      }
+      style={{ willChange: "opacity, transform" }}
+      className="fixed inset-0 z-[100] pointer-events-auto select-none overflow-hidden bg-[#07070a]"
+    >
+      {/* Smooth Godlike Red-to-White Ambient Radial Glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 38%, rgba(225,29,46,0.22) 0%, rgba(255,255,255,0.06) 42%, rgba(7,7,10,0.96) 76%)",
+        }}
+      />
 
       {/* Optional Custom Background Image or Video during Opening */}
-      {opening.backgroundImage && stage !== "shutter" && (
-        <div className="pointer-events-none absolute inset-0 z-[5]">
+      {opening.backgroundImage && (
+        <div className="pointer-events-none absolute inset-0 z-[2]">
           <SmartMedia
             src={opening.backgroundImage}
             alt=""
             fit="cover"
-            className="w-full h-full opacity-30"
+            className="w-full h-full opacity-25"
             mutedLoop
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#060608]/80 via-[#060608]/60 to-[#060608]/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07070a]/80 via-[#07070a]/55 to-[#07070a]/90" />
         </div>
       )}
 
-      {/* Crimson Flash Wipe right between Loading -> Giant Hero Word */}
-      <AnimatePresence>
-        {stage === "godlike" && (
-          <motion.div
-            key="crimson-wipe"
-            initial={{ scaleY: 1, opacity: 0.9 }}
-            animate={{ scaleY: 0, opacity: 0 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformOrigin: "top" }}
-            className="pointer-events-none absolute inset-0 bg-[#E11D2E] z-20"
-          />
-        )}
-      </AnimatePresence>
-
       {/* HUD Outer Frame & Content Layer */}
-      <motion.div
-        animate={
-          stage === "shutter"
-            ? {
-                opacity: 0,
-                scale: 1.08,
-                transition: { duration: 0.42, ease: [0.76, 0, 0.24, 1] },
-              }
-            : { opacity: 1, scale: 1 }
-        }
-        className="relative z-10 h-full w-full p-3 sm:p-5 flex flex-col justify-between text-white"
-      >
+      <div className="relative z-10 h-full w-full p-3 sm:p-5 flex flex-col justify-between text-white">
         <div className="relative flex-1 border border-white/15 flex flex-col justify-between p-4 sm:p-7 overflow-hidden">
           {/* Corner Crosshair Ticks */}
           <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[#E11D2E]" />
@@ -198,9 +173,8 @@ export function KprPreloader({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{
                     opacity: 0,
-                    scale: 0.9,
-                    filter: "blur(6px)",
-                    transition: { duration: 0.22, ease: "easeIn" },
+                    scale: 0.96,
+                    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
                   }}
                   className="w-full max-w-md flex flex-col items-center text-center"
                 >
@@ -208,19 +182,19 @@ export function KprPreloader({
                     <img
                       src={assetUrl(loadingLogo)}
                       alt={teamName}
-                      className="h-12 sm:h-16 w-auto object-contain mb-5 opacity-90"
+                      className="h-12 sm:h-16 w-auto object-contain mb-5 opacity-95"
                     />
                   )}
 
                   <div className="font-mono text-3xl sm:text-5xl font-bold tracking-[0.15em] text-white tabular-nums">
                     {String(progress).padStart(3, "0")}
-                    <span className="text-[#E11D2E] text-xl sm:text-2xl">%</span>
+                    <span className="bg-gradient-to-r from-[#E11D2E] to-white bg-clip-text text-transparent text-xl sm:text-2xl">%</span>
                   </div>
 
-                  {/* Expanding Center Horizon Line */}
-                  <div className="mt-4 w-56 sm:w-80 h-[2px] bg-zinc-800 relative overflow-hidden">
+                  {/* Expanding Center Horizon Line (Red-to-White Gradient) */}
+                  <div className="mt-4 w-56 sm:w-80 h-[2px] bg-zinc-800 relative overflow-hidden rounded-full">
                     <div
-                      className="absolute inset-y-0 left-0 bg-[#E11D2E] transition-all duration-75"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#E11D2E] via-rose-400 to-white transition-all duration-75"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
@@ -236,16 +210,9 @@ export function KprPreloader({
               {(stage === "godlike" || stage === "shutter") && (
                 <motion.div
                   key="stage-godlike"
-                  initial={{ opacity: 1 }}
-                  animate={
-                    stage === "shutter"
-                      ? {
-                          scale: 1.85,
-                          opacity: 0,
-                          transition: { duration: 0.55, ease: [0.76, 0, 0.24, 1] },
-                        }
-                      : { scale: 1, opacity: 1 }
-                  }
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                   className="relative w-full flex flex-col items-center justify-center text-center"
                 >
                   {/* Outlined Background Echo Word */}
@@ -352,7 +319,7 @@ export function KprPreloader({
             </button>
           </div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </motion.div>
   );
 }

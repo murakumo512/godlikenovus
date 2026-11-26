@@ -206,7 +206,7 @@ export function BrandAmbassadorSection({
             )}
             <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
               {homeSections.baTitleWhite || "BRAND"}{" "}
-              <span className="text-[#E11D2E]">
+              <span className="godlike-gradient-text">
                 {homeSections.baTitleAccent || "AMBASSADOR"}
               </span>
             </h2>

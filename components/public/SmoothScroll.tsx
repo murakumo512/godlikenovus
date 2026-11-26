@@ -35,9 +35,10 @@ export function SmoothScrollProvider({
 
   useEffect(() => {
     const lenis = new Lenis({
-      lerp: 0.085,
+      lerp: 0.068,
       smoothWheel: true,
-      wheelMultiplier: 0.95,
+      wheelMultiplier: 0.88,
+      touchMultiplier: 1.1,
       prevent: (node: HTMLElement) =>
         Boolean(node?.closest?.("[data-lenis-prevent], [role='dialog']")),
     });
@@ -120,18 +121,18 @@ export function ScrollSection({
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start 94%", "start 32%"],
+    offset: ["start 96%", "start 26%"],
   });
 
   const smooth = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.35,
+    stiffness: 88,
+    damping: 22,
+    mass: 0.4,
   });
 
-  const y = useTransform(smooth, [0, 1], [38, 0]);
-  const opacity = useTransform(smooth, [0, 1], [0.22, 1]);
-  const scale = useTransform(smooth, [0, 1], [0.972, 1]);
+  const y = useTransform(smooth, [0, 1], [46, 0]);
+  const opacity = useTransform(smooth, [0, 1], [0.06, 1]);
+  const scale = useTransform(smooth, [0, 1], [0.962, 1]);
   const lineScale = useTransform(smooth, [0, 1], [0, 1]);
 
   return (
@@ -141,12 +142,14 @@ export function ScrollSection({
           <div className="h-px w-full bg-white/[0.06] overflow-hidden">
             <motion.div
               style={{ scaleX: lineScale, transformOrigin: "left" }}
-              className="h-full w-full bg-gradient-to-r from-[#E11D2E] via-red-500/60 to-transparent"
+              className="h-full w-full bg-gradient-to-r from-[#E11D2E] via-rose-300/80 to-white/75"
             />
           </div>
         </div>
       )}
-      <motion.div style={{ y, opacity, scale }}>{children}</motion.div>
+      <motion.div style={{ y, opacity, scale, willChange: "transform, opacity" }}>
+        {children}
+      </motion.div>
     </section>
   );
 }
