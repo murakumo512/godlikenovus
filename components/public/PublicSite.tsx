@@ -11,8 +11,6 @@ import {
   Send,
   Play,
   Images,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import {
   GalleryEvent,
@@ -21,7 +19,7 @@ import {
   StoreProduct,
 } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
-import { isAnyVideoUrl } from "@/lib/media";
+import { collectMediaList, isAnyVideoUrl } from "@/lib/media";
 import {
   DEFAULT_CONTACT_WA_TEMPLATE,
   DEFAULT_SECTION_ORDER,
@@ -35,6 +33,7 @@ import { KprPreloader } from "./KprPreloader";
 import {
   LightboxMediaItem,
   LinkifiedText,
+  MediaCarousel,
   MediaLightbox,
   SmartMedia,
 } from "./MediaDisplay";
@@ -65,17 +64,11 @@ function PublicSiteInner({ data }: { data: SiteData }) {
   const rawCategories = Array.from(new Set(data.gallery.map((g) => g.category)));
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY_KEY);
   const [activeEvent, setActiveEvent] = useState<GalleryEvent | null>(null);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useLockBodyAndLenis(Boolean(activeEvent));
 
-  useEffect(() => {
-    setActiveSlide(0);
-  }, [activeEvent?.id]);
-
   const activeEventMedia = activeEvent
-    ? [activeEvent.image, ...(activeEvent.images || [])].filter(Boolean)
+    ? collectMediaList(activeEvent.image, activeEvent.images, activeEvent.videoUrl)
     : [];
 
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
@@ -422,40 +415,55 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 </div>
 
                 <div className="lg:col-span-7 grid grid-cols-2 gap-2 sm:gap-4">
-                  {data.about.photos.map((photo, idx) => (
-                    <div
-                      key={photo.id}
-                      onClick={() =>
-                        setLightboxItem({
-                          url: photo.url,
-                          title: data.about.title,
-                          caption: photo.caption,
-                        })
-                      }
-                      className={`group relative cursor-pointer overflow-hidden rounded-md bg-zinc-900 ${
-                        idx === 0
-                          ? "aspect-square sm:col-span-2 sm:aspect-[16/9]"
-                          : "aspect-square sm:aspect-[4/3]"
-                      }`}
-                    >
-                      <SmartMedia
-                        src={photo.url}
-                        alt={photo.caption}
-                        fit="contain-ambient"
-                        className="w-full h-full"
-                        imgClassName="group-hover:scale-[1.03] transition duration-500"
-                        mutedLoop
-                        showVideoBadge
-                      />
-                      {photo.caption && (
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-2 sm:p-4 pt-6">
-                          <span className="text-[10px] sm:text-sm text-zinc-100 block truncate">
-                            {photo.caption}
+                  {data.about.photos.map((photo, idx) => {
+                    const allAboutMedia = collectMediaList(
+                      ...data.about.photos.flatMap((p) => [p.url, ...(p.images || [])])
+                    );
+                    const photoMedia = collectMediaList(photo.url, photo.images);
+                    const startIdx = Math.max(0, allAboutMedia.indexOf(photo.url));
+                    return (
+                      <div
+                        key={photo.id}
+                        onClick={() =>
+                          setLightboxItem({
+                            url: photo.url,
+                            items: allAboutMedia,
+                            initialIndex: startIdx,
+                            title: data.about.title,
+                            caption: photo.caption,
+                          })
+                        }
+                        className={`group relative cursor-pointer overflow-hidden rounded-md bg-zinc-900 ${
+                          idx === 0
+                            ? "aspect-square sm:col-span-2 sm:aspect-[16/9]"
+                            : "aspect-square sm:aspect-[4/3]"
+                        }`}
+                      >
+                        <SmartMedia
+                          src={photo.url}
+                          alt={photo.caption}
+                          fit="contain-ambient"
+                          className="w-full h-full"
+                          imgClassName="group-hover:scale-[1.03] transition duration-500"
+                          mutedLoop
+                          showVideoBadge
+                        />
+                        {photoMedia.length > 1 && (
+                          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            <Images className="w-3 h-3" />
+                            {photoMedia.length}
                           </span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        )}
+                        {photo.caption && (
+                          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-2 sm:p-4 pt-6">
+                            <span className="text-[10px] sm:text-sm text-zinc-100 block truncate">
+                              {photo.caption}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </ScrollSection>
@@ -616,7 +624,9 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-                  {data.store.map((product) => (
+                  {data.store.map((product) => {
+                    const productMedia = collectMediaList(product.image, product.images);
+                    return (
                     <div
                       key={product.id}
                       onClick={() => setOrderProduct(product)}
@@ -634,6 +644,12 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                         {product.badge && (
                           <span className="absolute top-2 left-2 z-10 bg-black/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-white">
                             {product.badge}
+                          </span>
+                        )}
+                        {productMedia.length > 1 && (
+                          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                            <Images className="w-3 h-3" />
+                            {productMedia.length}
                           </span>
                         )}
                       </div>
@@ -673,7 +689,8 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </ScrollSection>
@@ -984,133 +1001,20 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
               {/* IG-Style Multi-Photo / Video Carousel Stage */}
-              <div className="md:col-span-7 bg-black flex flex-col md:h-full overflow-hidden">
-                {(() => {
-                  const totalSlides = activeEventMedia.length;
-                  const safeSlide = Math.min(activeSlide, Math.max(0, totalSlides - 1));
-                  const currentMedia = activeEventMedia[safeSlide] || activeEvent.image;
-                  const isVid = isAnyVideoUrl(currentMedia);
-
-                  return (
-                    <>
-                      <div
-                        onTouchStart={(e) => setTouchStartX(e.touches[0]?.clientX ?? null)}
-                        onTouchEnd={(e) => {
-                          if (touchStartX === null || totalSlides <= 1) return;
-                          const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartX;
-                          if (dx < -40) {
-                            setActiveSlide((s) => (s + 1) % totalSlides);
-                          } else if (dx > 40) {
-                            setActiveSlide((s) => (s - 1 + totalSlides) % totalSlides);
-                          }
-                          setTouchStartX(null);
-                        }}
-                        onClick={() => {
-                          if (!isVid) {
-                            setLightboxItem({
-                              url: currentMedia,
-                              items: activeEventMedia,
-                              initialIndex: safeSlide,
-                              title: activeEvent.title,
-                              caption: `${activeEvent.date} · ${activeEvent.location}`,
-                            });
-                          }
-                        }}
-                        className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[240px] ${
-                          isVid ? "" : "cursor-zoom-in"
-                        }`}
-                      >
-                        {isVid ? (
-                          <SmartMedia
-                            src={currentMedia}
-                            alt={activeEvent.title}
-                            fit="contain"
-                            className="w-full h-full aspect-video"
-                            controls
-                            mutedLoop={false}
-                          />
-                        ) : (
-                          <img
-                            src={assetUrl(currentMedia)}
-                            alt={`${activeEvent.title} (${safeSlide + 1})`}
-                            className="w-full max-h-[55vh] md:max-h-full h-auto md:h-full object-contain select-none"
-                          />
-                        )}
-
-                        {totalSlides > 1 && (
-                          <>
-                            <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-full bg-black/75 border border-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
-                              {safeSlide + 1} / {totalSlides}
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveSlide((s) => (s - 1 + totalSlides) % totalSlides);
-                              }}
-                              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
-                              aria-label="Foto sebelumnya"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveSlide((s) => (s + 1) % totalSlides);
-                              }}
-                              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
-                              aria-label="Foto berikutnya"
-                            >
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-
-                      {/* Scrollable Thumbnail Strip for Quick Activity Browsing */}
-                      {totalSlides > 1 && (
-                        <div
-                          data-lenis-prevent
-                          className="flex items-center gap-1.5 px-3 py-2 bg-zinc-950 border-t border-white/10 overflow-x-auto no-scrollbar shrink-0"
-                        >
-                          {activeEventMedia.map((mUrl, mIdx) => {
-                            const selected = mIdx === safeSlide;
-                            const thumbIsVid = isAnyVideoUrl(mUrl);
-                            return (
-                              <button
-                                key={`${mUrl}-${mIdx}`}
-                                type="button"
-                                onClick={() => setActiveSlide(mIdx)}
-                                className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden shrink-0 border-2 transition cursor-pointer bg-zinc-900 ${
-                                  selected
-                                    ? "border-[#E11D2E]"
-                                    : "border-transparent opacity-55 hover:opacity-100"
-                                }`}
-                              >
-                                {thumbIsVid ? (
-                                  <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-white">
-                                    <Play className="w-4 h-4 fill-white" />
-                                  </div>
-                                ) : (
-                                  <img
-                                    src={assetUrl(mUrl)}
-                                    alt={`Thumbnail ${mIdx + 1}`}
-                                    loading="lazy"
-                                    className="w-full h-full object-cover"
-                                  />
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
+              <MediaCarousel
+                items={activeEventMedia}
+                alt={activeEvent.title}
+                className="md:col-span-7 md:h-full"
+                onInspect={(url, slideIdx) =>
+                  setLightboxItem({
+                    url,
+                    items: activeEventMedia,
+                    initialIndex: slideIdx,
+                    title: activeEvent.title,
+                    caption: `${activeEvent.date} · ${activeEvent.location}`,
+                  })
+                }
+              />
 
               <div
                 data-lenis-prevent

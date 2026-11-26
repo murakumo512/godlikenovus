@@ -8,6 +8,20 @@ export type SectionKey =
   | "sponsors"
   | "contact";
 
+export type AdminTabId =
+  | "sections"
+  | "opening"
+  | "branding"
+  | "templates"
+  | "games"
+  | "about"
+  | "gallery"
+  | "ambassadors"
+  | "store"
+  | "sponsors"
+  | "contact"
+  | "users";
+
 export interface RosterMember {
   id: string;
   ign: string;
@@ -15,6 +29,7 @@ export interface RosterMember {
   role: string;
   isCoach: boolean;
   photo: string;
+  images?: string[];
   bio: string;
   achievements: string;
 }
@@ -26,6 +41,7 @@ export interface GameSubTeam {
   logo?: string;
   description?: string;
   bannerImage?: string;
+  bannerImages?: string[];
   roster: RosterMember[];
 }
 
@@ -36,6 +52,7 @@ export interface GameDivision {
   shortName: string;
   description: string;
   bannerImage: string;
+  bannerImages?: string[];
   subTeams?: GameSubTeam[];
   roster: RosterMember[];
 }
@@ -53,6 +70,7 @@ export interface BrandAmbassador {
   nickname: string;
   team: string;
   photo: string;
+  images?: string[];
   games: string[];
   bio: string;
   socials: SocialLink[];
@@ -72,6 +90,7 @@ export interface AboutStat {
 export interface AboutPhoto {
   id: string;
   url: string;
+  images?: string[];
   caption: string;
 }
 
@@ -102,6 +121,7 @@ export interface StoreProduct {
   category: string;
   badge: string;
   image: string;
+  images?: string[];
   description: string;
   sizes: string[];
   inStock: boolean;
@@ -243,6 +263,7 @@ export interface ContactConfig {
 export interface SiteData {
   sectionOrder: SectionKey[];
   hiddenSections?: SectionKey[];
+  adminTabOrder?: AdminTabId[];
   branding: BrandingConfig;
   opening: OpeningConfig;
   templates: MessageTemplatesConfig;

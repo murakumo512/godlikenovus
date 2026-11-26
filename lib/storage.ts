@@ -68,6 +68,7 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
     ...raw,
     sectionOrder: normalizeSectionOrder(raw.sectionOrder),
     hiddenSections: Array.isArray(raw.hiddenSections) ? raw.hiddenSections : [],
+    adminTabOrder: Array.isArray(raw.adminTabOrder) ? raw.adminTabOrder : undefined,
     branding: {
       ...DEFAULT_SITE_DATA.branding,
       ...(raw.branding || {}),
@@ -92,7 +93,10 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
         ? raw.about.stats
         : DEFAULT_SITE_DATA.about.stats,
       photos: Array.isArray(raw.about?.photos)
-        ? raw.about.photos
+        ? raw.about.photos.map((p) => ({
+            ...p,
+            images: Array.isArray(p.images) ? p.images.filter(Boolean) : [],
+          }))
         : DEFAULT_SITE_DATA.about.photos,
     },
     contact: {
@@ -102,11 +106,29 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
     games: Array.isArray(raw.games)
       ? raw.games.map((g) => ({
           ...g,
-          roster: Array.isArray(g.roster) ? g.roster : [],
+          bannerImages: Array.isArray(g.bannerImages)
+            ? g.bannerImages.filter(Boolean)
+            : [],
+          roster: Array.isArray(g.roster)
+            ? g.roster.map((m) => ({
+                ...m,
+                images: Array.isArray(m.images) ? m.images.filter(Boolean) : [],
+              }))
+            : [],
           subTeams: Array.isArray(g.subTeams)
             ? g.subTeams.map((st) => ({
                 ...st,
-                roster: Array.isArray(st.roster) ? st.roster : [],
+                bannerImages: Array.isArray(st.bannerImages)
+                  ? st.bannerImages.filter(Boolean)
+                  : [],
+                roster: Array.isArray(st.roster)
+                  ? st.roster.map((m) => ({
+                      ...m,
+                      images: Array.isArray(m.images)
+                        ? m.images.filter(Boolean)
+                        : [],
+                    }))
+                  : [],
               }))
             : [],
         }))
@@ -120,11 +142,17 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
     ambassadors: Array.isArray(raw.ambassadors)
       ? raw.ambassadors.map((ba) => ({
           ...ba,
+          images: Array.isArray(ba.images) ? ba.images.filter(Boolean) : [],
           games: Array.isArray(ba.games) ? ba.games : [],
           socials: Array.isArray(ba.socials) ? ba.socials : [],
         }))
       : DEFAULT_SITE_DATA.ambassadors,
-    store: Array.isArray(raw.store) ? raw.store : DEFAULT_SITE_DATA.store,
+    store: Array.isArray(raw.store)
+      ? raw.store.map((p) => ({
+          ...p,
+          images: Array.isArray(p.images) ? p.images.filter(Boolean) : [],
+        }))
+      : DEFAULT_SITE_DATA.store,
     sponsors: Array.isArray(raw.sponsors)
       ? raw.sponsors
       : DEFAULT_SITE_DATA.sponsors,

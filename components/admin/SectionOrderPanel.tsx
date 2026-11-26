@@ -1,6 +1,14 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  EyeOff,
+  GripVertical,
+  RotateCcw,
+} from "lucide-react";
 import { DEFAULT_SECTION_ORDER } from "@/lib/default-data";
 import { SectionKey, SiteData } from "@/lib/types";
 
@@ -64,6 +72,8 @@ export function SectionOrderPanel({
       ? data.sectionOrder
       : DEFAULT_SECTION_ORDER;
   const hidden = new Set<SectionKey>(data.hiddenSections || []);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
 
   const moveItem = (index: number, direction: -1 | 1) => {
     const targetIdx = index + direction;
@@ -72,6 +82,20 @@ export function SectionOrderPanel({
     const [moved] = next.splice(index, 1);
     next.splice(targetIdx, 0, moved);
     setData((prev) => ({ ...prev, sectionOrder: next }));
+  };
+
+  const handleDrop = (targetIdx: number) => {
+    if (dragIdx === null || dragIdx === targetIdx) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+    const next = [...order];
+    const [moved] = next.splice(dragIdx, 1);
+    next.splice(targetIdx, 0, moved);
+    setData((prev) => ({ ...prev, sectionOrder: next }));
+    setDragIdx(null);
+    setOverIdx(null);
   };
 
   const toggleVisibility = (key: SectionKey) => {
@@ -124,11 +148,30 @@ export function SectionOrderPanel({
             return (
               <div
                 key={key}
-                className={`p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 transition ${
-                  isHidden ? "bg-zinc-100/80 opacity-65" : "bg-white"
-                }`}
+                draggable
+                onDragStart={() => setDragIdx(idx)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (overIdx !== idx) setOverIdx(idx);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleDrop(idx);
+                }}
+                onDragEnd={() => {
+                  setDragIdx(null);
+                  setOverIdx(null);
+                }}
+                className={`p-3 sm:p-4 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 transition cursor-grab active:cursor-grabbing ${
+                  overIdx === idx && dragIdx !== idx
+                    ? "bg-red-50/70 ring-2 ring-inset ring-red-400"
+                    : isHidden
+                      ? "bg-zinc-100/80 opacity-65"
+                      : "bg-white"
+                } ${dragIdx === idx ? "opacity-45" : ""}`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <GripVertical className="w-4 h-4 text-zinc-400 shrink-0" />
                   <span className="w-7 h-7 rounded-full bg-zinc-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
                     {idx + 1}
                   </span>

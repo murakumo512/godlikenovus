@@ -20,3 +20,22 @@ export function isAnyVideoUrl(url?: string | null): boolean {
   if (!url) return false;
   return isVideoFileUrl(url) || Boolean(getYouTubeEmbedUrl(url));
 }
+
+export function collectMediaList(
+  ...sources: Array<string | string[] | undefined | null>
+): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const src of sources) {
+    if (!src) continue;
+    const list = Array.isArray(src) ? src : [src];
+    for (const item of list) {
+      const trimmed = typeof item === "string" ? item.trim() : "";
+      if (trimmed && !seen.has(trimmed)) {
+        seen.add(trimmed);
+        result.push(trimmed);
+      }
+    }
+  }
+  return result;
+}

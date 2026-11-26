@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowUpRight, Award, X } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Award, Images, X } from "lucide-react";
 import { GameDivision, HomeSectionsConfig, RosterMember } from "@/lib/types";
+import { collectMediaList } from "@/lib/media";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
   LinkifiedText,
+  MediaCarousel,
   SmartMedia,
 } from "./MediaDisplay";
 
@@ -55,6 +57,10 @@ export function RosterSection({
   const currentTitle = activeSubTeam ? activeSubTeam.name : activeGame.name;
   const currentDescription =
     activeSubTeam?.description || activeGame.description;
+  const currentBannerList = collectMediaList(
+    currentBanner,
+    activeSubTeam ? activeSubTeam.bannerImages : activeGame.bannerImages
+  );
 
   const coaches = currentRoster.filter((m) => m.isCoach);
   const players = currentRoster.filter((m) => !m.isCoach);
@@ -231,25 +237,24 @@ export function RosterSection({
                     {currentDescription}
                   </p>
                 </div>
-                {currentBanner && (
-                  <div
-                    onClick={() =>
+                {currentBannerList.length > 0 && (
+                  <MediaCarousel
+                    items={currentBannerList}
+                    alt={currentTitle}
+                    fit="cover"
+                    showThumbnails={false}
+                    className="lg:col-span-5 bg-zinc-900"
+                    stageClassName="aspect-[21/9]"
+                    onInspect={(url, idx) =>
                       onInspectMedia({
-                        url: currentBanner,
+                        url,
+                        items: currentBannerList,
+                        initialIndex: idx,
                         title: currentTitle,
                         caption: currentDescription,
                       })
                     }
-                    className="lg:col-span-5 aspect-[21/9] overflow-hidden bg-zinc-900 cursor-zoom-in"
-                  >
-                    <SmartMedia
-                      src={currentBanner}
-                      alt={currentTitle}
-                      fit="cover"
-                      className="w-full h-full opacity-90 hover:opacity-100 transition"
-                      mutedLoop
-                    />
-                  </div>
+                  />
                 )}
               </div>
 
@@ -297,20 +302,33 @@ export function RosterSection({
                   {players.length})
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-5">
-                  {players.map((player) => (
+                  {players.map((player) => {
+                    const playerMediaCount = collectMediaList(
+                      player.photo,
+                      player.images
+                    ).length;
+                    return (
                     <div
                       key={player.id}
                       onClick={() => setSelectedMember(player)}
                       className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                     >
-                      <SmartMedia
-                        src={player.photo}
-                        alt={player.ign}
-                        fit="contain-ambient"
-                        className="aspect-square sm:aspect-[3/3.6] w-full bg-zinc-900"
-                        imgClassName="group-hover:scale-[1.04] transition duration-500"
-                        showVideoBadge
-                      />
+                      <div className="relative aspect-square sm:aspect-[3/3.6] w-full bg-zinc-900 overflow-hidden">
+                        <SmartMedia
+                          src={player.photo}
+                          alt={player.ign}
+                          fit="contain-ambient"
+                          className="w-full h-full"
+                          imgClassName="group-hover:scale-[1.04] transition duration-500"
+                          showVideoBadge
+                        />
+                        {playerMediaCount > 1 && (
+                          <span className="absolute top-1.5 right-1.5 z-10 inline-flex items-center gap-0.5 rounded-full bg-black/75 border border-white/20 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-semibold text-white">
+                            <Images className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            {playerMediaCount}
+                          </span>
+                        )}
+                      </div>
                       <div className="p-2 sm:p-3 border-t border-white/8">
                         <span className="block text-[9px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] truncate">
                           {player.role}
@@ -323,7 +341,8 @@ export function RosterSection({
                         </p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
@@ -362,25 +381,27 @@ export function RosterSection({
                 data-lenis-prevent
                 className="flex-1 overflow-y-auto overscroll-contain"
               >
-                <div
-                  onClick={() =>
+                <MediaCarousel
+                  items={collectMediaList(
+                    selectedMember.photo,
+                    selectedMember.images
+                  )}
+                  alt={selectedMember.ign}
+                  fit="contain"
+                  stageClassName="min-h-[220px] max-h-[55vh]"
+                  onInspect={(url, idx) =>
                     onInspectMedia({
-                      url: selectedMember.photo,
+                      url,
+                      items: collectMediaList(
+                        selectedMember.photo,
+                        selectedMember.images
+                      ),
+                      initialIndex: idx,
                       title: `${selectedMember.ign} — ${selectedMember.realName}`,
                       caption: selectedMember.role,
                     })
                   }
-                  className="bg-black cursor-zoom-in flex items-center justify-center"
-                >
-                  <SmartMedia
-                    src={selectedMember.photo}
-                    alt={selectedMember.ign}
-                    fit="contain"
-                    className="w-full max-h-[55vh]"
-                    imgClassName="max-h-[55vh] w-auto mx-auto"
-                    controls
-                  />
-                </div>
+                />
 
                 <div className="p-5 space-y-3 border-t border-white/10">
                   <div>

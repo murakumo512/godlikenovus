@@ -1,4 +1,15 @@
 {
+  "sectionOrder": [
+    "ambassadors",
+    "hero",
+    "roster",
+    "about",
+    "gallery",
+    "store",
+    "sponsors",
+    "contact"
+  ],
+  "hiddenSections": [],
   "branding": {
     "teamName": "GODLIKE NOVUS",
     "estYear": "EST. 2013",
@@ -6,16 +17,18 @@
     "heroSubtitle": "Competitive esports powerhouse forged in 2013. Dominating the arena across Honor of Kings and RF Online with relentless discipline and championship DNA.",
     "heroCtaPrimary": "EXPLORE ROSTER",
     "heroCtaSecondary": "OFFICIAL STORE",
-    "whatsappNumber": "6285162790669",
+    "whatsappNumber": "085172330076",
     "logoRed": "/images/logo-red.png",
     "logoWhite": "/images/logo-white.png",
     "logoTagline": "/images/logo-tagline-red.png",
-    "siteTitle": "GODLIKE NOVUS \u2014 Esports Organization | Est. 2013",
-    "siteDescription": "Gamers Don't Die, They Respawn. Official website of Godlike Novus Esports \u2014 Honor of Kings & RF Online divisions, Store, Events, and Management.",
+    "siteTitle": "GODLIKE NOVUS — Esports Organization | Est. 2013",
+    "siteDescription": "Gamers Don't Die, They Respawn. Official website of Godlike Novus Esports — Honor of Kings & RF Online divisions, Store, Events, and Management.",
     "favicon": "/images/logo-red.png",
     "navbarLogo": "/images/logo-white.png",
     "navbarTitle": "GODLIKE NOVUS",
     "navbarSubtitle": "EST. 2013",
+    "adminLogo": "",
+    "adminTitle": "Godlike Admin",
     "navLabels": {
       "roster": "Roster",
       "about": "About",
@@ -38,12 +51,12 @@
     "loadingStatusText": "SYNCING ROSTER & ARENA DATA",
     "heroWord": "GODLIKE",
     "heroImage": "",
-    "subWord": "NOVUS",
+    "subWord": "Godlike",
     "badgeText": "",
     "quoteText": "",
     "bottomLeftLoadingPrefix": "LOAD",
     "bottomLeftReadyText": "[READY // ENTERING ARENA]",
-    "skipButtonText": "SKIP [\u2192]"
+    "skipButtonText": "SKIP [→]"
   },
   "templates": {
     "storeWhatsappTemplate": "*ORDER MERCH GODLIKE NOVUS*\n==============================\nProduk: {product}\nKategori: {category}\nHarga Satuan: {price}\nUkuran: {size}\nJumlah: {qty} pcs\nTotal Estimasi: {total}\n------------------------------\nNama Pemesan: {name}\nNo. WhatsApp: {phone}\nAlamat Pengiriman: {address}\nCatatan: {notes}\n==============================\nMohon info ketersediaan & pembayaran ya min!",
@@ -228,7 +241,7 @@
             },
             {
               "id": "mem-1795590850767",
-              "ign": "C\u221ekies",
+              "ign": "C∞kies",
               "realName": "ANDI BIMO",
               "role": "MID",
               "isCoach": false,
@@ -325,7 +338,7 @@
   "about": {
     "title": "ABOUT GODLIKE NOVUS",
     "headline": "FORGED IN 2013. REBORN FOR THE MODERN ARENA.",
-    "description": "Founded in 2013 as a tight-knit competitive guild, Godlike Novus has evolved into a multi-division esports organization uniting disciplined players, dedicated coaches, and a passionate community. Guided by our motto \u2014 'Gamers Don't Die, They Respawn' \u2014 we never back down from a challenge, turning every setback into a stronger comeback.",
+    "description": "Founded in 2013 as a tight-knit competitive guild, Godlike Novus has evolved into a multi-division esports organization uniting disciplined players, dedicated coaches, and a passionate community. Guided by our motto — 'Gamers Don't Die, They Respawn' — we never back down from a challenge, turning every setback into a stronger comeback.",
     "stats": [
       {
         "label": "FOUNDED",
@@ -353,7 +366,7 @@
       {
         "id": "about-2",
         "url": "/images/seed/about-2.svg",
-        "caption": "Main Stage Walkout \u2014 Regional Championship"
+        "caption": "Main Stage Walkout — Regional Championship"
       },
       {
         "id": "about-3",
@@ -375,7 +388,11 @@
       "location": "BEKASI, INDONESIA",
       "category": "HONOR OF KING TOURNAMENT",
       "image": "/api/uploads/1795578996453-WhatsApp_Image_2026-11-25_at_10.55.12.jpeg",
-      "description": "HOK KGS CHAMPIONSHIP SEASON 1 \u2013 CITY QUALIFIER BEKASI! \ud83d\udd25\n\nSaatnya tunjukkan kemampuan tim kalian dan buktikan siapa yang layak menjadi yang terbaik! \ud83c\udfc6\n\nHOK Bekasi x Bekasian Esports x Godlike menghadirkan HOK CHAMPIONSHIP SEASON 1 \u2013 CITY QUALIFIER BEKASI dengan kesempatan membawa pulang total hadiah jutaan rupiah!\n\n\ud83c\udfae INFORMASI TURNAMEN\n\ud83d\udcc5 Tanggal: 22 November 2026\n\ud83d\udccd Lokasi: Kedai Kavling Tugu (https://share.google/QWnV5MAQZOD7W07GU)\n\ud83d\udcb0 Prizepool: Rp1.000.000\n\ud83c\udf9f\ufe0f Pendaftaran: GRATIS!\n\n\ud83d\ude80 Jangan lewatkan kesempatan ini! Ajak tim kalian, susun strategi, dan bersiaplah untuk menjadi juara!\n\ud83d\udcdd DAFTARKAN TIM KALIAN SEKARANG!\n\ud83d\udd17 https://bit.ly/kgs-qualifer-bekasi\n\ud83d\udcde CONTACT PERSON: - Pradana (Tim): 085172330076 - Fajri (Solo): 081292348877"
+      "description": "HOK KGS CHAMPIONSHIP SEASON 1 – CITY QUALIFIER BEKASI! 🔥\n\nSaatnya tunjukkan kemampuan tim kalian dan buktikan siapa yang layak menjadi yang terbaik! 🏆\n\nHOK Bekasi x Bekasian Esports x Godlike menghadirkan HOK CHAMPIONSHIP SEASON 1 – CITY QUALIFIER BEKASI dengan kesempatan membawa pulang total hadiah jutaan rupiah!\n\n🎮 INFORMASI TURNAMEN\n📅 Tanggal: 22 November 2026\n📍 Lokasi: Kedai Kavling Tugu (https://share.google/QWnV5MAQZOD7W07GU)\n💰 Prizepool: Rp1.000.000\n🎟️ Pendaftaran: GRATIS!\n\n🚀 Jangan lewatkan kesempatan ini! Ajak tim kalian, susun strategi, dan bersiaplah untuk menjadi juara!\n📝 DAFTARKAN TIM KALIAN SEKARANG!\n🔗 https://bit.ly/kgs-qualifer-bekasi\n📞 CONTACT PERSON: - Pradana (Tim): 085172330076 - Fajri (Solo): 081292348877",
+      "images": [
+        "/api/uploads/1795615265908-8a3d3134-149b-40c8-bbbd-28d660435896.jpg",
+        "/api/uploads/1795615266105-154654.png"
+      ]
     },
     {
       "id": "evt-2",
@@ -384,7 +401,8 @@
       "location": "Jakarta Arena",
       "category": "RF Event",
       "image": "/images/seed/event-2.svg",
-      "description": "Our RF division dominated the 3-faction clash, securing the central chip in under 18 minutes."
+      "description": "Our RF division dominated the 3-faction clash, securing the central chip in under 18 minutes.",
+      "images": []
     },
     {
       "id": "evt-3",
@@ -393,7 +411,8 @@
       "location": "Novus HQ, Bandung",
       "category": "Community",
       "image": "/images/seed/event-3.svg",
-      "description": "Open scrimmage, Q&A with Coach Vex & Coach Kronos, and exclusive limited jersey signing."
+      "description": "Open scrimmage, Q&A with Coach Vex & Coach Kronos, and exclusive limited jersey signing.",
+      "images": []
     },
     {
       "id": "evt-4",
@@ -402,7 +421,8 @@
       "location": "Online / Livestream",
       "category": "Exhibition",
       "image": "/images/seed/event-4.svg",
-      "description": "Cross-region exhibition matches showcasing our new season roster and tactical drafts."
+      "description": "Cross-region exhibition matches showcasing our new season roster and tactical drafts.",
+      "images": []
     }
   ],
   "ambassadors": [
@@ -548,15 +568,5 @@
       "label": "Discord",
       "url": "https://discord.gg/godlikenovus"
     }
-  ],
-  "sectionOrder": [
-    "hero",
-    "roster",
-    "about",
-    "gallery",
-    "ambassadors",
-    "store",
-    "sponsors",
-    "contact"
   ]
 }

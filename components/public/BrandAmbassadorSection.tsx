@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight, Images, X } from "lucide-react";
 import { BrandAmbassador, HomeSectionsConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
-import { isAnyVideoUrl } from "@/lib/media";
+import { collectMediaList, isAnyVideoUrl } from "@/lib/media";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
   LinkifiedText,
+  MediaCarousel,
   SmartMedia,
 } from "./MediaDisplay";
 import { SocialIcon } from "./SocialIcon";
@@ -225,7 +226,13 @@ export function BrandAmbassadorSection({
               : "grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
           }
         >
-          {ambassadors.map((ba) => (
+          {ambassadors.map((ba) => {
+            const baMediaCount = collectMediaList(
+              ba.bannerImage,
+              ba.photo,
+              ba.images
+            ).length;
+            return (
             <article
               key={ba.id}
               onClick={() => setSelectedBa(ba)}
@@ -233,6 +240,12 @@ export function BrandAmbassadorSection({
             >
               <div className="@container relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-white/12 bg-[#050507] group-hover:border-[#E11D2E]/70 transition shadow-lg">
                 <AmbassadorLandscapeCard ba={ba} logo={fallbackLogo} />
+                {baMediaCount > 1 && (
+                  <span className="absolute top-2.5 right-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    <Images className="w-3 h-3" />
+                    {baMediaCount}
+                  </span>
+                )}
               </div>
 
               <div className="pt-2.5 sm:pt-3 flex items-center justify-between gap-3 px-0.5">
@@ -250,7 +263,8 @@ export function BrandAmbassadorSection({
                 </span>
               </div>
             </article>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -286,39 +300,29 @@ export function BrandAmbassadorSection({
               data-lenis-prevent
               className="flex-1 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
-              <div
-                onClick={() => {
-                  const mediaToInspect =
-                    selectedBa.bannerImage || selectedBa.photo;
-                  if (!isAnyVideoUrl(mediaToInspect)) {
-                    onInspectMedia({
-                      url: mediaToInspect,
-                      title: selectedBa.name,
-                      caption: `${selectedBa.nickname} — ${selectedBa.team}`,
-                    });
-                  }
-                }}
-                className={`md:col-span-6 bg-black flex items-center justify-center md:h-full overflow-hidden ${
-                  isAnyVideoUrl(selectedBa.photo) ? "" : "cursor-zoom-in"
-                }`}
-              >
-                {isAnyVideoUrl(selectedBa.photo) ? (
-                  <SmartMedia
-                    src={selectedBa.photo}
-                    alt={selectedBa.name}
-                    fit="contain"
-                    className="w-full md:h-full aspect-video"
-                    controls
-                    mutedLoop={false}
-                  />
-                ) : (
-                  <img
-                    src={assetUrl(selectedBa.bannerImage || selectedBa.photo)}
-                    alt={selectedBa.name}
-                    className="w-full max-h-[58vh] md:max-h-none h-auto md:h-full md:w-full object-contain select-none"
-                  />
+              <MediaCarousel
+                items={collectMediaList(
+                  selectedBa.bannerImage,
+                  selectedBa.photo,
+                  selectedBa.images
                 )}
-              </div>
+                alt={selectedBa.name}
+                fit="contain"
+                className="md:col-span-6 md:h-full"
+                onInspect={(url, idx) =>
+                  onInspectMedia({
+                    url,
+                    items: collectMediaList(
+                      selectedBa.bannerImage,
+                      selectedBa.photo,
+                      selectedBa.images
+                    ),
+                    initialIndex: idx,
+                    title: selectedBa.name,
+                    caption: `${selectedBa.nickname} — ${selectedBa.team}`,
+                  })
+                }
+              />
 
               <div
                 data-lenis-prevent

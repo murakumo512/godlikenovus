@@ -11,8 +11,10 @@ import {
   AlertCircle,
   Users,
   LogOut,
+  GripVertical,
 } from "lucide-react";
 import {
+  AdminTabId,
   BrandAmbassador,
   GameDivision,
   GameSubTeam,
@@ -32,19 +34,7 @@ import { SectionOrderPanel } from "./SectionOrderPanel";
 import { AdminUsersPanel } from "./AdminUsersPanel";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
-type TabId =
-  | "sections"
-  | "opening"
-  | "branding"
-  | "templates"
-  | "games"
-  | "about"
-  | "gallery"
-  | "ambassadors"
-  | "store"
-  | "sponsors"
-  | "contact"
-  | "users";
+type TabId = AdminTabId;
 
 const STORE_TEMPLATE_VARS = [
   ["{product}", "Nama Produk"],
@@ -82,6 +72,8 @@ export function AdminDashboard({
     initialData.games[0]?.subTeams?.[0]?.id || ""
   );
   const [saving, setSaving] = useState(false);
+  const [tabDragIdx, setTabDragIdx] = useState<number | null>(null);
+  const [tabOverIdx, setTabOverIdx] = useState<number | null>(null);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     text: string;
@@ -174,7 +166,7 @@ export function AdminDashboard({
     );
   }
 
-  const tabs: { id: TabId; label: string }[] = [
+  const defaultTabs: { id: TabId; label: string }[] = [
     { id: "sections", label: "Urutan Section" },
     { id: "branding", label: "Home & Branding" },
     { id: "opening", label: "Opening & Loading" },
@@ -188,6 +180,38 @@ export function AdminDashboard({
     { id: "templates", label: "Template Pesan" },
     { id: "users", label: "Akun & Password" },
   ];
+
+  const tabs: { id: TabId; label: string }[] = (() => {
+    const customOrder = data.adminTabOrder;
+    if (!Array.isArray(customOrder) || customOrder.length === 0) {
+      return defaultTabs;
+    }
+    const byId = new Map(defaultTabs.map((t) => [t.id, t]));
+    const ordered: { id: TabId; label: string }[] = [];
+    for (const id of customOrder) {
+      const found = byId.get(id);
+      if (found && !ordered.some((o) => o.id === id)) ordered.push(found);
+    }
+    for (const t of defaultTabs) {
+      if (!ordered.some((o) => o.id === t.id)) ordered.push(t);
+    }
+    return ordered;
+  })();
+
+  const handleTabDrop = (targetIdx: number) => {
+    if (tabDragIdx === null || tabDragIdx === targetIdx) {
+      setTabDragIdx(null);
+      setTabOverIdx(null);
+      return;
+    }
+    const nextOrder = tabs.map((t) => t.id);
+    const [moved] = nextOrder.splice(tabDragIdx, 1);
+    nextOrder.splice(targetIdx, 0, moved);
+    setData((prev) => ({ ...prev, adminTabOrder: nextOrder }));
+    scheduleAutoSave();
+    setTabDragIdx(null);
+    setTabOverIdx(null);
+  };
 
   const activeGame =
     data.games.find((g) => g.id === selectedGameId) || data.games[0] || null;
@@ -339,23 +363,66 @@ export function AdminDashboard({
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-5 sm:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar (Drag & Drop Reorderable) */}
         <aside className="hidden lg:block lg:col-span-3">
           <nav className="sticky top-20 space-y-0.5">
-            {tabs.map((tab) => {
+            <div className="px-3 pb-1.5 flex items-center justify-between text-[11px] text-zinc-400">
+              <span>Geser menu untuk atur urutan</span>
+              {data.adminTabOrder && data.adminTabOrder.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setData((prev) => ({ ...prev, adminTabOrder: undefined }));
+                    scheduleAutoSave();
+                  }}
+                  className="text-red-600 hover:underline cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            {tabs.map((tab, idx) => {
               const active = activeTab === tab.id;
               return (
-                <button
+                <div
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full text-left px-3 py-2 rounded text-sm font-medium transition cursor-pointer ${
-                    active
-                      ? "bg-red-600 text-white"
-                      : "text-zinc-700 hover:bg-zinc-200/60"
-                  }`}
+                  draggable
+                  onDragStart={() => setTabDragIdx(idx)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (tabOverIdx !== idx) setTabOverIdx(idx);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleTabDrop(idx);
+                  }}
+                  onDragEnd={() => {
+                    setTabDragIdx(null);
+                    setTabOverIdx(null);
+                  }}
+                  className={`flex items-center gap-1 rounded transition ${
+                    tabOverIdx === idx && tabDragIdx !== idx
+                      ? "ring-2 ring-red-400 bg-red-50"
+                      : ""
+                  } ${tabDragIdx === idx ? "opacity-45" : ""}`}
                 >
-                  {tab.label}
-                </button>
+                  <span
+                    title="Geser urutan menu"
+                    className="pl-1.5 py-2 text-zinc-400 hover:text-zinc-600 cursor-grab active:cursor-grabbing shrink-0"
+                  >
+                    <GripVertical className="w-3.5 h-3.5" />
+                  </span>
+                  <button
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 text-left px-2 py-2 rounded text-sm font-medium transition cursor-pointer ${
+                      active
+                        ? "bg-red-600 text-white"
+                        : "text-zinc-700 hover:bg-zinc-200/60"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                </div>
               );
             })}
           </nav>
@@ -2077,6 +2144,29 @@ export function AdminDashboard({
                                       }
                                     />
 
+                                    <MultiMediaField
+                                      label="Foto / Video Tambahan Anggota (Swipe ala IG)"
+                                      values={member.images || []}
+                                      onChange={(urls) =>
+                                        setTargetRoster((list) =>
+                                          list.map((m) =>
+                                            m.id === member.id
+                                              ? { ...m, images: urls }
+                                              : m
+                                          )
+                                        )
+                                      }
+                                      onPromoteToCover={(url) =>
+                                        setTargetRoster((list) =>
+                                          list.map((m) =>
+                                            m.id === member.id
+                                              ? { ...m, photo: url }
+                                              : m
+                                          )
+                                        )
+                                      }
+                                    />
+
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                       <InputField
                                         label="Bio Singkat"
@@ -2330,6 +2420,32 @@ export function AdminDashboard({
                               ...data.about,
                               photos: data.about.photos.map((p) =>
                                 p.id === ph.id ? { ...p, url: v } : p
+                              ),
+                            },
+                          })
+                        }
+                      />
+                      <MultiMediaField
+                        label="Foto / Video Tambahan (Swipe ala IG)"
+                        values={ph.images || []}
+                        onChange={(urls) =>
+                          setData({
+                            ...data,
+                            about: {
+                              ...data.about,
+                              photos: data.about.photos.map((p) =>
+                                p.id === ph.id ? { ...p, images: urls } : p
+                              ),
+                            },
+                          })
+                        }
+                        onPromoteToCover={(url) =>
+                          setData({
+                            ...data,
+                            about: {
+                              ...data.about,
+                              photos: data.about.photos.map((p) =>
+                                p.id === ph.id ? { ...p, url } : p
                               ),
                             },
                           })
@@ -2835,6 +2951,17 @@ export function AdminDashboard({
                             />
                           </div>
 
+                          <MultiMediaField
+                            label="Foto / Video Tambahan Brand Ambassador (Swipe ala IG)"
+                            values={ba.images || []}
+                            onChange={(urls) =>
+                              updateBa((item) => ({ ...item, images: urls }))
+                            }
+                            onPromoteToCover={(url) =>
+                              updateBa((item) => ({ ...item, photo: url }))
+                            }
+                          />
+
                           <InputField
                             label="Main Game Apa Saja (Pisahkan dengan koma — contoh: Honor of Kings, RF Online, Valorant)"
                             value={ba.games.join(", ")}
@@ -3232,6 +3359,27 @@ export function AdminDashboard({
                             ...data,
                             store: data.store.map((p) =>
                               p.id === prod.id ? { ...p, image: v } : p
+                            ),
+                          })
+                        }
+                      />
+
+                      <MultiMediaField
+                        label="Foto / Video Produk Tambahan (Swipe ala IG)"
+                        values={prod.images || []}
+                        onChange={(urls) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id ? { ...p, images: urls } : p
+                            ),
+                          })
+                        }
+                        onPromoteToCover={(url) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id ? { ...p, image: url } : p
                             ),
                           })
                         }

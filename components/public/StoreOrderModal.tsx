@@ -5,7 +5,8 @@ import { X, ShoppingBag, MessageCircle } from "lucide-react";
 import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
-import { LightboxMediaItem, SmartMedia } from "./MediaDisplay";
+import { collectMediaList } from "@/lib/media";
+import { LightboxMediaItem, MediaCarousel } from "./MediaDisplay";
 import { useLockBodyAndLenis } from "./SmoothScroll";
 
 interface StoreOrderModalProps {
@@ -86,26 +87,23 @@ export function StoreOrderModal({
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
       >
-        {/* Left / Top: Large Uncropped Product Photo (Click like IG for Fullscreen Zoom!) */}
-        <div
-          onClick={() =>
+        {/* Left / Top: Swipeable IG-Style Product Media (Click for Fullscreen Zoom) */}
+        <MediaCarousel
+          items={collectMediaList(product.image, product.images)}
+          alt={product.name}
+          fit="contain-ambient"
+          className="md:col-span-5 border-b md:border-b-0 md:border-r border-white/10"
+          stageClassName="w-full max-h-[38vh] md:max-h-none md:h-full aspect-square"
+          onInspect={(url, idx) =>
             onInspectMedia?.({
-              url: product.image,
+              url,
+              items: collectMediaList(product.image, product.images),
+              initialIndex: idx,
               title: product.name,
               caption: product.description,
             })
           }
-          className="md:col-span-5 bg-black flex flex-col justify-center cursor-zoom-in border-b md:border-b-0 md:border-r border-white/10"
-          title="Klik untuk perbesar foto"
-        >
-          <SmartMedia
-            src={product.image}
-            alt={product.name}
-            fit="contain-ambient"
-            className="w-full max-h-[38vh] md:max-h-none md:h-full aspect-square"
-            controls
-          />
-        </div>
+        />
 
         {/* Right / Bottom: Full Product Details & Order Form */}
         <div className="md:col-span-7 p-4 sm:p-6">

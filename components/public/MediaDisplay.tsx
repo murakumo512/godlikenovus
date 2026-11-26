@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { assetUrl } from "@/lib/base-path";
-import { getYouTubeEmbedUrl, isVideoFileUrl } from "@/lib/media";
+import {
+  getYouTubeEmbedUrl,
+  isAnyVideoUrl,
+  isVideoFileUrl,
+} from "@/lib/media";
 import { useLockBodyAndLenis } from "./SmoothScroll";
 
 interface SmartMediaProps {
@@ -127,6 +131,8 @@ export function MediaLightbox({
 }) {
   const [zoomed, setZoomed] = useState(false);
   const [idx, setIdx] = useState(0);
+  const swipeStartRef = useRef<number | null>(null);
+  const swipedRef = useRef(false);
 
   useLockBodyAndLenis(Boolean(item));
 
@@ -167,13 +173,47 @@ export function MediaLightbox({
   const isVideo = isVideoFileUrl(currentUrl);
   const resolved = assetUrl(currentUrl);
 
+  const handleSwipeStart = (clientX: number) => {
+    swipeStartRef.current = clientX;
+    swipedRef.current = false;
+  };
+
+  const handleSwipeEnd = (clientX: number) => {
+    if (swipeStartRef.current === null || total <= 1 || zoomed) {
+      swipeStartRef.current = null;
+      return;
+    }
+    const dx = clientX - swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (Math.abs(dx) > 40) {
+      swipedRef.current = true;
+      setZoomed(false);
+      if (dx < 0) setIdx((i) => (i + 1) % total);
+      else setIdx((i) => (i - 1 + total) % total);
+    }
+  };
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       data-lenis-prevent
       className="fixed inset-0 z-[95] bg-black/95 backdrop-blur-md flex flex-col"
-      onClick={onClose}
+      onClick={() => {
+        if (swipedRef.current) {
+          swipedRef.current = false;
+          return;
+        }
+        onClose();
+      }}
+      onTouchStart={(e) => handleSwipeStart(e.touches[0]?.clientX ?? 0)}
+      onTouchEnd={(e) => handleSwipeEnd(e.changedTouches[0]?.clientX ?? 0)}
+      onPointerDown={(e) => {
+        if (e.pointerType === "mouse") handleSwipeStart(e.clientX);
+      }}
+      onPointerUp={(e) => {
+        if (e.pointerType === "mouse") handleSwipeEnd(e.clientX);
+      }}
     >
       {/* Top Counter when multi-photo */}
       {total > 1 && (
@@ -264,8 +304,13 @@ export function MediaLightbox({
             <img
               src={resolved}
               alt={item.title || item.caption || "Preview"}
+              draggable={false}
               onClick={(e) => {
                 e.stopPropagation();
+                if (swipedRef.current) {
+                  swipedRef.current = false;
+                  return;
+                }
                 setZoomed((z) => !z);
               }}
               className={
@@ -283,6 +328,207 @@ export function MediaLightbox({
           className="px-4 py-3 text-center text-xs sm:text-sm text-zinc-300 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none"
         >
           {item.caption}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Instagram-style Swipeable Multi-Media Carousel:
+ * - Touch swipe on mobile & pointer drag swipe on desktop
+ * - Dot indicators + optional thumbnail strip + Prev/Next arrows
+ * - Tap photo to open Lightbox zoom
+ */
+export function MediaCarousel({
+  items,
+  alt,
+  className = "",
+  stageClassName = "min-h-[240px]",
+  fit = "contain",
+  showThumbnails = true,
+  showDots = true,
+  onInspect,
+}: {
+  items: string[];
+  alt: string;
+  className?: string;
+  stageClassName?: string;
+  fit?: "contain-ambient" | "contain" | "cover";
+  showThumbnails?: boolean;
+  showDots?: boolean;
+  onInspect?: (url: string, index: number) => void;
+}) {
+  const [slide, setSlide] = useState(0);
+  const startXRef = useRef<number | null>(null);
+  const swipedRef = useRef(false);
+
+  const total = items.length;
+  const safeIdx = total > 0 ? Math.min(slide, total - 1) : 0;
+  const current = items[safeIdx] || "";
+  const isVid = isAnyVideoUrl(current);
+
+  useEffect(() => {
+    setSlide(0);
+  }, [items.join("|")]);
+
+  if (total === 0) return null;
+
+  const beginSwipe = (x: number) => {
+    startXRef.current = x;
+    swipedRef.current = false;
+  };
+
+  const endSwipe = (x: number) => {
+    if (startXRef.current === null || total <= 1) {
+      startXRef.current = null;
+      return;
+    }
+    const dx = x - startXRef.current;
+    startXRef.current = null;
+    if (Math.abs(dx) > 35) {
+      swipedRef.current = true;
+      if (dx < 0) setSlide((s) => (s + 1) % total);
+      else setSlide((s) => (s - 1 + total) % total);
+    }
+  };
+
+  return (
+    <div className={`flex flex-col bg-black overflow-hidden ${className}`}>
+      <div
+        onTouchStart={(e) => beginSwipe(e.touches[0]?.clientX ?? 0)}
+        onTouchEnd={(e) => endSwipe(e.changedTouches[0]?.clientX ?? 0)}
+        onPointerDown={(e) => {
+          if (e.pointerType === "mouse") beginSwipe(e.clientX);
+        }}
+        onPointerUp={(e) => {
+          if (e.pointerType === "mouse") endSwipe(e.clientX);
+        }}
+        onClick={() => {
+          if (swipedRef.current) {
+            swipedRef.current = false;
+            return;
+          }
+          if (!isVid && onInspect) {
+            onInspect(current, safeIdx);
+          }
+        }}
+        className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden select-none ${stageClassName} ${
+          !isVid && onInspect ? "cursor-zoom-in" : ""
+        }`}
+      >
+        {isVid ? (
+          <SmartMedia
+            src={current}
+            alt={alt}
+            fit="contain"
+            className="w-full h-full aspect-video"
+            controls
+            mutedLoop={false}
+          />
+        ) : fit === "contain-ambient" ? (
+          <SmartMedia
+            src={current}
+            alt={`${alt} (${safeIdx + 1})`}
+            fit="contain-ambient"
+            className="w-full h-full"
+          />
+        ) : (
+          <img
+            src={assetUrl(current)}
+            alt={`${alt} (${safeIdx + 1})`}
+            draggable={false}
+            className={`w-full max-h-[55vh] md:max-h-full h-auto md:h-full select-none ${
+              fit === "cover" ? "object-cover" : "object-contain"
+            }`}
+          />
+        )}
+
+        {total > 1 && (
+          <>
+            <span className="pointer-events-none absolute top-3 left-3 z-10 rounded-full bg-black/75 border border-white/15 px-2.5 py-0.5 text-[11px] font-medium text-white">
+              {safeIdx + 1} / {total}
+            </span>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSlide((s) => (s - 1 + total) % total);
+              }}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
+              aria-label="Sebelumnya"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSlide((s) => (s + 1) % total);
+              }}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/70 hover:bg-[#E11D2E] border border-white/15 p-1.5 text-white transition cursor-pointer"
+              aria-label="Berikutnya"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {showDots && (
+              <div className="pointer-events-none absolute bottom-2.5 inset-x-0 z-10 flex items-center justify-center gap-1.5">
+                {items.map((_, dotIdx) => (
+                  <span
+                    key={dotIdx}
+                    className={`h-1.5 rounded-full transition-all ${
+                      dotIdx === safeIdx
+                        ? "w-4 bg-[#E11D2E]"
+                        : "w-1.5 bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {showThumbnails && total > 1 && (
+        <div
+          data-lenis-prevent
+          className="flex items-center gap-1.5 px-3 py-2 bg-zinc-950 border-t border-white/10 overflow-x-auto no-scrollbar shrink-0"
+        >
+          {items.map((mUrl, mIdx) => {
+            const selected = mIdx === safeIdx;
+            const thumbIsVid = isAnyVideoUrl(mUrl);
+            return (
+              <button
+                key={`${mUrl}-${mIdx}`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSlide(mIdx);
+                }}
+                className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded overflow-hidden shrink-0 border-2 transition cursor-pointer bg-zinc-900 ${
+                  selected
+                    ? "border-[#E11D2E]"
+                    : "border-transparent opacity-55 hover:opacity-100"
+                }`}
+              >
+                {thumbIsVid ? (
+                  <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-white">
+                    <Play className="w-4 h-4 fill-white" />
+                  </div>
+                ) : (
+                  <img
+                    src={assetUrl(mUrl)}
+                    alt={`Thumbnail ${mIdx + 1}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

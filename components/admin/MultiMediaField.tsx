@@ -54,6 +54,23 @@ export function MultiMediaField({
   const [galleryFiles, setGalleryFiles] = useState<UploadedServerFile[]>([]);
   const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  const handleDropItem = (targetIdx: number) => {
+    if (dragIdx === null || dragIdx === targetIdx) {
+      setDragIdx(null);
+      setOverIdx(null);
+      return;
+    }
+    const next = [...values];
+    const [moved] = next.splice(dragIdx, 1);
+    next.splice(targetIdx, 0, moved);
+    onChange(next);
+    scheduleAutoSave();
+    setDragIdx(null);
+    setOverIdx(null);
+  };
 
   const handleBulkFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = Array.from(e.target.files || []);
@@ -219,7 +236,25 @@ export function MultiMediaField({
             return (
               <div
                 key={`${url}-${idx}`}
-                className="group relative rounded border border-zinc-200 bg-white overflow-hidden flex flex-col"
+                draggable
+                onDragStart={() => setDragIdx(idx)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (overIdx !== idx) setOverIdx(idx);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  handleDropItem(idx);
+                }}
+                onDragEnd={() => {
+                  setDragIdx(null);
+                  setOverIdx(null);
+                }}
+                className={`group relative rounded border bg-white overflow-hidden flex flex-col cursor-grab active:cursor-grabbing transition ${
+                  overIdx === idx && dragIdx !== idx
+                    ? "border-red-500 ring-2 ring-red-400"
+                    : "border-zinc-200"
+                } ${dragIdx === idx ? "opacity-45" : ""}`}
               >
                 <div className="relative aspect-square bg-zinc-900 flex items-center justify-center overflow-hidden">
                   {isVid ? (
