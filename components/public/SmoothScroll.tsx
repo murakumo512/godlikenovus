@@ -110,44 +110,86 @@ interface ScrollSectionProps {
   className?: string;
   children: React.ReactNode;
   showDivider?: boolean;
+  skipEnter?: boolean;
 }
 
 export function ScrollSection({
   id,
   className = "",
   children,
-  showDivider = true,
+  skipEnter = false,
 }: ScrollSectionProps) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
+
+  // Track bottom-edge entry (scrolling down into section / scrolling up out of section)
+  const { scrollYProgress: enterRaw } = useScroll({
     target: ref,
-    offset: ["start 96%", "start 26%"],
+    offset: ["start 98%", "start 24%"],
   });
 
-  const smooth = useSpring(scrollYProgress, {
-    stiffness: 88,
-    damping: 22,
-    mass: 0.4,
+  // Track top-edge exit (scrolling down past section / scrolling back up into section)
+  const { scrollYProgress: exitRaw } = useScroll({
+    target: ref,
+    offset: ["end 76%", "end 2%"],
   });
 
-  const y = useTransform(smooth, [0, 1], [46, 0]);
-  const opacity = useTransform(smooth, [0, 1], [0.06, 1]);
-  const scale = useTransform(smooth, [0, 1], [0.962, 1]);
-  const lineScale = useTransform(smooth, [0, 1], [0, 1]);
+  const springConfig = { stiffness: 95, damping: 24, mass: 0.38 };
+  const smoothEnter = useSpring(enterRaw, springConfig);
+  const smoothExit = useSpring(exitRaw, springConfig);
+
+  const y = useTransform(
+    [smoothEnter, smoothExit],
+    ([enter, exit]: number[]) => {
+      const enterOffset = skipEnter ? 0 : (1 - enter) * 60;
+      const exitOffset = -exit * 42;
+      return enterOffset + exitOffset;
+    }
+  );
+
+  const scale = useTransform(
+    [smoothEnter, smoothExit],
+    ([enter, exit]: number[]) => {
+      const enterScale = skipEnter ? 1 : 0.935 + enter * 0.065;
+      const exitScale = 1 - exit * 0.045;
+      return Math.min(enterScale, exitScale);
+    }
+  );
+
+  const opacity = useTransform(
+    [smoothEnter, smoothExit],
+    ([enter, exit]: number[]) => {
+      const enterOp = skipEnter ? 1 : 0.08 + enter * 0.92;
+      const exitOp = 1 - exit * 0.78;
+      return Math.max(0.08, Math.min(enterOp, exitOp));
+    }
+  );
+
+  const rotateX = useTransform(
+    [smoothEnter, smoothExit],
+    ([enter, exit]: number[]) => {
+      const enterTilt = skipEnter ? 0 : (1 - enter) * 3.5;
+      const exitTilt = -exit * 2.5;
+      return enterTilt + exitTilt;
+    }
+  );
 
   return (
-    <section id={id} ref={ref} className={`relative ${className}`}>
-      {showDivider && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-none">
-          <div className="h-px w-full bg-white/[0.06] overflow-hidden">
-            <motion.div
-              style={{ scaleX: lineScale, transformOrigin: "left" }}
-              className="h-full w-full bg-gradient-to-r from-[#E11D2E] via-rose-300/80 to-white/75"
-            />
-          </div>
-        </div>
-      )}
-      <motion.div style={{ y, opacity, scale, willChange: "transform, opacity" }}>
+    <section
+      id={id}
+      ref={ref}
+      style={{ perspective: "1200px" }}
+      className={`relative ${className}`}
+    >
+      <motion.div
+        style={{
+          y,
+          opacity,
+          scale,
+          rotateX,
+          transformOrigin: "center center",
+          willChange: "transform, opacity",
+        }}
+      >
         {children}
       </motion.div>
     </section>
@@ -176,13 +218,6 @@ export function ScrollHudRail({
 }: {
   sections?: HudRailSectionItem[];
 }) {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 160,
-    damping: 28,
-    mass: 0.25,
-  });
-
   const [activeId, setActiveId] = useState("top");
 
   useEffect(() => {
@@ -207,42 +242,35 @@ export function ScrollHudRail({
   }, [sections]);
 
   return (
-    <>
-      <motion.div
-        style={{ scaleX, transformOrigin: "left" }}
-        className="fixed top-14 sm:top-16 left-0 right-0 h-[2px] bg-[#E11D2E] z-40 pointer-events-none"
-      />
-
-      <div className="hidden xl:flex fixed right-5 top-1/2 -translate-y-1/2 z-30 flex-col items-end gap-2.5">
-        {sections.map((sec) => {
-          const active = activeId === sec.id;
-          return (
-            <a
-              key={sec.id}
-              href={`#${sec.id}`}
-              className="group flex items-center gap-2.5 py-0.5"
-              title={sec.name}
+    <div className="hidden xl:flex fixed right-5 top-1/2 -translate-y-1/2 z-30 flex-col items-end gap-2.5">
+      {sections.map((sec) => {
+        const active = activeId === sec.id;
+        return (
+          <a
+            key={sec.id}
+            href={`#${sec.id}`}
+            className="group flex items-center gap-2.5 py-0.5"
+            title={sec.name}
+          >
+            <span
+              className={`text-[11px] font-medium tracking-wide transition-all ${
+                active
+                  ? "text-white opacity-100"
+                  : "text-zinc-500 opacity-0 group-hover:opacity-100"
+              }`}
             >
-              <span
-                className={`text-[11px] font-medium tracking-wide transition-all ${
-                  active
-                    ? "text-white opacity-100"
-                    : "text-zinc-500 opacity-0 group-hover:opacity-100"
-                }`}
-              >
-                {sec.name}
-              </span>
-              <span
-                className={`block h-[2px] transition-all duration-300 ${
-                  active
-                    ? "w-5 bg-[#E11D2E]"
-                    : "w-2 bg-zinc-700 group-hover:w-3.5 group-hover:bg-zinc-400"
-                }`}
-              />
-            </a>
-          );
-        })}
-      </div>
-    </>
+              {sec.name}
+            </span>
+            <span
+              className={`block h-[2px] transition-all duration-300 ${
+                active
+                  ? "w-5 bg-gradient-to-r from-[#E11D2E] to-white"
+                  : "w-2 bg-zinc-700 group-hover:w-3.5 group-hover:bg-zinc-400"
+              }`}
+            />
+          </a>
+        );
+      })}
+    </div>
   );
 }

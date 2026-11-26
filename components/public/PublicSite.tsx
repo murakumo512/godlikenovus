@@ -217,10 +217,12 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     switch (key) {
       case "hero":
         return (
-          <section
+          <ScrollSection
             key="hero"
             id="top"
-            className="relative pt-24 sm:pt-32 pb-12 overflow-hidden"
+            skipEnter={isFirstSection}
+            showDivider={false}
+            className="pt-24 sm:pt-32 pb-12 overflow-hidden"
           >
             {hs.heroBgImage && (
               <div className="pointer-events-none absolute inset-0">
@@ -351,7 +353,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 ))}
               </div>
             </div>
-          </section>
+          </ScrollSection>
         );
 
       case "roster":
