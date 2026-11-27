@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 import { getYouTubeEmbedUrl, isVideoFileUrl } from "@/lib/media";
+import { compressImageForUpload } from "@/lib/image-compress";
 
 export const AdminAutoSaveContext = createContext<{
   scheduleAutoSave: () => void;
@@ -68,8 +69,9 @@ export function ImageField({
     setUploading(true);
     setErrorMsg(null);
     try {
+      const optimizedFile = await compressImageForUpload(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", optimizedFile);
       const res = await fetch(`${BASE_PATH}/api/upload`, {
         method: "POST",
         body: formData,

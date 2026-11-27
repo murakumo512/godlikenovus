@@ -743,7 +743,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-6">
+                <div className="flex flex-wrap justify-center gap-2 sm:gap-6">
                   {filteredGallery.map((evt) => {
                     const evtMedia = collectVisibleMediaList(
                       evt.hiddenImages,
@@ -766,7 +766,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                             mediaUrl: evt.image,
                           });
                         }}
-                        className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+                        className="group w-[calc(50%-0.25rem)] sm:w-[calc(33.333%-1rem)] cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                       >
                         <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-zinc-900">
                           <SmartMedia
@@ -870,7 +870,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
+                <div className="flex flex-wrap justify-center gap-2.5 sm:gap-6">
                   {visibleStore.map((product) => {
                     const productMedia = collectVisibleMediaList(
                       product.hiddenImages,
@@ -890,7 +890,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                           mediaUrl: product.image,
                         });
                       }}
-                      className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+                      className="group w-[calc(50%-0.3125rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)] cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                     >
                       <div className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden">
                         <SmartMedia
