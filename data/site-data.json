@@ -1,10 +1,10 @@
 {
   "sectionOrder": [
-    "ambassadors",
     "hero",
     "roster",
     "about",
     "gallery",
+    "ambassadors",
     "store",
     "sponsors",
     "contact"
@@ -144,10 +144,11 @@
               "ign": "MOTME",
               "realName": "APRIL",
               "role": "MANAGER",
-              "isCoach": false,
+              "isCoach": true,
               "photo": "/api/uploads/1795589369972-GL_Est_Red.png",
               "bio": "Veteran MOBA tactician leading draft strategy, macro rotations, and mental conditioning since 2019.",
-              "achievements": "2x Regional Qualifier Champion"
+              "achievements": "2x Regional Qualifier Champion",
+              "images": []
             },
             {
               "id": "hok-p1",
@@ -157,7 +158,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795589372612-GL_Est_Red.png",
               "bio": "High-tempo assassin specialist known for objective steals and early-game invades.",
-              "achievements": "MVP Bandung Open Cup"
+              "achievements": "MVP Bandung Open Cup",
+              "images": []
             },
             {
               "id": "hok-p2",
@@ -167,7 +169,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795589374839-GL_Est_Red.png",
               "bio": "Control mage & burst playmaker dictating mid-lane priority and map tempo.",
-              "achievements": "Top 4 National Series"
+              "achievements": "Top 4 National Series",
+              "images": []
             },
             {
               "id": "hok-p3",
@@ -177,7 +180,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795589377233-GL_Est_Red.png",
               "bio": "Late-game marksman carry with pinpoint positioning in 5v5 teamfights.",
-              "achievements": "Highest KDA Split 1"
+              "achievements": "Highest KDA Split 1",
+              "images": []
             },
             {
               "id": "hok-p4",
@@ -187,7 +191,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795589379775-GL_Est_Red.png",
               "bio": "Frontline bruiser anchor holding side-lane pressure and flank engages.",
-              "achievements": "Best Offlaner Finalist"
+              "achievements": "Best Offlaner Finalist",
+              "images": []
             },
             {
               "id": "hok-p5",
@@ -197,7 +202,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795589382865-GL_Est_Red.png",
               "bio": "Shotcaller and engage support creating vision and decisive picks.",
-              "achievements": "Assist Leader 2025"
+              "achievements": "Assist Leader 2025",
+              "images": []
             },
             {
               "id": "mem-1795590321056",
@@ -207,9 +213,11 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590324818-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             }
-          ]
+          ],
+          "bannerImages": []
         },
         {
           "id": "sub-1795590391366-2",
@@ -227,7 +235,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590626602-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             },
             {
               "id": "mem-1795590639095",
@@ -237,7 +246,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590863274-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             },
             {
               "id": "mem-1795590850767",
@@ -247,7 +257,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590919286-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             },
             {
               "id": "mem-1795590921743",
@@ -257,7 +268,8 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590930420-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             },
             {
               "id": "mem-1795590937535",
@@ -267,11 +279,102 @@
               "isCoach": false,
               "photo": "/api/uploads/1795590968668-GL_Est_Red.png",
               "bio": "Bio singkat.",
-              "achievements": ""
+              "achievements": "",
+              "images": []
             }
-          ]
+          ],
+          "bannerImages": []
+        },
+        {
+          "id": "sub-1795681256955",
+          "name": "SMA CITRA NUSA",
+          "shortName": "Pelajar",
+          "logo": "/api/uploads/1795681372968-IMG-20261125-WA0027.jpg",
+          "description": "TEAM PELAJAR SMA CITRA NUSA ",
+          "bannerImage": "",
+          "roster": [
+            {
+              "id": "mem-1795681376509",
+              "ign": "2FAR.SCARLET",
+              "realName": "Hanip",
+              "role": "CLASHLANE",
+              "isCoach": false,
+              "photo": "/api/uploads/1795681391160-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681438253",
+              "ign": "MALING AYAM",
+              "realName": "Era",
+              "role": "COACH",
+              "isCoach": true,
+              "photo": "/api/uploads/1795681471711-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681476060",
+              "ign": "2FAR.ASUNA",
+              "realName": "Byan",
+              "role": "MIDLANE",
+              "isCoach": false,
+              "photo": "/api/uploads/1795681489490-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681519706",
+              "ign": "2FAR.CIKENAS",
+              "realName": "SAGARW",
+              "role": "ROAMER",
+              "isCoach": false,
+              "photo": "/api/uploads/1795681540585-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681571469",
+              "ign": "2FAR.SWAYNOVA",
+              "realName": "Dimas",
+              "role": "Farmlane",
+              "isCoach": false,
+              "photo": "/api/uploads/1795681583479-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681615481",
+              "ign": "2FAR.ASUKA",
+              "realName": "Daffa",
+              "role": "Jungler",
+              "isCoach": false,
+              "photo": "/api/uploads/1795681627006-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            },
+            {
+              "id": "mem-1795681670758",
+              "ign": "Xapph1re",
+              "realName": "Hanif",
+              "role": "Coach",
+              "isCoach": true,
+              "photo": "/api/uploads/1795681682849-IMG-20261105-WA0111.jpg",
+              "bio": "Bio singkat.",
+              "achievements": "",
+              "images": []
+            }
+          ],
+          "bannerImages": []
         }
-      ]
+      ],
+      "bannerImages": []
     },
     {
       "id": "game-rf",
@@ -289,7 +392,8 @@
           "isCoach": true,
           "photo": "/images/seed/player-coach.svg",
           "bio": "Founding 2013 tactician orchestrating Chip War formations, guild diplomacy, and PvP builds.",
-          "achievements": "Multi-Server Chip War Legend"
+          "achievements": "Multi-Server Chip War Legend",
+          "images": []
         },
         {
           "id": "rf-p1",
@@ -299,7 +403,8 @@
           "isCoach": false,
           "photo": "/images/seed/player-1.svg",
           "bio": "Precision siege & burst DPS specialist breaking enemy frontlines during Chip Wars.",
-          "achievements": "1st Place Guild War Invitational"
+          "achievements": "1st Place Guild War Invitational",
+          "images": []
         },
         {
           "id": "rf-p2",
@@ -309,7 +414,8 @@
           "isCoach": false,
           "photo": "/images/seed/player-2.svg",
           "bio": "Unbreakable frontline vanguard anchoring choke points and protecting core ranged units.",
-          "achievements": "Best Defense Squad 2025"
+          "achievements": "Best Defense Squad 2025",
+          "images": []
         },
         {
           "id": "rf-p3",
@@ -319,7 +425,8 @@
           "isCoach": false,
           "photo": "/images/seed/player-3.svg",
           "bio": "Buff, debuff, and crowd-control specialist keeping the strike squad sustained.",
-          "achievements": "Top Guild Support"
+          "achievements": "Top Guild Support",
+          "images": []
         },
         {
           "id": "rf-p4",
@@ -329,10 +436,44 @@
           "isCoach": false,
           "photo": "/images/seed/player-4.svg",
           "bio": "Backline disruptor hunting enemy launchers and force users.",
-          "achievements": "PvP Duelist Champion"
+          "achievements": "PvP Duelist Champion",
+          "images": []
         }
       ],
-      "subTeams": []
+      "subTeams": [],
+      "bannerImages": []
+    },
+    {
+      "id": "game-1795695640956",
+      "slug": "game-3",
+      "name": "MOBILE LEGEND",
+      "shortName": "ML",
+      "description": "Deskripsi divisi game baru.",
+      "bannerImage": "",
+      "roster": [],
+      "subTeams": [
+        {
+          "id": "sub-1795695661378-1",
+          "name": "OVRS VALIENT BY GODLIKE",
+          "shortName": "Ladies",
+          "logo": "/api/uploads/1795695768697-IMG-20261120-WA0018.jpg",
+          "description": "LADIES TEAM",
+          "bannerImage": "",
+          "roster": [],
+          "bannerImages": []
+        },
+        {
+          "id": "sub-1795695661378-2",
+          "name": "GODLIKE NOVUS 2",
+          "shortName": "SQUAD 2",
+          "logo": "",
+          "description": "Skuad kedua divisi MOBILE LEGEND.",
+          "bannerImage": "",
+          "roster": [],
+          "bannerImages": []
+        }
+      ],
+      "bannerImages": []
     }
   ],
   "about": {
@@ -361,22 +502,26 @@
       {
         "id": "about-1",
         "url": "/images/seed/about-1.svg",
-        "caption": "Godlike Novus Bootcamp & Scrimmage Session"
+        "caption": "Godlike Novus Bootcamp & Scrimmage Session",
+        "images": []
       },
       {
         "id": "about-2",
         "url": "/images/seed/about-2.svg",
-        "caption": "Main Stage Walkout — Regional Championship"
+        "caption": "Main Stage Walkout — Regional Championship",
+        "images": []
       },
       {
         "id": "about-3",
         "url": "/images/seed/about-3.svg",
-        "caption": "Community Gathering & Fan Meet 2025"
+        "caption": "Community Gathering & Fan Meet 2025",
+        "images": []
       },
       {
         "id": "about-4",
         "url": "/images/seed/about-4.svg",
-        "caption": "Trophy Room & Jersey Launch"
+        "caption": "Trophy Room & Jersey Launch",
+        "images": []
       }
     ]
   },
@@ -389,10 +534,7 @@
       "category": "HONOR OF KING TOURNAMENT",
       "image": "/api/uploads/1795578996453-WhatsApp_Image_2026-11-25_at_10.55.12.jpeg",
       "description": "HOK KGS CHAMPIONSHIP SEASON 1 – CITY QUALIFIER BEKASI! 🔥\n\nSaatnya tunjukkan kemampuan tim kalian dan buktikan siapa yang layak menjadi yang terbaik! 🏆\n\nHOK Bekasi x Bekasian Esports x Godlike menghadirkan HOK CHAMPIONSHIP SEASON 1 – CITY QUALIFIER BEKASI dengan kesempatan membawa pulang total hadiah jutaan rupiah!\n\n🎮 INFORMASI TURNAMEN\n📅 Tanggal: 22 November 2026\n📍 Lokasi: Kedai Kavling Tugu (https://share.google/QWnV5MAQZOD7W07GU)\n💰 Prizepool: Rp1.000.000\n🎟️ Pendaftaran: GRATIS!\n\n🚀 Jangan lewatkan kesempatan ini! Ajak tim kalian, susun strategi, dan bersiaplah untuk menjadi juara!\n📝 DAFTARKAN TIM KALIAN SEKARANG!\n🔗 https://bit.ly/kgs-qualifer-bekasi\n📞 CONTACT PERSON: - Pradana (Tim): 085172330076 - Fajri (Solo): 081292348877",
-      "images": [
-        "/api/uploads/1795615265908-8a3d3134-149b-40c8-bbbd-28d660435896.jpg",
-        "/api/uploads/1795615266105-154654.png"
-      ]
+      "images": []
     },
     {
       "id": "evt-2",
@@ -428,7 +570,7 @@
   "ambassadors": [
     {
       "id": "ba-1",
-      "name": "LIA LIVINA",
+      "name": "LEA LEMON",
       "nickname": "LEA LEMON",
       "team": "GODLIKE",
       "photo": "/api/uploads/1795586550677-WhatsApp_Image_2026-11-25_at_11.57.07-removebg-preview.png",
@@ -443,15 +585,16 @@
           "id": "ba-soc-1",
           "platform": "instagram",
           "label": "@LEALEMON",
-          "url": "https://instagram.com/"
+          "url": "https://www.instagram.com/lealemon7_?knvt=MXd1NXRiZ3l1aThuNg=="
         },
         {
           "id": "ba-soc-2",
           "platform": "tiktok",
           "label": "@LEALEMON",
-          "url": "https://tiktok.com/"
+          "url": "https://www.tiktok.com/@lealemon7_?_r=1&_t=ZS-9Bj24s2KphV"
         }
-      ]
+      ],
+      "images": []
     }
   ],
   "store": [
@@ -462,7 +605,7 @@
       "category": "Official Jersey",
       "badge": "BEST SELLER",
       "image": "/api/uploads/1795586769181-WhatsApp_Image_2026-11-25_at_10.40.26-removebg-preview.png",
-      "description": "Official player-grade breathable dry-fit jersey in signature Godlike Crimson Red with sublimated crest and EST. 2013 collar detail.",
+      "description": "Bahan Dry Fit\n\nSize : \nS\t49\t69\nM\t51\t71\nL\t53\t75\nXL\t56\t78\nXXL\t59\t80\nXXXL\t62\t83\n\n*XXXL = Nambah 10 ribu \n\n*BELUM TERMASUK ONGKIR*",
       "sizes": [
         "S",
         "M",
@@ -470,7 +613,8 @@
         "XL",
         "XXL"
       ],
-      "inStock": true
+      "inStock": true,
+      "images": []
     },
     {
       "id": "prod-2",
@@ -479,7 +623,7 @@
       "category": "Official Jersey",
       "badge": "LIMITED",
       "image": "/api/uploads/1795586862961-WhatsApp_Image_2026-11-25_at_10.40.22-removebg-preview.png",
-      "description": "Sleek matte-black alternate match jersey featuring bold white GL crest and crimson side-panels for tournament days.",
+      "description": "Bahan Dry Fit\n\nSize : \nS\t49\t69\nM\t51\t71\nL\t53\t75\nXL\t56\t78\nXXL\t59\t80\nXXXL\t62\t83\n\n*XXXL = Nambah 10 ribu \n\n*BELUM TERMASUK ONGKIR*",
       "sizes": [
         "S",
         "M",
@@ -487,7 +631,8 @@
         "XL",
         "XXL"
       ],
-      "inStock": true
+      "inStock": true,
+      "images": []
     },
     {
       "id": "prod-3",
@@ -496,30 +641,31 @@
       "category": "Official Jersey",
       "badge": "LIMITED",
       "image": "/api/uploads/1795586957627-WhatsApp_Image_2026-11-25_at_09.07.16-removebg-preview.png",
-      "description": "Heavyweight 240gsm cotton combed oversized tee with 'GAMERS DON'T DIE, THEY RESPAWN' back print.",
+      "description": "Bahan Dry Fit\n\nSize : \nS\t49\t69\nM\t51\t71\nL\t53\t75\nXL\t56\t78\nXXL\t59\t80\nXXXL\t62\t83\n\n*XXXL = Nambah 10 ribu \n\n*BELUM TERMASUK ONGKIR*",
       "sizes": [
         "S",
         "M",
         "L",
         "XL"
       ],
-      "inStock": true
+      "inStock": true,
+      "images": []
     }
   ],
   "sponsors": [
     {
       "id": "sp-1",
-      "name": "NOVUS GEAR",
-      "tier": "Title Partner",
-      "logo": "/images/seed/sponsor-1.svg",
-      "website": "https://example.com"
+      "name": "JUST ME AGENCY",
+      "tier": "Sponsor",
+      "logo": "/api/uploads/1795681039230-IMG-20261019-WA0030.jpg",
+      "website": "https://www.instagram.com/justmeagencyofficial?evlk=b2E2N2lmeXJhYm1h"
     },
     {
       "id": "sp-2",
-      "name": "HYPERPULSE ENERGY",
-      "tier": "Official Energy",
-      "logo": "/images/seed/sponsor-2.svg",
-      "website": "https://example.com"
+      "name": "HANSA PRO DESIGN",
+      "tier": "Partnership",
+      "logo": "/api/uploads/1795693463011-SAVE_20260801_231335.jpg",
+      "website": "https://www.instagram.com/hansapro_desain?evlk=dzk4bGV1Z2l5ZW5t"
     },
     {
       "id": "sp-3",
@@ -539,9 +685,9 @@
   "contact": {
     "title": "CONTACT GODLIKE NOVUS",
     "subtitle": "Have tournament invitations, sponsorship inquiries, or scrimmage requests? Send us a message directly to our official WhatsApp.",
-    "whatsappNumber": "6285162790669",
-    "email": "management@godlikenovus.gg",
-    "location": "Bandung, West Java, Indonesia"
+    "whatsappNumber": "085172330076",
+    "email": "Godlike.novus@gmail.com",
+    "location": "Bekasi, West Java, Indonesia"
   },
   "socials": [
     {

@@ -1,0 +1,16 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: godlikenovus_web
+    restart: unless-stopped
+    environment:
+      TZ: "Asia/Jakarta"
+      PORT: "8080"
+      HOSTNAME: "0.0.0.0"
+    ports:
+      - "8088:8080"
+    volumes:
+      - ./data:/app/data
+      - ./public/uploads:/app/public/uploads
