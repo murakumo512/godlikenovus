@@ -99,6 +99,8 @@ export function SmoothScrollProvider({
       lockCountRef.current = Math.max(0, lockCountRef.current - 1);
       if (lockCountRef.current === 0) {
         const y = savedScrollYRef.current;
+        const prevBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = "auto";
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
         document.body.style.position = "";
@@ -106,8 +108,12 @@ export function SmoothScrollProvider({
         document.body.style.left = "";
         document.body.style.right = "";
         document.body.style.width = "";
-        window.scrollTo(0, y);
+        window.scrollTo({ top: y, left: 0, behavior: "instant" as ScrollBehavior });
         lenisRef.current?.start();
+        lenisRef.current?.scrollTo(y, { immediate: true, force: true });
+        requestAnimationFrame(() => {
+          document.documentElement.style.scrollBehavior = prevBehavior;
+        });
       }
     };
   }).current;
