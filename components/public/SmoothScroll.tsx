@@ -32,6 +32,7 @@ export function SmoothScrollProvider({
 }) {
   const lenisRef = useRef<Lenis | null>(null);
   const lockCountRef = useRef(0);
+  const savedScrollYRef = useRef(0);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -84,16 +85,29 @@ export function SmoothScrollProvider({
   const acquireLock = useRef(() => {
     lockCountRef.current += 1;
     if (lockCountRef.current === 1) {
+      savedScrollYRef.current = window.scrollY || window.pageYOffset || 0;
       lenisRef.current?.stop();
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${savedScrollYRef.current}px`;
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
     }
     return () => {
       lockCountRef.current = Math.max(0, lockCountRef.current - 1);
       if (lockCountRef.current === 0) {
-        lenisRef.current?.start();
+        const y = savedScrollYRef.current;
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.left = "";
+        document.body.style.right = "";
+        document.body.style.width = "";
+        window.scrollTo(0, y);
+        lenisRef.current?.start();
       }
     };
   }).current;

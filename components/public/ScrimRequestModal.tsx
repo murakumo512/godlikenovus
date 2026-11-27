@@ -215,26 +215,6 @@ export function ScrimRequestModal({
                   </div>
                 </div>
 
-                {activePics.length > 0 && (
-                  <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
-                      Kirim ke PIC / Admin Scrim
-                    </label>
-                    <select
-                      value={selectedPic?.id || ""}
-                      onChange={(e) => setSelectedPicId(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
-                    >
-                      {activePics.map((pic) => (
-                        <option key={pic.id} value={pic.id}>
-                          {pic.name}
-                          {pic.division ? ` (${pic.division})` : ""} — {pic.phone}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
@@ -264,8 +244,8 @@ export function ScrimRequestModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="min-w-0">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
                       Tanggal *
                     </label>
@@ -274,10 +254,10 @@ export function ScrimRequestModal({
                       required
                       value={preferredDate}
                       onChange={(e) => setPreferredDate(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-xs sm:text-sm text-white focus:border-[#E11D2E] focus:outline-none"
+                      className="w-full max-w-full min-w-0 appearance-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
                       Jam (WIB) *
                     </label>
@@ -286,10 +266,10 @@ export function ScrimRequestModal({
                       required
                       value={preferredTime}
                       onChange={(e) => setPreferredTime(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-2 text-xs sm:text-sm text-white focus:border-[#E11D2E] focus:outline-none"
+                      className="w-full max-w-full min-w-0 appearance-none rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
                       Format
                     </label>
