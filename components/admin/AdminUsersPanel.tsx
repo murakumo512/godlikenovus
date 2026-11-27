@@ -31,6 +31,7 @@ export function AdminUsersPanel({
 
   // Change password form
   const [targetUserId, setTargetUserId] = useState(currentUser.id);
+  const [currentPwd, setCurrentPwd] = useState("");
   const [changePwd, setChangePwd] = useState("");
   const [changePwdConfirm, setChangePwdConfirm] = useState("");
   const [changing, setChanging] = useState(false);
@@ -83,8 +84,16 @@ export function AdminUsersPanel({
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentPwd) {
+      onShowToast("error", "Password lama wajib diisi.");
+      return;
+    }
     if (changePwd !== changePwdConfirm) {
-      onShowToast("error", "Konfirmasi password tidak cocok.");
+      onShowToast("error", "Konfirmasi password baru tidak cocok.");
+      return;
+    }
+    if (changePwd === currentPwd) {
+      onShowToast("error", "Password baru tidak boleh sama dengan password lama.");
       return;
     }
     setChanging(true);
@@ -95,7 +104,9 @@ export function AdminUsersPanel({
         body: JSON.stringify({
           action: "change-password",
           userId: targetUserId,
+          currentPassword: currentPwd,
           newPassword: changePwd,
+          confirmPassword: changePwdConfirm,
         }),
       });
       const json = (await res.json()) as { ok?: boolean; error?: string };
@@ -103,6 +114,7 @@ export function AdminUsersPanel({
         onShowToast("error", json.error || "Gagal mengganti password.");
         return;
       }
+      setCurrentPwd("");
       setChangePwd("");
       setChangePwdConfirm("");
       onShowToast("success", "Password berhasil diperbarui.");
@@ -148,7 +160,7 @@ export function AdminUsersPanel({
         </div>
 
         <form onSubmit={handleChangePassword} className="space-y-3.5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-zinc-700 mb-1">
                 Pilih Akun
@@ -167,7 +179,20 @@ export function AdminUsersPanel({
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-700 mb-1">
-                Password Baru
+                Password Lama *
+              </label>
+              <input
+                type="password"
+                required
+                value={currentPwd}
+                onChange={(e) => setCurrentPwd(e.target.value)}
+                placeholder="Masukkan password lama akun ini"
+                className="w-full rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-700 mb-1">
+                Password Baru *
               </label>
               <input
                 type="password"
@@ -181,7 +206,7 @@ export function AdminUsersPanel({
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-700 mb-1">
-                Ulangi Password Baru
+                Konfirmasi Password Baru *
               </label>
               <input
                 type="password"
@@ -189,7 +214,7 @@ export function AdminUsersPanel({
                 minLength={4}
                 value={changePwdConfirm}
                 onChange={(e) => setChangePwdConfirm(e.target.value)}
-                placeholder="Ketik ulang password"
+                placeholder="Ketik ulang password baru"
                 className="w-full rounded border border-zinc-300 bg-white px-2.5 py-1.5 text-sm text-zinc-900 focus:border-red-600 focus:outline-none"
               />
             </div>

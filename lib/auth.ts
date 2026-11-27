@@ -226,15 +226,25 @@ export async function createAdminUser(
 
 export async function changeAdminPassword(
   userId: string,
+  currentPassword: string,
   newPassword: string
 ) {
+  if (!currentPassword) {
+    throw new Error("Password lama wajib diisi.");
+  }
   if (!newPassword || newPassword.length < 4) {
     throw new Error("Password baru minimal 4 karakter.");
+  }
+  if (newPassword === currentPassword) {
+    throw new Error("Password baru tidak boleh sama dengan password lama.");
   }
   const store = await readUsersStore();
   const idx = store.users.findIndex((u) => u.id === userId);
   if (idx === -1) {
     throw new Error("User tidak ditemukan.");
+  }
+  if (!verifyPassword(currentPassword, store.users[idx].passwordHash)) {
+    throw new Error("Password lama salah.");
   }
   store.users[idx].passwordHash = hashPassword(newPassword);
   await writeUsersStore(store);

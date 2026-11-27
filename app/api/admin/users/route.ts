@@ -43,7 +43,9 @@ export async function POST(request: Request) {
       displayName?: string;
       password?: string;
       userId?: string;
+      currentPassword?: string;
       newPassword?: string;
+      confirmPassword?: string;
     };
 
     const freshToken = await issueSessionToken(admin);
@@ -76,7 +78,17 @@ export async function POST(request: Request) {
 
     if (body.action === "change-password") {
       const targetId = body.userId || admin.id;
-      await changeAdminPassword(targetId, body.newPassword || "");
+      if (!body.confirmPassword || body.newPassword !== body.confirmPassword) {
+        return NextResponse.json(
+          { error: "Konfirmasi password baru tidak cocok." },
+          { status: 400 }
+        );
+      }
+      await changeAdminPassword(
+        targetId,
+        body.currentPassword || "",
+        body.newPassword || ""
+      );
       await appendActivityLog({
         action: "user_password",
         username: admin.username,
