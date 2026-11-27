@@ -21,6 +21,7 @@ import {
 import { assetUrl } from "@/lib/base-path";
 import { collectVisibleMediaList, isAnyVideoUrl } from "@/lib/media";
 import { trackAnalytics } from "@/lib/analytics-client";
+import { useHistoryBack } from "@/lib/use-history-back";
 import {
   DEFAULT_CONTACT_WA_TEMPLATE,
   DEFAULT_SECTION_ORDER,
@@ -85,6 +86,11 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     : [];
 
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
+
+  useHistoryBack(mobileMenuOpen, () => setMobileMenuOpen(false), "nav");
+  useHistoryBack(Boolean(activeEvent), () => setActiveEvent(null), "gallery");
+  useHistoryBack(Boolean(orderProduct), () => setOrderProduct(null), "store");
+  useHistoryBack(Boolean(lightboxItem), () => setLightboxItem(null), "lightbox");
 
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");

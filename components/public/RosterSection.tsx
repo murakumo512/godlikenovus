@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowUpRight, Award, Images, X } from "lucide-react";
 import { GameDivision, HomeSectionsConfig, RosterMember } from "@/lib/types";
 import { collectVisibleMediaList } from "@/lib/media";
 import { trackAnalytics } from "@/lib/analytics-client";
+import { useHistoryBack } from "@/lib/use-history-back";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
@@ -34,6 +35,16 @@ export function RosterSection({
   );
 
   useLockBodyAndLenis(Boolean(selectedMember));
+  useHistoryBack(
+    Boolean(selectedSubTeamId),
+    () => setSelectedSubTeamId(null),
+    "subteam"
+  );
+  useHistoryBack(
+    Boolean(selectedMember),
+    () => setSelectedMember(null),
+    "member"
+  );
 
   const activeGame =
     games.find((g) => g.id === activeGameId) || games[0] || null;

@@ -6,6 +6,7 @@ import { BrandAmbassador, HomeSectionsConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
 import { collectVisibleMediaList, isAnyVideoUrl } from "@/lib/media";
 import { trackAnalytics } from "@/lib/analytics-client";
+import { useHistoryBack } from "@/lib/use-history-back";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
@@ -190,6 +191,7 @@ export function BrandAmbassadorSection({
   const [selectedBa, setSelectedBa] = useState<BrandAmbassador | null>(null);
 
   useLockBodyAndLenis(Boolean(selectedBa));
+  useHistoryBack(Boolean(selectedBa), () => setSelectedBa(null), "ba");
 
   if (ambassadors.length === 0) return null;
 
