@@ -259,103 +259,79 @@ export function MediaLightbox({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[95] bg-black/95 flex flex-col md:flex-row overflow-hidden"
+      onClick={() => {
+        if (swipedRef.current) {
+          swipedRef.current = false;
+          return;
+        }
+        onClose();
+      }}
+      className="fixed inset-0 z-[95] bg-black/90 p-2.5 sm:p-5 flex items-center justify-center overflow-hidden"
     >
-      {/* Desktop Left Vertical Thumbnail Rail */}
-      {total > 1 && (
-        <aside
+      {zoomed ? (
+        <div
           data-lenis-prevent
-          onClick={(e) => e.stopPropagation()}
-          className="hidden md:flex flex-col w-24 shrink-0 border-r border-white/10 bg-zinc-950/95 p-2.5 gap-2 overflow-y-auto overscroll-contain z-20"
+          className="relative w-full h-full overflow-auto overscroll-contain"
         >
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 text-center pb-1 border-b border-white/10">
-            {safeIdx + 1} / {total}
-          </div>
-          {mediaList.map((url, i) => renderThumbItem(url, i))}
-        </aside>
-      )}
-
-      {/* Main Viewer Column */}
-      <div
-        className="relative flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden"
-        onClick={() => {
-          if (swipedRef.current) {
-            swipedRef.current = false;
-            return;
-          }
-          onClose();
-        }}
-      >
-        {/* Top Counter on Mobile */}
-        {total > 1 && (
-          <div className="md:hidden fixed top-4 left-4 z-[100] rounded-full bg-zinc-900/85 border border-white/15 px-3 py-1 text-xs font-medium text-white">
-            {safeIdx + 1} / {total}
-          </div>
-        )}
-
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className="fixed top-4 right-4 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-          aria-label="Tutup"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Prev / Next Arrows */}
-        {total > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setZoomed(false);
-                setIdx((i) => (i - 1 + total) % total);
-              }}
-              className="fixed left-3 md:left-28 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-              aria-label="Sebelumnya"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setZoomed(false);
-                setIdx((i) => (i + 1) % total);
-              }}
-              className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-              aria-label="Berikutnya"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </>
-        )}
-
-        {/* Main Media Stage: Zoomed Scrollable OR 1:1 Drag-Follow Track */}
-        {zoomed ? (
-          <div
-            data-lenis-prevent
-            className="flex-1 w-full h-full overflow-auto overscroll-contain"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomed(false);
+            }}
+            className="fixed top-4 right-4 z-[100] rounded-full bg-zinc-900/90 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+            aria-label="Tutup Zoom"
           >
-            <div className="min-h-full min-w-full flex items-start justify-start sm:justify-center p-3 sm:p-8">
-              <img
-                src={resolved}
-                alt={item.title || item.caption || "Preview"}
-                draggable={false}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomed(false);
-                }}
-                className="max-w-none w-auto h-auto cursor-zoom-out select-none shadow-2xl"
-              />
-            </div>
+            <X className="w-5 h-5" />
+          </button>
+          <div className="min-h-full min-w-full flex items-start justify-start sm:justify-center p-3 sm:p-8">
+            <img
+              src={resolved}
+              alt={item.title || item.caption || "Preview"}
+              draggable={false}
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomed(false);
+              }}
+              className="max-w-none w-auto h-auto cursor-zoom-out select-none shadow-2xl"
+            />
           </div>
-        ) : (
+        </div>
+      ) : (
+        /* Instagram-Style Post Card: Header -> Swipeable Image -> Dots -> Caption */
+        <motion.div
+          data-lenis-prevent
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.97, y: 8 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-xl max-h-[92vh] rounded-xl border border-white/12 bg-[#0e0e12] shadow-2xl flex flex-col overflow-hidden"
+        >
+          {/* Top IG Header */}
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#E11D2E] shrink-0" />
+              <span className="text-xs sm:text-sm font-semibold text-white truncate">
+                {item.title || "Godlike Novus"}
+              </span>
+              {total > 1 && (
+                <span className="text-[11px] font-medium text-zinc-400 shrink-0">
+                  · {safeIdx + 1}/{total}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
+              aria-label="Tutup"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Swipeable 1:1 Drag-Follow Image Stage */}
           <div
             onPointerDown={(e) => {
               if (total <= 1) return;
@@ -405,12 +381,12 @@ export function MediaLightbox({
             }}
             onPointerCancel={() => finishDrag(0)}
             style={{ touchAction: total > 1 ? "pan-y" : undefined }}
-            className={`flex-1 w-full h-full overflow-hidden select-none ${
+            className={`relative w-full bg-black overflow-hidden select-none shrink-0 ${
               total > 1 ? "cursor-grab active:cursor-grabbing" : ""
             }`}
           >
             <div
-              className="flex w-full h-full"
+              className="flex w-full items-center"
               style={{
                 transform: `translate3d(calc(-${safeIdx * 100}% + ${dragX}px), 0, 0)`,
                 transition: dragging
@@ -426,13 +402,10 @@ export function MediaLightbox({
                 return (
                   <div
                     key={`${url}-${mIdx}`}
-                    className="w-full h-full shrink-0 flex items-center justify-center p-3 sm:p-8"
+                    className="w-full shrink-0 flex items-center justify-center bg-black"
                   >
                     {mYt ? (
-                      <div
-                        className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                      >
+                      <div className="w-full aspect-video bg-black">
                         <iframe
                           src={mIdx === safeIdx ? `${mYt}&autoplay=1` : mYt}
                           title={item.title || "Video"}
@@ -447,49 +420,88 @@ export function MediaLightbox({
                         controls
                         autoPlay={mIdx === safeIdx}
                         playsInline
-                        onClick={(e) => e.stopPropagation()}
-                        className="max-w-full max-h-[82vh] w-auto h-auto rounded-lg bg-black shadow-2xl"
+                        className="w-full max-h-[62vh] bg-black object-contain"
                       />
                     ) : (
                       <img
                         src={mResolved}
                         alt={item.title || item.caption || "Preview"}
                         draggable={false}
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={() => {
                           if (swipedRef.current) {
                             swipedRef.current = false;
                             return;
                           }
                           setZoomed(true);
                         }}
-                        className="max-w-full max-h-[80vh] md:max-h-[86vh] w-auto h-auto object-contain cursor-zoom-in select-none shadow-2xl"
+                        className="w-full max-h-[62vh] object-contain cursor-zoom-in select-none"
                       />
                     )}
                   </div>
                 );
               })}
             </div>
-          </div>
-        )}
 
-        {item.caption && !zoomed && (
-          <div className="px-4 py-2.5 text-center text-xs sm:text-sm text-zinc-300 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none shrink-0">
-            {item.caption}
+            {/* Subtle IG-Style Prev / Next Arrows */}
+            {total > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setIdx((i) => (i - 1 + total) % total)}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/65 hover:bg-black/90 border border-white/15 p-1.5 text-white transition cursor-pointer"
+                  aria-label="Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIdx((i) => (i + 1) % total)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-10 rounded-full bg-black/65 hover:bg-black/90 border border-white/15 p-1.5 text-white transition cursor-pointer"
+                  aria-label="Berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
-        )}
 
-        {/* Mobile Bottom Horizontal Thumbnail Strip */}
-        {total > 1 && !zoomed && (
-          <div
-            data-lenis-prevent
-            onClick={(e) => e.stopPropagation()}
-            className="flex md:hidden flex-row items-center gap-2 border-t border-white/10 bg-zinc-950/95 px-3 py-2.5 overflow-x-auto no-scrollbar shrink-0 z-20"
-          >
-            {mediaList.map((url, i) => renderThumbItem(url, i))}
-          </div>
-        )}
-      </div>
+          {/* IG Dot Indicators Below Image */}
+          {total > 1 && (
+            <div className="flex items-center justify-center gap-1.5 py-2.5 border-b border-white/8 shrink-0">
+              {mediaList.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  aria-label={`Foto ${i + 1}`}
+                  onClick={() => setIdx(i)}
+                  className={`rounded-full transition-all cursor-pointer ${
+                    i === safeIdx
+                      ? "w-2 h-2 bg-[#E11D2E]"
+                      : "w-1.5 h-1.5 bg-zinc-600 hover:bg-zinc-400"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Caption Area Below Dots (Instagram Style) */}
+          {(item.caption || item.title) && (
+            <div
+              data-lenis-prevent
+              className="px-4 py-3.5 overflow-y-auto overscroll-contain text-xs sm:text-sm text-zinc-200 leading-relaxed"
+            >
+              {item.title && (
+                <span className="font-semibold text-white mr-2">
+                  {item.title}
+                </span>
+              )}
+              {item.caption && (
+                <span className="text-zinc-300">{item.caption}</span>
+              )}
+            </div>
+          )}
+        </motion.div>
+      )}
     </motion.div>
     </AnimatePresence>
     </ModalPortal>
