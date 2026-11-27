@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { X, ShoppingBag, MessageCircle } from "lucide-react";
 import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
@@ -76,15 +77,21 @@ export function StoreOrderModal({
 
   return (
     <ModalPortal>
-    <div
+    <motion.div
       role="dialog"
       aria-modal="true"
       data-lenis-prevent
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/88 backdrop-blur-sm p-2.5 sm:p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-2.5 sm:p-4"
       onClick={onClose}
     >
-      <div
+      <motion.div
         data-lenis-prevent
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
       >
@@ -269,8 +276,8 @@ export function StoreOrderModal({
           </button>
         </form>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
     </ModalPortal>
   );
 }

@@ -377,17 +377,26 @@ export function RosterSection({
         </AnimatePresence>
 
         {/* Player / Coach Detail Modal */}
+        <AnimatePresence>
         {selectedMember && (
           <ModalPortal>
-          <div
+          <motion.div
             role="dialog"
             aria-modal="true"
             data-lenis-prevent
-            className="fixed inset-0 z-[80] bg-black/88 backdrop-blur-sm p-3 sm:p-6 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[80] bg-black/90 p-3 sm:p-6 flex items-center justify-center"
             onClick={() => setSelectedMember(null)}
           >
-            <div
+            <motion.div
               data-lenis-prevent
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 8 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full max-w-md max-h-[88vh] flex flex-col border border-white/10 bg-[#0e0e11] overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
@@ -454,10 +463,11 @@ export function RosterSection({
                   )}
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
           </ModalPortal>
         )}
+        </AnimatePresence>
       </div>
     </ScrollSection>
   );

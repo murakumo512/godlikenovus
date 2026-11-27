@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { X, Play, ChevronLeft, ChevronRight } from "lucide-react";
 import { assetUrl } from "@/lib/base-path";
 import {
@@ -209,11 +210,16 @@ export function MediaLightbox({
 
   return (
     <ModalPortal>
-    <div
+    <AnimatePresence>
+    <motion.div
       role="dialog"
       aria-modal="true"
       data-lenis-prevent
-      className="fixed inset-0 z-[95] bg-black/95 backdrop-blur-md flex flex-col"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[95] bg-black/95 flex flex-col"
       onClick={() => {
         if (swipedRef.current) {
           swipedRef.current = false;
@@ -345,7 +351,8 @@ export function MediaLightbox({
           {item.caption}
         </div>
       )}
-    </div>
+    </motion.div>
+    </AnimatePresence>
     </ModalPortal>
   );
 }
@@ -443,17 +450,29 @@ export function MediaCarousel({
             mutedLoop={false}
           />
         ) : fit === "contain-ambient" ? (
-          <SmartMedia
-            src={current}
-            alt={`${alt} (${safeIdx + 1})`}
-            fit="contain-ambient"
+          <motion.div
+            key={`${current}-${safeIdx}`}
+            initial={{ opacity: 0.4, scale: 0.985 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="w-full h-full"
-          />
+          >
+            <SmartMedia
+              src={current}
+              alt={`${alt} (${safeIdx + 1})`}
+              fit="contain-ambient"
+              className="w-full h-full"
+            />
+          </motion.div>
         ) : (
-          <img
+          <motion.img
+            key={`${current}-${safeIdx}`}
             src={assetUrl(current)}
             alt={`${alt} (${safeIdx + 1})`}
             draggable={false}
+            initial={{ opacity: 0.4, scale: 0.985 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className={`w-full max-h-[55vh] md:max-h-full h-auto md:h-full select-none ${
               fit === "cover" ? "object-cover" : "object-contain"
             }`}

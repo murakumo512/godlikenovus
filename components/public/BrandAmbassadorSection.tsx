@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, Images, X } from "lucide-react";
 import { BrandAmbassador, HomeSectionsConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
@@ -286,17 +287,26 @@ export function BrandAmbassadorSection({
       </div>
 
       {/* Detail Modal on Click: Nickname, Team, Games Played, Social Media */}
+      <AnimatePresence>
       {selectedBa && (
         <ModalPortal>
-        <div
+        <motion.div
           role="dialog"
           aria-modal="true"
           data-lenis-prevent
-          className="fixed inset-0 z-[80] bg-black/88 backdrop-blur-sm p-2.5 sm:p-5 flex items-center justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[80] bg-black/90 p-2.5 sm:p-5 flex items-center justify-center"
           onClick={() => setSelectedBa(null)}
         >
-          <div
+          <motion.div
             data-lenis-prevent
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 8 }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             className="relative w-full max-w-4xl max-h-[90vh] md:h-[82vh] rounded-lg overflow-hidden bg-[#0e0e11] border border-white/12 shadow-2xl flex flex-col md:grid md:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
@@ -436,10 +446,11 @@ export function BrandAmbassadorSection({
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         </ModalPortal>
       )}
+      </AnimatePresence>
     </ScrollSection>
   );
 }
