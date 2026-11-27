@@ -146,7 +146,13 @@ export function MediaLightbox({
 }) {
   const [zoomed, setZoomed] = useState(false);
   const [idx, setIdx] = useState(0);
-  const swipeStartRef = useRef<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+
+  const pointerIdRef = useRef<number | null>(null);
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const axisLockRef = useRef<"x" | "y" | null>(null);
   const swipedRef = useRef(false);
 
   useLockBodyAndLenis(Boolean(item));
@@ -158,10 +164,13 @@ export function MediaLightbox({
         ? [item.url]
         : [];
   const total = mediaList.length;
+  const safeIdx = total > 0 ? Math.min(idx, total - 1) : 0;
 
   useEffect(() => {
     setZoomed(false);
     setIdx(item?.initialIndex ?? 0);
+    setDragX(0);
+    setDragging(false);
   }, [item?.url, item?.initialIndex]);
 
   useEffect(() => {
@@ -183,29 +192,60 @@ export function MediaLightbox({
 
   if (!item || total === 0) return null;
 
-  const currentUrl = mediaList[idx] || mediaList[0];
+  const currentUrl = mediaList[safeIdx] || mediaList[0];
   const ytEmbed = getYouTubeEmbedUrl(currentUrl);
   const isVideo = isVideoFileUrl(currentUrl);
   const resolved = assetUrl(currentUrl);
 
-  const handleSwipeStart = (clientX: number) => {
-    swipeStartRef.current = clientX;
-    swipedRef.current = false;
-  };
-
-  const handleSwipeEnd = (clientX: number) => {
-    if (swipeStartRef.current === null || total <= 1 || zoomed) {
-      swipeStartRef.current = null;
-      return;
-    }
-    const dx = clientX - swipeStartRef.current;
-    swipeStartRef.current = null;
-    if (Math.abs(dx) > 40) {
+  const finishDrag = (dx: number) => {
+    if (total > 1 && !zoomed && Math.abs(dx) > 45) {
       swipedRef.current = true;
       setZoomed(false);
       if (dx < 0) setIdx((i) => (i + 1) % total);
       else setIdx((i) => (i - 1 + total) % total);
     }
+    setDragging(false);
+    setDragX(0);
+    pointerIdRef.current = null;
+    axisLockRef.current = null;
+  };
+
+  const renderThumbItem = (url: string, i: number) => {
+    const active = i === safeIdx;
+    const thumbIsVid = isAnyVideoUrl(url);
+    return (
+      <button
+        key={`${url}-${i}`}
+        type="button"
+        data-lightbox-thumb="true"
+        onClick={(e) => {
+          e.stopPropagation();
+          setZoomed(false);
+          setIdx(i);
+        }}
+        className={`relative shrink-0 w-14 h-14 md:w-full md:h-16 rounded overflow-hidden border-2 bg-zinc-900 transition cursor-pointer ${
+          active
+            ? "border-[#E11D2E] ring-2 ring-[#E11D2E]/40 opacity-100"
+            : "border-white/10 opacity-60 hover:opacity-100 hover:border-white/30"
+        }`}
+        title={`Foto ${i + 1}`}
+      >
+        {thumbIsVid ? (
+          <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-zinc-300">
+            <Play className="w-4 h-4 fill-white" />
+          </div>
+        ) : (
+          <img
+            src={assetUrl(url)}
+            alt={`Thumbnail ${i + 1}`}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="w-full h-full object-cover"
+          />
+        )}
+      </button>
+    );
   };
 
   return (
@@ -219,138 +259,237 @@ export function MediaLightbox({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[95] bg-black/95 flex flex-col"
-      onClick={() => {
-        if (swipedRef.current) {
-          swipedRef.current = false;
-          return;
-        }
-        onClose();
-      }}
-      onTouchStart={(e) => handleSwipeStart(e.touches[0]?.clientX ?? 0)}
-      onTouchEnd={(e) => handleSwipeEnd(e.changedTouches[0]?.clientX ?? 0)}
-      onPointerDown={(e) => {
-        if (e.pointerType === "mouse") handleSwipeStart(e.clientX);
-      }}
-      onPointerUp={(e) => {
-        if (e.pointerType === "mouse") handleSwipeEnd(e.clientX);
-      }}
+      className="fixed inset-0 z-[95] bg-black/95 flex flex-col md:flex-row overflow-hidden"
     >
-      {/* Top Counter when multi-photo */}
+      {/* Desktop Left Vertical Thumbnail Rail */}
       {total > 1 && (
-        <div className="fixed top-4 left-4 z-[100] rounded-full bg-zinc-900/85 border border-white/15 px-3 py-1 text-xs font-medium text-white">
-          {idx + 1} / {total}
-        </div>
+        <aside
+          data-lenis-prevent
+          onClick={(e) => e.stopPropagation()}
+          className="hidden md:flex flex-col w-24 shrink-0 border-r border-white/10 bg-zinc-950/95 p-2.5 gap-2 overflow-y-auto overscroll-contain z-20"
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 text-center pb-1 border-b border-white/10">
+            {safeIdx + 1} / {total}
+          </div>
+          {mediaList.map((url, i) => renderThumbItem(url, i))}
+        </aside>
       )}
 
-      {/* Minimal Close Button (IG Style) */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
+      {/* Main Viewer Column */}
+      <div
+        className="relative flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden"
+        onClick={() => {
+          if (swipedRef.current) {
+            swipedRef.current = false;
+            return;
+          }
           onClose();
         }}
-        className="fixed top-4 right-4 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-        aria-label="Tutup"
       >
-        <X className="w-5 h-5" />
-      </button>
+        {/* Top Counter on Mobile */}
+        {total > 1 && (
+          <div className="md:hidden fixed top-4 left-4 z-[100] rounded-full bg-zinc-900/85 border border-white/15 px-3 py-1 text-xs font-medium text-white">
+            {safeIdx + 1} / {total}
+          </div>
+        )}
 
-      {/* Prev / Next Arrows when multi-photo */}
-      {total > 1 && (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomed(false);
-              setIdx((i) => (i - 1 + total) % total);
-            }}
-            className="fixed left-3 sm:left-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-            aria-label="Sebelumnya"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setZoomed(false);
-              setIdx((i) => (i + 1) % total);
-            }}
-            className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
-            aria-label="Berikutnya"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </>
-      )}
-
-      {/* Scrollable / Zoomable Original Media Stage */}
-      <div
-        data-lenis-prevent
-        className="flex-1 w-full h-full overflow-auto overscroll-contain"
-        onClick={onClose}
-      >
-        <div
-          className={`min-h-full min-w-full flex p-3 sm:p-8 ${
-            zoomed
-              ? "items-start justify-start sm:justify-center"
-              : "items-center justify-center"
-          }`}
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="fixed top-4 right-4 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+          aria-label="Tutup"
         >
-          {ytEmbed ? (
-            <div
-              className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <iframe
-                src={`${ytEmbed}&autoplay=1`}
-                title={item.title || "Video"}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full border-0"
-              />
-            </div>
-          ) : isVideo ? (
-            <video
-              src={resolved}
-              controls
-              autoPlay
-              playsInline
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full max-h-[88vh] w-auto h-auto rounded-lg bg-black shadow-2xl"
-            />
-          ) : (
-            <img
-              src={resolved}
-              alt={item.title || item.caption || "Preview"}
-              draggable={false}
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Prev / Next Arrows */}
+        {total > 1 && (
+          <>
+            <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (swipedRef.current) {
-                  swipedRef.current = false;
-                  return;
-                }
-                setZoomed((z) => !z);
+                setZoomed(false);
+                setIdx((i) => (i - 1 + total) % total);
               }}
-              className={
-                zoomed
-                  ? "max-w-none w-auto h-auto cursor-zoom-out select-none shadow-2xl"
-                  : "max-w-full max-h-[88vh] w-auto h-auto object-contain cursor-zoom-in select-none shadow-2xl"
-              }
-            />
-          )}
-        </div>
-      </div>
+              className="fixed left-3 md:left-28 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+              aria-label="Sebelumnya"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomed(false);
+                setIdx((i) => (i + 1) % total);
+              }}
+              className="fixed right-3 sm:right-5 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-zinc-900/85 hover:bg-[#E11D2E] border border-white/15 p-2 text-white transition cursor-pointer shadow-lg"
+              aria-label="Berikutnya"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
 
-      {item.caption && !zoomed && (
-        <div
-          className="px-4 py-3 text-center text-xs sm:text-sm text-zinc-300 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none"
-        >
-          {item.caption}
-        </div>
-      )}
+        {/* Main Media Stage: Zoomed Scrollable OR 1:1 Drag-Follow Track */}
+        {zoomed ? (
+          <div
+            data-lenis-prevent
+            className="flex-1 w-full h-full overflow-auto overscroll-contain"
+          >
+            <div className="min-h-full min-w-full flex items-start justify-start sm:justify-center p-3 sm:p-8">
+              <img
+                src={resolved}
+                alt={item.title || item.caption || "Preview"}
+                draggable={false}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomed(false);
+                }}
+                className="max-w-none w-auto h-auto cursor-zoom-out select-none shadow-2xl"
+              />
+            </div>
+          </div>
+        ) : (
+          <div
+            onPointerDown={(e) => {
+              if (total <= 1) return;
+              if (e.pointerType === "mouse" && e.button !== 0) return;
+              const target = e.target as HTMLElement | null;
+              if (target?.closest("button, a, video, iframe")) return;
+              pointerIdRef.current = e.pointerId;
+              startXRef.current = e.clientX;
+              startYRef.current = e.clientY;
+              axisLockRef.current = null;
+              swipedRef.current = false;
+              setDragX(0);
+            }}
+            onPointerMove={(e) => {
+              if (pointerIdRef.current !== e.pointerId) return;
+              const dx = e.clientX - startXRef.current;
+              const dy = e.clientY - startYRef.current;
+              if (!axisLockRef.current) {
+                if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                  axisLockRef.current = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+                  if (axisLockRef.current === "x") {
+                    setDragging(true);
+                    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+                  }
+                }
+              }
+              if (axisLockRef.current === "y") {
+                setDragging(false);
+                setDragX(0);
+                pointerIdRef.current = null;
+                return;
+              }
+              if (axisLockRef.current === "x") {
+                if (Math.abs(dx) > 8) swipedRef.current = true;
+                setDragX(dx);
+              }
+            }}
+            onPointerUp={(e) => {
+              if (pointerIdRef.current !== e.pointerId) return;
+              const dx = e.clientX - startXRef.current;
+              try {
+                (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+              } catch {
+                // ignore
+              }
+              finishDrag(axisLockRef.current === "x" ? dx : 0);
+            }}
+            onPointerCancel={() => finishDrag(0)}
+            style={{ touchAction: total > 1 ? "pan-y" : undefined }}
+            className={`flex-1 w-full h-full overflow-hidden select-none ${
+              total > 1 ? "cursor-grab active:cursor-grabbing" : ""
+            }`}
+          >
+            <div
+              className="flex w-full h-full"
+              style={{
+                transform: `translate3d(calc(-${safeIdx * 100}% + ${dragX}px), 0, 0)`,
+                transition: dragging
+                  ? "none"
+                  : "transform 340ms cubic-bezier(0.22, 1, 0.36, 1)",
+                willChange: "transform",
+              }}
+            >
+              {mediaList.map((url, mIdx) => {
+                const mYt = getYouTubeEmbedUrl(url);
+                const mVid = isVideoFileUrl(url);
+                const mResolved = assetUrl(url);
+                return (
+                  <div
+                    key={`${url}-${mIdx}`}
+                    className="w-full h-full shrink-0 flex items-center justify-center p-3 sm:p-8"
+                  >
+                    {mYt ? (
+                      <div
+                        className="w-full max-w-4xl aspect-video rounded-lg overflow-hidden border border-zinc-800 bg-black shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <iframe
+                          src={mIdx === safeIdx ? `${mYt}&autoplay=1` : mYt}
+                          title={item.title || "Video"}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full border-0"
+                        />
+                      </div>
+                    ) : mVid ? (
+                      <video
+                        src={mResolved}
+                        controls
+                        autoPlay={mIdx === safeIdx}
+                        playsInline
+                        onClick={(e) => e.stopPropagation()}
+                        className="max-w-full max-h-[82vh] w-auto h-auto rounded-lg bg-black shadow-2xl"
+                      />
+                    ) : (
+                      <img
+                        src={mResolved}
+                        alt={item.title || item.caption || "Preview"}
+                        draggable={false}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (swipedRef.current) {
+                            swipedRef.current = false;
+                            return;
+                          }
+                          setZoomed(true);
+                        }}
+                        className="max-w-full max-h-[80vh] md:max-h-[86vh] w-auto h-auto object-contain cursor-zoom-in select-none shadow-2xl"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {item.caption && !zoomed && (
+          <div className="px-4 py-2.5 text-center text-xs sm:text-sm text-zinc-300 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none shrink-0">
+            {item.caption}
+          </div>
+        )}
+
+        {/* Mobile Bottom Horizontal Thumbnail Strip */}
+        {total > 1 && !zoomed && (
+          <div
+            data-lenis-prevent
+            onClick={(e) => e.stopPropagation()}
+            className="flex md:hidden flex-row items-center gap-2 border-t border-white/10 bg-zinc-950/95 px-3 py-2.5 overflow-x-auto no-scrollbar shrink-0 z-20"
+          >
+            {mediaList.map((url, i) => renderThumbItem(url, i))}
+          </div>
+        )}
+      </div>
     </motion.div>
     </AnimatePresence>
     </ModalPortal>
