@@ -23,13 +23,20 @@ export function KprPreloader({
   tagline,
   fallbackLogo,
 }: KprPreloaderProps) {
-  const [stage, setStage] = useState<Stage>(
-    opening.enabled === false ? "done" : "loading"
-  );
+  const isLoadingOn =
+    opening.enabled !== false && opening.loadingEnabled !== false;
+  const isRevealOn =
+    opening.enabled !== false && opening.revealEnabled !== false;
+  const anyEnabled = isLoadingOn || isRevealOn;
+
+  const [stage, setStage] = useState<Stage>(() => {
+    if (!anyEnabled) return "done";
+    return isLoadingOn ? "loading" : "godlike";
+  });
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (opening.enabled === false) {
+    if (!anyEnabled) {
       setStage("done");
       document.body.style.overflow = "";
       return;
@@ -37,42 +44,58 @@ export function KprPreloader({
 
     document.body.style.overflow = "hidden";
 
-    const start = performance.now();
-    const duration = 950;
     let rafId = 0;
+    let toGodlike: ReturnType<typeof setTimeout> | undefined;
+    let toShutter: ReturnType<typeof setTimeout> | undefined;
+    let toDone: ReturnType<typeof setTimeout> | undefined;
 
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const t = Math.min(1, elapsed / duration);
-      const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      setProgress(Math.round(eased * 100));
-      if (t < 1) {
-        rafId = requestAnimationFrame(tick);
+    if (isLoadingOn) {
+      setStage("loading");
+      const start = performance.now();
+      const duration = 950;
+      const tick = (now: number) => {
+        const elapsed = now - start;
+        const t = Math.min(1, elapsed / duration);
+        const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        setProgress(Math.round(eased * 100));
+        if (t < 1) {
+          rafId = requestAnimationFrame(tick);
+        }
+      };
+      rafId = requestAnimationFrame(tick);
+
+      if (isRevealOn) {
+        toGodlike = setTimeout(() => setStage("godlike"), 1020);
+        toShutter = setTimeout(() => setStage("shutter"), 2350);
+        toDone = setTimeout(() => {
+          setStage("done");
+          document.body.style.overflow = "";
+        }, 3050);
+      } else {
+        toShutter = setTimeout(() => setStage("shutter"), 1050);
+        toDone = setTimeout(() => {
+          setStage("done");
+          document.body.style.overflow = "";
+        }, 1720);
       }
-    };
-    rafId = requestAnimationFrame(tick);
-
-    const toGodlike = setTimeout(() => {
+    } else {
+      // Loading skipped, Opening Reveal only
       setStage("godlike");
-    }, 1020);
-
-    const toShutter = setTimeout(() => {
-      setStage("shutter");
-    }, 2350);
-
-    const toDone = setTimeout(() => {
-      setStage("done");
-      document.body.style.overflow = "";
-    }, 3050);
+      toShutter = setTimeout(() => setStage("shutter"), 1450);
+      toDone = setTimeout(() => {
+        setStage("done");
+        document.body.style.overflow = "";
+      }, 2150);
+    }
 
     return () => {
       cancelAnimationFrame(rafId);
-      clearTimeout(toGodlike);
-      clearTimeout(toShutter);
-      clearTimeout(toDone);
+      if (toGodlike) clearTimeout(toGodlike);
+      if (toShutter) clearTimeout(toShutter);
+      if (toDone) clearTimeout(toDone);
       document.body.style.overflow = "";
     };
-  }, [opening.enabled]);
+  }, [anyEnabled, isLoadingOn, isRevealOn]);
 
   const handleSkip = () => {
     setStage("shutter");
@@ -82,7 +105,7 @@ export function KprPreloader({
     }, 600);
   };
 
-  if (opening.enabled === false || stage === "done") return null;
+  if (!anyEnabled || stage === "done") return null;
 
   const heroWord =
     (opening.heroWord ?? "").trim() ||

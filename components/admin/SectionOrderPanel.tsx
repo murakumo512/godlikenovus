@@ -58,6 +58,36 @@ const SECTION_LABELS: Record<
   },
 };
 
+function ModularSwitch({
+  enabled,
+  onToggle,
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition cursor-pointer shrink-0 ${
+        enabled
+          ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+          : "border-zinc-300 bg-zinc-100 text-zinc-500 hover:bg-zinc-200"
+      }`}
+    >
+      {enabled ? (
+        <>
+          <Eye className="w-3.5 h-3.5" /> ON
+        </>
+      ) : (
+        <>
+          <EyeOff className="w-3.5 h-3.5" /> OFF
+        </>
+      )}
+    </button>
+  );
+}
+
 export function SectionOrderPanel({
   data,
   setData,
@@ -74,6 +104,23 @@ export function SectionOrderPanel({
   const hidden = new Set<SectionKey>(data.hiddenSections || []);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [overIdx, setOverIdx] = useState<number | null>(null);
+
+  const isLoadingOn =
+    data.opening.enabled !== false && data.opening.loadingEnabled !== false;
+  const isRevealOn =
+    data.opening.enabled !== false && data.opening.revealEnabled !== false;
+
+  const setOpeningFlags = (nextLoading: boolean, nextReveal: boolean) => {
+    setData((prev) => ({
+      ...prev,
+      opening: {
+        ...prev.opening,
+        enabled: nextLoading || nextReveal,
+        loadingEnabled: nextLoading,
+        revealEnabled: nextReveal,
+      },
+    }));
+  };
 
   const moveItem = (index: number, direction: -1 | 1) => {
     const targetIdx = index + direction;
@@ -113,64 +160,70 @@ export function SectionOrderPanel({
 
   return (
     <div className="space-y-5">
-      {/* Enable / Disable Opening & Loading */}
-      <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-900">
-            Layar Opening &amp; Loading (0–100%)
-          </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            {data.opening.enabled !== false
-              ? "Aktif — tampil saat pengunjung pertama kali membuka website."
-              : "Dinonaktifkan — pengunjung langsung masuk ke halaman Home."}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      {/* 1. Toggle Terpisah: Loading (0-100%) vs Opening Reveal */}
+      <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-900">
+              Enable / Disable Loading &amp; Opening (Terpisah)
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Aktifkan atau matikan animasi <strong>Loading (0–100%)</strong> dan{" "}
+              <strong>Opening Reveal (Tulisan Besar)</strong> secara terpisah.
+            </p>
+          </div>
           <button
             type="button"
             onClick={() => onJumpTab("opening")}
             className="rounded border border-zinc-300 bg-white hover:border-red-600 hover:text-red-600 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition cursor-pointer"
           >
-            Edit Opening
+            Edit Teks &amp; Logo
           </button>
-          <button
-            type="button"
-            onClick={() =>
-              setData((prev) => ({
-                ...prev,
-                opening: {
-                  ...prev.opening,
-                  enabled: prev.opening.enabled === false,
-                },
-              }))
-            }
-            className={`inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
-              data.opening.enabled !== false
-                ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                : "border-zinc-300 bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-            }`}
-          >
-            {data.opening.enabled !== false ? (
-              <>
-                <Eye className="w-3.5 h-3.5" /> Aktif
-              </>
-            ) : (
-              <>
-                <EyeOff className="w-3.5 h-3.5" /> Nonaktif
-              </>
-            )}
-          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3.5 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-zinc-900">
+                1. Layar Loading (0–100%)
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">
+                {isLoadingOn ? "Tampil di awal buka web" : "Dilewati"}
+              </p>
+            </div>
+            <ModularSwitch
+              enabled={isLoadingOn}
+              onToggle={() => setOpeningFlags(!isLoadingOn, isRevealOn)}
+            />
+          </div>
+
+          <div className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3.5 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-semibold text-zinc-900">
+                2. Opening Reveal (Tulisan Besar)
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">
+                {isRevealOn ? "Tampil sebelum masuk Home" : "Dilewati"}
+              </p>
+            </div>
+            <ModularSwitch
+              enabled={isRevealOn}
+              onToggle={() => setOpeningFlags(isLoadingOn, !isRevealOn)}
+            />
+          </div>
         </div>
       </section>
 
+      {/* 2. Urutan & Enable/Disable Semua Section */}
       <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
           <div>
             <h2 className="text-base font-semibold text-zinc-900">
-              Urutan Section Website (Maju / Mundur)
+              Urutan &amp; Enable/Disable Section (1 per 1)
             </h2>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Geser urutan tampil dari atas ke bawah menggunakan tombol panah. Urutan menu di bar atas (Navbar) juga otomatis menyesuaikan!
+              Drag &amp; drop atau pakai panah untuk atur urutan, lalu klik tombol{" "}
+              <strong>ON / OFF</strong> untuk mengaktifkan atau menonaktifkan section.
             </p>
           </div>
 
@@ -230,11 +283,6 @@ export function SectionOrderPanel({
                       <span className="text-sm font-semibold text-zinc-900 truncate">
                         {info.title}
                       </span>
-                      {isHidden && (
-                        <span className="px-1.5 py-0.5 rounded bg-zinc-300 text-[10px] font-semibold uppercase text-zinc-700">
-                          Disembunyikan
-                        </span>
-                      )}
                     </div>
                     <p className="text-xs text-zinc-500 truncate">
                       {info.desc}
@@ -243,56 +291,280 @@ export function SectionOrderPanel({
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+                  <ModularSwitch
+                    enabled={!isHidden}
+                    onToggle={() => toggleVisibility(key)}
+                  />
+
                   <button
                     type="button"
                     onClick={() => onJumpTab(info.targetTab)}
-                    className="px-2.5 py-1.5 rounded border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 cursor-pointer"
+                    className="px-2.5 py-1 rounded border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-medium text-zinc-700 cursor-pointer"
                   >
-                    Edit Isi
+                    Edit
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => toggleVisibility(key)}
-                    title={isHidden ? "Tampilkan kembali" : "Sembunyikan section"}
-                    className={`p-1.5 rounded border transition cursor-pointer ${
-                      isHidden
-                        ? "border-zinc-300 bg-white text-zinc-500 hover:text-zinc-900"
-                        : "border-zinc-300 bg-white text-zinc-700 hover:text-red-600"
-                    }`}
-                  >
-                    {isHidden ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={idx === 0}
                     onClick={() => moveItem(idx, -1)}
-                    title="Geser Naik (Maju)"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded border border-zinc-300 bg-white hover:border-red-600 hover:text-red-600 disabled:opacity-35 disabled:pointer-events-none text-xs font-medium text-zinc-800 cursor-pointer"
+                    disabled={idx === 0}
+                    title="Geser naik"
+                    className="p-1.5 rounded border border-zinc-300 bg-white text-zinc-700 hover:border-red-600 hover:text-red-600 disabled:opacity-35 cursor-pointer"
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Naik</span>
                   </button>
 
                   <button
                     type="button"
-                    disabled={idx === order.length - 1}
                     onClick={() => moveItem(idx, 1)}
-                    title="Geser Turun (Mundur)"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded border border-zinc-300 bg-white hover:border-red-600 hover:text-red-600 disabled:opacity-35 disabled:pointer-events-none text-xs font-medium text-zinc-800 cursor-pointer"
+                    disabled={idx === order.length - 1}
+                    title="Geser turun"
+                    className="p-1.5 rounded border border-zinc-300 bg-white text-zinc-700 hover:border-red-600 hover:text-red-600 disabled:opacity-35 cursor-pointer"
                   >
                     <ArrowDown className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Turun</span>
                   </button>
                 </div>
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* 3. Kontrol Modular 1-per-1 Semua Item & Konten */}
+      <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
+        <div className="border-b border-zinc-100 pb-3">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Kontrol Modular Item &amp; Konten (1 per 1)
+          </h2>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            Aktifkan atau nonaktifkan setiap divisi game, tim, player, foto About, event Gallery, Brand Ambassador, produk Store, dan Sponsor satu per satu dari sini.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Games & Sub-Teams */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Divisi Game &amp; Sub-Tim ({data.games.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.games.map((g) => (
+                <div key={g.id} className="py-2 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-zinc-900 truncate">
+                      {g.name} ({g.shortName})
+                    </span>
+                    <ModularSwitch
+                      enabled={g.enabled !== false}
+                      onToggle={() =>
+                        setData((prev) => ({
+                          ...prev,
+                          games: prev.games.map((item) =>
+                            item.id === g.id
+                              ? { ...item, enabled: item.enabled === false }
+                              : item
+                          ),
+                        }))
+                      }
+                    />
+                  </div>
+                  {(g.subTeams || []).map((st) => (
+                    <div
+                      key={st.id}
+                      className="pl-4 flex items-center justify-between gap-2"
+                    >
+                      <span className="text-[11px] text-zinc-600 truncate">
+                        ↳ {st.name}
+                      </span>
+                      <ModularSwitch
+                        enabled={st.enabled !== false}
+                        onToggle={() =>
+                          setData((prev) => ({
+                            ...prev,
+                            games: prev.games.map((item) =>
+                              item.id === g.id
+                                ? {
+                                    ...item,
+                                    subTeams: (item.subTeams || []).map((s) =>
+                                      s.id === st.id
+                                        ? { ...s, enabled: s.enabled === false }
+                                        : s
+                                    ),
+                                  }
+                                : item
+                            ),
+                          }))
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Brand Ambassadors */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Brand Ambassador ({data.ambassadors.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.ambassadors.map((ba) => (
+                <div
+                  key={ba.id}
+                  className="py-2 flex items-center justify-between gap-2"
+                >
+                  <span className="text-xs font-medium text-zinc-800 truncate">
+                    {ba.name} ({ba.nickname})
+                  </span>
+                  <ModularSwitch
+                    enabled={ba.enabled !== false}
+                    onToggle={() =>
+                      setData((prev) => ({
+                        ...prev,
+                        ambassadors: prev.ambassadors.map((item) =>
+                          item.id === ba.id
+                            ? { ...item, enabled: item.enabled === false }
+                            : item
+                        ),
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Gallery Events */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Gallery Event ({data.gallery.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.gallery.map((evt) => (
+                <div
+                  key={evt.id}
+                  className="py-2 flex items-center justify-between gap-2"
+                >
+                  <span className="text-xs font-medium text-zinc-800 truncate">
+                    {evt.title}
+                  </span>
+                  <ModularSwitch
+                    enabled={evt.enabled !== false}
+                    onToggle={() =>
+                      setData((prev) => ({
+                        ...prev,
+                        gallery: prev.gallery.map((item) =>
+                          item.id === evt.id
+                            ? { ...item, enabled: item.enabled === false }
+                            : item
+                        ),
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Store Products */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Official Store ({data.store.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.store.map((prod) => (
+                <div
+                  key={prod.id}
+                  className="py-2 flex items-center justify-between gap-2"
+                >
+                  <span className="text-xs font-medium text-zinc-800 truncate">
+                    {prod.name}
+                  </span>
+                  <ModularSwitch
+                    enabled={prod.enabled !== false}
+                    onToggle={() =>
+                      setData((prev) => ({
+                        ...prev,
+                        store: prev.store.map((item) =>
+                          item.id === prod.id
+                            ? { ...item, enabled: item.enabled === false }
+                            : item
+                        ),
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* About Photos */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              About Us Media ({data.about.photos.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.about.photos.map((ph, idx) => (
+                <div
+                  key={ph.id}
+                  className="py-2 flex items-center justify-between gap-2"
+                >
+                  <span className="text-xs font-medium text-zinc-800 truncate">
+                    {ph.caption || `Foto About #${idx + 1}`}
+                  </span>
+                  <ModularSwitch
+                    enabled={ph.enabled !== false}
+                    onToggle={() =>
+                      setData((prev) => ({
+                        ...prev,
+                        about: {
+                          ...prev.about,
+                          photos: prev.about.photos.map((item) =>
+                            item.id === ph.id
+                              ? { ...item, enabled: item.enabled === false }
+                              : item
+                          ),
+                        },
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sponsors */}
+          <div className="rounded-md border border-zinc-200 p-3.5 space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Sponsors / Partners ({data.sponsors.length})
+            </div>
+            <div className="divide-y divide-zinc-100">
+              {data.sponsors.map((sp) => (
+                <div
+                  key={sp.id}
+                  className="py-2 flex items-center justify-between gap-2"
+                >
+                  <span className="text-xs font-medium text-zinc-800 truncate">
+                    {sp.name}
+                  </span>
+                  <ModularSwitch
+                    enabled={sp.enabled !== false}
+                    onToggle={() =>
+                      setData((prev) => ({
+                        ...prev,
+                        sponsors: prev.sponsors.map((item) =>
+                          item.id === sp.id
+                            ? { ...item, enabled: item.enabled === false }
+                            : item
+                        ),
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -166,6 +166,8 @@ export interface NavLabels {
 
 export interface OpeningConfig {
   enabled: boolean;
+  loadingEnabled?: boolean;
+  revealEnabled?: boolean;
   loadingLogo: string;
   revealLogo: string;
   backgroundImage: string;

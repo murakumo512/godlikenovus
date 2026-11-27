@@ -616,23 +616,60 @@ export function AdminDashboard({
                     </p>
                   </div>
 
-                  <label className="inline-flex items-center gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-800 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={data.opening.enabled !== false}
-                      onChange={(e) =>
-                        setData({
-                          ...data,
-                          opening: {
-                            ...data.opening,
-                            enabled: e.target.checked,
-                          },
-                        })
-                      }
-                      className="accent-red-600 w-3.5 h-3.5"
-                    />
-                    Aktifkan Opening
-                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-800 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={
+                          data.opening.enabled !== false &&
+                          data.opening.loadingEnabled !== false
+                        }
+                        onChange={(e) => {
+                          const nextLoading = e.target.checked;
+                          const curReveal =
+                            data.opening.enabled !== false &&
+                            data.opening.revealEnabled !== false;
+                          setData({
+                            ...data,
+                            opening: {
+                              ...data.opening,
+                              enabled: nextLoading || curReveal,
+                              loadingEnabled: nextLoading,
+                              revealEnabled: curReveal,
+                            },
+                          });
+                        }}
+                        className="accent-red-600 w-3.5 h-3.5"
+                      />
+                      Aktifkan Loading (0–100%)
+                    </label>
+                    <label className="inline-flex items-center gap-2 rounded border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-800 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={
+                          data.opening.enabled !== false &&
+                          data.opening.revealEnabled !== false
+                        }
+                        onChange={(e) => {
+                          const nextReveal = e.target.checked;
+                          const curLoading =
+                            data.opening.enabled !== false &&
+                            data.opening.loadingEnabled !== false;
+                          setData({
+                            ...data,
+                            opening: {
+                              ...data.opening,
+                              enabled: curLoading || nextReveal,
+                              loadingEnabled: curLoading,
+                              revealEnabled: nextReveal,
+                            },
+                          });
+                        }}
+                        className="accent-red-600 w-3.5 h-3.5"
+                      />
+                      Aktifkan Opening (Tulisan Besar)
+                    </label>
+                  </div>
                 </div>
 
                 <div className="space-y-3.5">
