@@ -6,8 +6,10 @@ import { trackAnalytics } from "@/lib/analytics-client";
 
 export function SponsorRollingStrip({
   sponsors,
+  fullBleed = true,
 }: {
   sponsors: SponsorItem[];
+  fullBleed?: boolean;
 }) {
   if (sponsors.length === 0) return null;
 
@@ -19,14 +21,20 @@ export function SponsorRollingStrip({
   };
 
   return (
-    <div className="godlike-sponsor-bg relative w-full overflow-hidden rounded-xl px-4 sm:px-8 md:px-12 py-8 sm:py-12">
+    <div
+      className={`godlike-sponsor-bg relative w-full overflow-hidden py-8 sm:py-12 ${
+        fullBleed
+          ? "rounded-none border-x-0 px-4 sm:px-6 lg:px-8"
+          : "rounded-xl px-4 sm:px-8 md:px-12"
+      }`}
+    >
       {/* Subtle flowing contour waves (Team Liquid-inspired in brighter Godlike crimson) */}
       <div
         className="godlike-sponsor-waves pointer-events-none absolute inset-0"
         aria-hidden="true"
       />
 
-      <div className="relative z-10 flex flex-wrap items-stretch justify-center gap-4 sm:gap-6 md:gap-8">
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-wrap items-stretch justify-center gap-4 sm:gap-6 md:gap-8">
         {sponsors.map((sp) => {
           const href = normalizeHref(sp.website);
           return (

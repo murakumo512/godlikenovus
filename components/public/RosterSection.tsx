@@ -198,7 +198,7 @@ export function RosterSection({
                         />
                       ) : (
                         <div className="flex flex-col items-center justify-center gap-1">
-                          <span className="inline-flex items-center justify-center px-3 py-1 rounded bg-[#E11D2E]/15 border border-[#E11D2E]/35 font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-white group-hover:text-[#E11D2E] transition">
+                          <span className="font-display text-3xl sm:text-4xl font-bold uppercase tracking-wider text-white group-hover:text-[#E11D2E] transition">
                             {game.shortName}
                           </span>
                         </div>

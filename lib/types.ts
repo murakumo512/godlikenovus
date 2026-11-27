@@ -268,6 +268,7 @@ export interface HomeSectionsConfig {
   heroCtaPrimaryHref: string;
   heroCtaSecondaryHref: string;
   heroTickerText: string;
+  heroTickerEnabled?: boolean;
   heroScrollCueText: string;
   heroNavLabel: string;
   rosterBadge: string;
@@ -296,6 +297,7 @@ export interface HomeSectionsConfig {
   sponsorsBadge: string;
   sponsorsTitleWhite: string;
   sponsorsTitleAccent: string;
+  sponsorsFullBleed?: boolean;
   scrimBadge?: string;
   scrimTitleWhite?: string;
   scrimTitleAccent?: string;

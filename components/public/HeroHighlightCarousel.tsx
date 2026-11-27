@@ -122,8 +122,7 @@ export function HeroHighlightCarousel({
         <div className="relative z-10 w-full p-6 sm:p-10 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="max-w-xl space-y-3 sm:space-y-4">
             {current.badge && (
-              <span className="inline-flex items-center gap-2 px-2.5 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] bg-[#E11D2E]/15 border border-[#E11D2E]/40 text-rose-200 rounded">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#E11D2E]" />
+              <span className="block text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#E11D2E]">
                 {current.badge}
               </span>
             )}

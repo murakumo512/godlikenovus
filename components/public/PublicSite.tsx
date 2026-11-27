@@ -457,42 +457,44 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             </div>
             )}
 
-            <div className="border-y border-white/10 py-3 overflow-hidden">
-              <div className="animate-marquee flex items-center gap-10 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
-                {[...Array(2)].map((_, idx) => (
-                  <div key={idx} className="flex items-center gap-10">
-                    {hs.heroTickerText ? (
-                      hs.heroTickerText
-                        .split("|")
-                        .map((item) => item.trim())
-                        .filter(Boolean)
-                        .map((item, i) => (
-                          <span
-                            key={`${idx}-${i}`}
-                            className={i === 0 ? "text-white" : "text-zinc-400"}
-                          >
-                            {item}
+            {hs.heroTickerEnabled !== false && (
+              <div className="border-y border-white/10 py-3 overflow-hidden">
+                <div className="animate-marquee flex items-center gap-10 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
+                  {[...Array(2)].map((_, idx) => (
+                    <div key={idx} className="flex items-center gap-10">
+                      {hs.heroTickerText ? (
+                        hs.heroTickerText
+                          .split("|")
+                          .map((item) => item.trim())
+                          .filter(Boolean)
+                          .map((item, i) => (
+                            <span
+                              key={`${idx}-${i}`}
+                              className={i === 0 ? "text-white" : "text-zinc-400"}
+                            >
+                              {item}
+                            </span>
+                          ))
+                      ) : (
+                        <>
+                          <span className="text-white font-semibold">
+                            {data.branding.teamName}
                           </span>
-                        ))
-                    ) : (
-                      <>
-                        <span className="text-white font-semibold">
-                          {data.branding.teamName}
-                        </span>
-                        <span className="text-[#E11D2E]">•</span>
-                        <span>{data.branding.tagline}</span>
-                        {data.games.map((g) => (
-                          <span key={`${idx}-${g.id}`} className="text-zinc-300">
-                            · {g.name}
-                          </span>
-                        ))}
-                        <span>· {data.branding.estYear}</span>
-                      </>
-                    )}
-                  </div>
-                ))}
+                          <span className="text-[#E11D2E]">•</span>
+                          <span>{data.branding.tagline}</span>
+                          {data.games.map((g) => (
+                            <span key={`${idx}-${g.id}`} className="text-zinc-300">
+                              · {g.name}
+                            </span>
+                          ))}
+                          <span>· {data.branding.estYear}</span>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </ScrollSection>
         );
 
@@ -975,12 +977,13 @@ function PublicSiteInner({ data }: { data: SiteData }) {
           </div>
         );
 
-      case "sponsors":
+      case "sponsors": {
+        const isSponsorFullBleed = hs.sponsorsFullBleed !== false;
         return (
           <div key="sponsors" className={topOffsetClass}>
             <ScrollSection id="sponsors" skipEnter={true} showDivider={!isFirstSection}>
-              <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+              <div className="py-12 sm:py-16 md:py-20">
+                <div className="mb-8 sm:mb-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                   <div>
                     {hs.sponsorsBadge && (
                       <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#E11D2E] block mb-2">
@@ -996,11 +999,18 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </div>
                 </div>
 
-                <SponsorRollingStrip sponsors={visibleSponsors} />
+                {isSponsorFullBleed ? (
+                  <SponsorRollingStrip sponsors={visibleSponsors} fullBleed={true} />
+                ) : (
+                  <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                    <SponsorRollingStrip sponsors={visibleSponsors} fullBleed={false} />
+                  </div>
+                )}
               </div>
             </ScrollSection>
           </div>
         );
+      }
 
       case "contact":
         return (

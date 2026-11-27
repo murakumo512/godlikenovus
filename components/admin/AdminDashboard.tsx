@@ -1255,6 +1255,34 @@ export function AdminDashboard({
                   />
                 </div>
 
+                <div className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3.5 py-2.5">
+                  <div>
+                    <div className="text-xs font-semibold text-zinc-900">
+                      Teks Berjalan (Running Text) di Bagian Atas
+                    </div>
+                    <div className="text-[11px] text-zinc-500">
+                      Matikan jika tidak ingin menampilkan baris teks berjalan di bawah Hero.
+                    </div>
+                  </div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={data.homeSections.heroTickerEnabled !== false}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          homeSections: {
+                            ...data.homeSections,
+                            heroTickerEnabled: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded border-zinc-300"
+                    />
+                    {data.homeSections.heroTickerEnabled !== false ? "ON" : "OFF"}
+                  </label>
+                </div>
+
                 <InputField
                   label="Teks Berjalan / Marquee Bawah Hero (Pisahkan tiap item dengan tanda | — kosongkan untuk otomatis)"
                   value={data.homeSections.heroTickerText}
@@ -4033,6 +4061,33 @@ export function AdminDashboard({
                       })
                     }
                   />
+                </div>
+                <div className="flex items-center justify-between gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3.5 py-2.5">
+                  <div>
+                    <div className="text-xs font-semibold text-zinc-900">
+                      Mode Background Sponsor Full Width (Mentok Kiri–Kanan)
+                    </div>
+                    <div className="text-[11px] text-zinc-500">
+                      ON = background merah mentok penuh selebar layar; OFF = kotak membulat di tengah.
+                    </div>
+                  </div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-800 cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={data.homeSections.sponsorsFullBleed !== false}
+                      onChange={(e) =>
+                        setData({
+                          ...data,
+                          homeSections: {
+                            ...data.homeSections,
+                            sponsorsFullBleed: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded border-zinc-300"
+                    />
+                    {data.homeSections.sponsorsFullBleed !== false ? "Mentok (Full)" : "Boxed"}
+                  </label>
                 </div>
               </section>
 
