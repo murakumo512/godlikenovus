@@ -20,7 +20,7 @@ export function SponsorRollingStrip({
 
   return (
     <div className="w-full py-4 sm:py-6">
-      <div className="flex flex-wrap items-stretch justify-center gap-3.5 sm:gap-6">
+      <div className="flex flex-wrap items-stretch justify-center gap-4 sm:gap-6">
         {sponsors.map((sp) => {
           const href = normalizeHref(sp.website);
           return (
@@ -42,7 +42,7 @@ export function SponsorRollingStrip({
                 });
               }}
               title={href ? `${sp.name} — Buka link` : sp.name}
-              className="group w-[calc(50%-0.4375rem)] sm:w-[195px] md:w-[215px] rounded-md border border-white/10 bg-zinc-950/70 hover:border-[#E11D2E]/50 p-4 sm:p-5 flex flex-col items-center justify-center gap-3 transition"
+              className="godlike-card group w-[calc(50%-0.5rem)] sm:w-[210px] md:w-[230px] rounded-lg p-5 sm:p-6 flex flex-col items-center justify-center gap-3.5"
             >
               <div className="w-full h-16 sm:h-20 flex items-center justify-center overflow-hidden">
                 <img
@@ -54,11 +54,11 @@ export function SponsorRollingStrip({
                 />
               </div>
               <div className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-[11px] sm:text-xs font-semibold tracking-wide text-zinc-200 group-hover:text-white transition line-clamp-1">
+                <span className="text-xs sm:text-sm font-semibold tracking-wide text-zinc-100 group-hover:text-white transition line-clamp-1">
                   {sp.name}
                 </span>
                 {sp.tier && (
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E11D2E]">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E11D2E]">
                     {sp.tier}
                   </span>
                 )}

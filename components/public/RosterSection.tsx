@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowUpRight, Award, Images, X } from "lucide-react";
-import { GameDivision, HomeSectionsConfig, RosterMember } from "@/lib/types";
+import { ArrowLeft, ArrowUpRight, Award, Images, Swords, X } from "lucide-react";
+import {
+  GameDivision,
+  HomeSectionsConfig,
+  LayoutProfile,
+  RosterMember,
+} from "@/lib/types";
+import { assetUrl } from "@/lib/base-path";
 import { collectVisibleMediaList } from "@/lib/media";
 import { trackAnalytics } from "@/lib/analytics-client";
 import { useHistoryBack } from "@/lib/use-history-back";
@@ -19,14 +25,20 @@ import {
 export function RosterSection({
   games: rawGames,
   homeSections,
+  layoutProfile = "liquid-pro",
   onInspectMedia,
 }: {
   games: GameDivision[];
   homeSections: HomeSectionsConfig;
+  layoutProfile?: LayoutProfile;
   onInspectMedia: (item: LightboxMediaItem) => void;
 }) {
   const games = rawGames.filter((g) => g.enabled !== false);
+  const isProProfile = layoutProfile === "liquid-pro";
   const [activeGameId, setActiveGameId] = useState(games[0]?.id || "");
+  const [selectedProGameId, setSelectedProGameId] = useState<string | null>(
+    null
+  );
   const [selectedSubTeamId, setSelectedSubTeamId] = useState<string | null>(
     null
   );
@@ -35,6 +47,11 @@ export function RosterSection({
   );
 
   useLockBodyAndLenis(Boolean(selectedMember));
+  useHistoryBack(
+    isProProfile && Boolean(selectedProGameId) && !selectedSubTeamId,
+    () => setSelectedProGameId(null),
+    "pro-game"
+  );
   useHistoryBack(
     Boolean(selectedSubTeamId),
     () => setSelectedSubTeamId(null),
@@ -46,14 +63,15 @@ export function RosterSection({
     "member"
   );
 
-  const activeGame =
-    games.find((g) => g.id === activeGameId) || games[0] || null;
+  const activeGame = isProProfile
+    ? games.find((g) => g.id === selectedProGameId) || null
+    : games.find((g) => g.id === activeGameId) || games[0] || null;
 
-  if (!activeGame) return null;
+  if (games.length === 0) return null;
 
-  const subTeams = (activeGame.subTeams || []).filter(
-    (st) => st.enabled !== false
-  );
+  const subTeams = activeGame
+    ? (activeGame.subTeams || []).filter((st) => st.enabled !== false)
+    : [];
   const hasSubTeams = subTeams.length > 0;
 
   const activeSubTeam =
@@ -61,29 +79,38 @@ export function RosterSection({
       ? subTeams.find((st) => st.id === selectedSubTeamId) || null
       : null;
 
-  const showTeamDirectory = hasSubTeams && !activeSubTeam;
+  const showGameDirectory = isProProfile && !activeGame;
+  const showTeamDirectory = Boolean(activeGame) && hasSubTeams && !activeSubTeam;
 
-  const currentRoster = (
-    activeSubTeam ? activeSubTeam.roster : activeGame.roster
-  ).filter((m) => m.enabled !== false);
+  const currentRoster = activeGame
+    ? (activeSubTeam ? activeSubTeam.roster : activeGame.roster).filter(
+        (m) => m.enabled !== false
+      )
+    : [];
   const currentBanner =
     activeSubTeam?.bannerImage ||
     activeSubTeam?.logo ||
-    activeGame.bannerImage;
-  const currentTitle = activeSubTeam ? activeSubTeam.name : activeGame.name;
+    activeGame?.bannerImage ||
+    "";
+  const currentTitle = activeSubTeam
+    ? activeSubTeam.name
+    : activeGame?.name || "";
   const currentDescription =
-    activeSubTeam?.description || activeGame.description;
-  const currentBannerList = collectVisibleMediaList(
-    activeSubTeam ? activeSubTeam.hiddenImages : activeGame.hiddenImages,
-    currentBanner,
-    activeSubTeam ? activeSubTeam.bannerImages : activeGame.bannerImages
-  );
+    activeSubTeam?.description || activeGame?.description || "";
+  const currentBannerList = activeGame
+    ? collectVisibleMediaList(
+        activeSubTeam ? activeSubTeam.hiddenImages : activeGame.hiddenImages,
+        currentBanner,
+        activeSubTeam ? activeSubTeam.bannerImages : activeGame.bannerImages
+      )
+    : [];
 
   const coaches = currentRoster.filter((m) => m.isCoach);
   const players = currentRoster.filter((m) => !m.isCoach);
 
   const handleSelectGame = (gameId: string) => {
     setActiveGameId(gameId);
+    setSelectedProGameId(gameId);
     setSelectedSubTeamId(null);
   };
 
@@ -106,29 +133,98 @@ export function RosterSection({
             </h2>
           </div>
 
-          <div className="flex items-center gap-6 border-b border-white/10 sm:border-b-0 overflow-x-auto no-scrollbar">
-            {games.map((game) => {
-              const isActive = game.id === activeGame.id;
-              return (
-                <button
-                  key={game.id}
-                  onClick={() => handleSelectGame(game.id)}
-                  className={`shrink-0 pb-2.5 sm:pb-2 font-display text-lg sm:text-2xl font-bold uppercase tracking-wide transition cursor-pointer border-b-2 ${
-                    isActive
-                      ? "border-[#E11D2E] text-white"
-                      : "border-transparent text-zinc-500 hover:text-zinc-200"
-                  }`}
-                >
-                  {game.name}
-                </button>
-              );
-            })}
-          </div>
+          {!isProProfile && activeGame && (
+            <div className="flex items-center gap-6 border-b border-white/10 sm:border-b-0 overflow-x-auto no-scrollbar">
+              {games.map((game) => {
+                const isActive = game.id === activeGame.id;
+                return (
+                  <button
+                    key={game.id}
+                    onClick={() => handleSelectGame(game.id)}
+                    className={`shrink-0 pb-2.5 sm:pb-2 font-display text-lg sm:text-2xl font-bold uppercase tracking-wide transition cursor-pointer border-b-2 ${
+                      isActive
+                        ? "border-[#E11D2E] text-white"
+                        : "border-transparent text-zinc-500 hover:text-zinc-200"
+                    }`}
+                  >
+                    {game.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
-          {showTeamDirectory ? (
-            /* STEP 1: Sub-Division Team List (Editorial Lookbook Cards, Zero AI Boxes) */
+          {showGameDirectory ? (
+            /* PRO LEVEL 1: Game Division Logo/Title Grid (Team Liquid Style) */
+            <motion.div
+              key="pro-game-directory"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.22 }}
+              className="flex flex-wrap justify-center gap-3.5 sm:gap-6"
+            >
+              {games.map((game) => {
+                const gameSubTeams = (game.subTeams || []).filter(
+                  (st) => st.enabled !== false
+                );
+                const memberTotal =
+                  gameSubTeams.length > 0
+                    ? gameSubTeams.reduce(
+                        (acc, st) =>
+                          acc +
+                          st.roster.filter((m) => m.enabled !== false).length,
+                        0
+                      )
+                    : game.roster.filter((m) => m.enabled !== false).length;
+
+                return (
+                  <button
+                    key={game.id}
+                    type="button"
+                    onClick={() => handleSelectGame(game.id)}
+                    className="godlike-card group w-[calc(50%-0.4375rem)] sm:w-[240px] md:w-[265px] rounded-lg p-5 sm:p-7 flex flex-col items-center justify-between gap-4 text-center cursor-pointer min-h-[170px] sm:min-h-[200px]"
+                  >
+                    <div className="w-full flex-1 flex flex-col items-center justify-center gap-2">
+                      {game.logo ? (
+                        <img
+                          src={assetUrl(game.logo)}
+                          alt={game.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-16 sm:h-20 w-auto max-w-[160px] object-contain group-hover:scale-105 transition duration-200"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          <span className="inline-flex items-center justify-center px-3 py-1 rounded bg-[#E11D2E]/15 border border-[#E11D2E]/35 font-display text-2xl sm:text-3xl font-bold uppercase tracking-wider text-white group-hover:text-[#E11D2E] transition">
+                            {game.shortName}
+                          </span>
+                        </div>
+                      )}
+                      <h3 className="font-display text-base sm:text-xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-tight mt-1">
+                        {game.name}
+                      </h3>
+                    </div>
+
+                    <div className="w-full pt-2.5 border-t border-white/10 flex items-center justify-between text-[11px] text-zinc-400">
+                      <span>
+                        {gameSubTeams.length > 0
+                          ? `${gameSubTeams.length} Tim`
+                          : `${memberTotal} Anggota`}
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-semibold text-zinc-200 group-hover:text-[#E11D2E] transition">
+                        {gameSubTeams.length > 0 ? "Pilih Tim" : "Lihat Roster"}
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </motion.div>
+          ) : showTeamDirectory && activeGame ? (
+            /* STEP 2: Sub-Division Team List */
             <motion.div
               key={`${activeGame.id}-directory`}
               initial={{ opacity: 0, y: 10 }}
@@ -136,11 +232,28 @@ export function RosterSection({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.22 }}
             >
+              {isProProfile && (
+                <div className="mb-6 pb-3.5 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProGameId(null)}
+                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white transition cursor-pointer"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-[#E11D2E]" />
+                    Semua Game
+                  </button>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#E11D2E]">
+                    <Swords className="w-3.5 h-3.5" />
+                    {activeGame.name}
+                  </span>
+                </div>
+              )}
+
               <p className="text-zinc-400 text-sm sm:text-base max-w-2xl mb-8 leading-relaxed">
                 {activeGame.description}
               </p>
 
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
+              <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
                 {subTeams.map((team) => {
                   const cardMedia =
                     team.logo || team.bannerImage || activeGame.bannerImage;
@@ -156,7 +269,7 @@ export function RosterSection({
                       key={team.id}
                       type="button"
                       onClick={() => setSelectedSubTeamId(team.id)}
-                      className="group text-left rounded-md overflow-hidden border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col cursor-pointer"
+                      className="godlike-card group w-[calc(50%-0.375rem)] lg:w-[calc(33.333%-1rem)] text-left rounded-md overflow-hidden flex flex-col cursor-pointer"
                     >
                       <div className="relative aspect-square sm:aspect-[16/10] w-full bg-zinc-900 overflow-hidden">
                         <SmartMedia
@@ -202,47 +315,65 @@ export function RosterSection({
                 })}
               </div>
             </motion.div>
-          ) : (
-            /* STEP 2: Selected Team Roster OR Direct Game Roster */
-            <motion.div
-              key={`${activeGame.id}-${activeSubTeam?.id || "direct"}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.22 }}
-            >
-              {activeSubTeam && (
-                <div className="mb-8 pb-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedSubTeamId(null)}
-                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white transition cursor-pointer"
-                  >
-                    <ArrowLeft className="w-4 h-4 text-[#E11D2E]" />
-                    Semua Tim {activeGame.shortName}
-                  </button>
+          ) : activeGame ? (
+                <motion.div
+                  key={`${activeGame.id}-${activeSubTeam?.id || "direct"}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  {(activeSubTeam || isProProfile) && (
+                    <div className="mb-8 pb-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-4">
+                        {isProProfile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedSubTeamId(null);
+                              setSelectedProGameId(null);
+                            }}
+                            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white transition cursor-pointer"
+                          >
+                            <ArrowLeft className="w-4 h-4 text-[#E11D2E]" />
+                            Semua Game
+                          </button>
+                        )}
+                        {activeSubTeam && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSubTeamId(null)}
+                            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-300 hover:text-white transition cursor-pointer"
+                          >
+                            <ArrowLeft className="w-4 h-4 text-[#E11D2E]" />
+                            Semua Tim {activeGame.shortName}
+                          </button>
+                        )}
+                      </div>
 
-                  <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
-                    {subTeams.map((st) => {
-                      const isSubActive = st.id === activeSubTeam.id;
-                      return (
-                        <button
-                          key={st.id}
-                          type="button"
-                          onClick={() => setSelectedSubTeamId(st.id)}
-                          className={`shrink-0 text-xs sm:text-sm font-semibold uppercase tracking-wider transition cursor-pointer ${
-                            isSubActive
-                              ? "text-[#E11D2E]"
-                              : "text-zinc-500 hover:text-zinc-200"
-                          }`}
-                        >
-                          {st.shortName || st.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                      {activeSubTeam && (
+                        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+                          {subTeams.map((st) => {
+                            const isSubActive = st.id === activeSubTeam.id;
+                            return (
+                              <button
+                                key={st.id}
+                                type="button"
+                                onClick={() => setSelectedSubTeamId(st.id)}
+                                className={`shrink-0 text-xs sm:text-sm font-semibold uppercase tracking-wider transition cursor-pointer ${
+                                  isSubActive
+                                    ? "text-[#E11D2E]"
+                                    : "text-zinc-500 hover:text-zinc-200"
+                                }`}
+                              >
+                                {st.shortName || st.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
               {/* Natural Editorial Division Intro */}
               <div className="mb-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
@@ -338,7 +469,7 @@ export function RosterSection({
                           mediaUrl: player.photo,
                         });
                       }}
-                      className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+                      className="godlike-card group cursor-pointer overflow-hidden rounded-md flex flex-col"
                     >
                       <div className="relative aspect-square sm:aspect-[3/3.6] w-full bg-zinc-900 overflow-hidden">
                         <SmartMedia
@@ -372,8 +503,8 @@ export function RosterSection({
                   })}
                 </div>
               </div>
-            </motion.div>
-          )}
+              </motion.div>
+          ) : null}
         </AnimatePresence>
 
         {/* Player / Coach Detail Modal */}

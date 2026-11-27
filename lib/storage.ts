@@ -169,6 +169,7 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
       ? raw.socials
       : DEFAULT_SITE_DATA.socials,
     scrimContacts: Array.isArray(raw.scrimContacts) ? raw.scrimContacts : [],
+    heroHighlights: Array.isArray(raw.heroHighlights) ? raw.heroHighlights : [],
   };
 }
 

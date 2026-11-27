@@ -105,6 +105,7 @@ export interface GameDivision {
   slug: string;
   name: string;
   shortName: string;
+  logo?: string;
   description: string;
   bannerImage: string;
   bannerImages?: string[];
@@ -306,9 +307,22 @@ export interface HomeSectionsConfig {
 }
 
 export type SiteTheme = "dark-crimson" | "red-white" | "gaming-red-white";
+export type LayoutProfile = "existing" | "liquid-pro";
+
+export interface HeroHighlightSlide {
+  id: string;
+  badge?: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  ctaText?: string;
+  ctaHref?: string;
+  enabled?: boolean;
+}
 
 export interface BrandingConfig {
   siteTheme?: SiteTheme;
+  layoutProfile?: LayoutProfile;
   teamName: string;
   estYear: string;
   tagline: string;
@@ -364,4 +378,5 @@ export interface SiteData {
   contact: ContactConfig;
   socials: SocialLink[];
   scrimContacts?: ScrimContact[];
+  heroHighlights?: HeroHighlightSlide[];
 }

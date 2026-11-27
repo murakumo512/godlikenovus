@@ -30,6 +30,7 @@ import {
 } from "@/lib/default-data";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { RosterSection } from "./RosterSection";
+import { HeroHighlightCarousel } from "./HeroHighlightCarousel";
 import { BrandAmbassadorSection } from "./BrandAmbassadorSection";
 import { StoreOrderModal } from "./StoreOrderModal";
 import { OrderStatusModal } from "./OrderStatusModal";
@@ -243,6 +244,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
   const hs = data.homeSections;
   const tpl = data.templates;
+  const layoutProfile = data.branding.layoutProfile || "liquid-pro";
   const hasAmbassadors =
     Array.isArray(data.ambassadors) && data.ambassadors.length > 0;
 
@@ -366,6 +368,14 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               </div>
             )}
 
+            {layoutProfile === "liquid-pro" ? (
+              <div className="relative z-10">
+                <HeroHighlightCarousel
+                  data={data}
+                  onOpenScrim={() => setScrimModalOpen(true)}
+                />
+              </div>
+            ) : (
             <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center pb-12 sm:pb-16">
                 <motion.div
@@ -445,6 +455,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 )}
               </div>
             </div>
+            )}
 
             <div className="border-y border-white/10 py-3 overflow-hidden">
               <div className="animate-marquee flex items-center gap-10 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
@@ -494,7 +505,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8"
             >
               <div className="max-w-6xl mx-auto">
-                <div className="relative overflow-hidden border border-white/12 bg-zinc-950/75 p-6 sm:p-10 md:p-12">
+                <div className="godlike-card relative overflow-hidden rounded-lg p-6 sm:p-10 md:p-12">
                   <div
                     className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#E11D2E]/15 blur-3xl"
                     aria-hidden="true"
@@ -572,6 +583,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             <RosterSection
               games={data.games}
               homeSections={hs}
+              layoutProfile={layoutProfile}
               onInspectMedia={(item) => setLightboxItem(item)}
             />
           </div>
@@ -659,7 +671,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                             caption: photo.caption,
                           });
                         }}
-                        className={`group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col ${
+                        className={`godlike-card group cursor-pointer overflow-hidden rounded-md flex flex-col ${
                           idx === 0 ? "col-span-2 sm:col-span-2" : ""
                         }`}
                       >
@@ -772,7 +784,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                             mediaUrl: evt.image,
                           });
                         }}
-                        className="group w-[calc(50%-0.25rem)] sm:w-[calc(33.333%-1rem)] cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+                        className="godlike-card group w-[calc(50%-0.25rem)] sm:w-[calc(33.333%-1rem)] cursor-pointer overflow-hidden rounded-md flex flex-col"
                       >
                         <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-zinc-900">
                           <SmartMedia
@@ -896,7 +908,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                           mediaUrl: product.image,
                         });
                       }}
-                      className="group w-[calc(50%-0.3125rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)] cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
+                      className="godlike-card group w-[calc(50%-0.3125rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)] cursor-pointer overflow-hidden rounded-md flex flex-col"
                     >
                       <div className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden">
                         <SmartMedia

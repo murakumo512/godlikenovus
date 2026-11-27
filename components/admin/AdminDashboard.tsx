@@ -1041,6 +1041,62 @@ export function AdminDashboard({
 
                 <div className="border-b border-zinc-100 pb-3 pt-2">
                   <h2 className="text-base font-semibold text-zinc-900">
+                    Gaya Layout Profil Website (Switch Dynamic)
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Pilih antara tampilan Existing (Classic) atau Godlike Pro (Highlight Carousel di atas + Roster 3-tahap Game → Tim → Coach/Player).
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(
+                    [
+                      {
+                        id: "liquid-pro",
+                        title: "Godlike Pro (Esports Showcase)",
+                        desc: "Highlight slider di atas, kotak aksen Godlike, & alur Game → Tim → Roster.",
+                      },
+                      {
+                        id: "existing",
+                        title: "Existing (Classic)",
+                        desc: "Hero 2-kolom klasik & tab pilihan game langsung di seksi Roster.",
+                      },
+                    ] as const
+                  ).map((opt) => {
+                    const active =
+                      (data.branding.layoutProfile || "liquid-pro") === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          setData({
+                            ...data,
+                            branding: {
+                              ...data.branding,
+                              layoutProfile: opt.id,
+                            },
+                          })
+                        }
+                        className={`text-left rounded-md border p-3 transition cursor-pointer ${
+                          active
+                            ? "border-red-600 ring-2 ring-red-500/30 bg-red-50/40"
+                            : "border-zinc-200 hover:border-zinc-400 bg-white"
+                        }`}
+                      >
+                        <div className="text-xs font-semibold text-zinc-900">
+                          {opt.title}
+                        </div>
+                        <div className="text-[11px] text-zinc-500 mt-0.5">
+                          {opt.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="border-b border-zinc-100 pb-3 pt-2">
+                  <h2 className="text-base font-semibold text-zinc-900">
                     Identitas &amp; Konten Hero Home
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">
@@ -2212,6 +2268,19 @@ export function AdminDashboard({
                         updateGame(activeGame.id, (g) => ({
                           ...g,
                           description: v,
+                        }))
+                      }
+                    />
+
+                    <ImageField
+                      label="Logo Game (untuk Kartu Grid di Profil Godlike Pro)"
+                      value={activeGame.logo || ""}
+                      allowClear
+                      acceptMedia="image"
+                      onChange={(v) =>
+                        updateGame(activeGame.id, (g) => ({
+                          ...g,
+                          logo: v,
                         }))
                       }
                     />
