@@ -599,7 +599,11 @@ export function AdminDashboard({
 
           {/* LOG AKTIVITAS ADMIN */}
           {effectiveActiveTab === "logs" && (
-            <AdminLogsPanel onUnauthorized={() => setCurrentUser(null)} />
+            <AdminLogsPanel
+              role={currentUser.role}
+              onUnauthorized={() => setCurrentUser(null)}
+              onToast={showToast}
+            />
           )}
 
           {/* 0. OPENING & LOADING */}
