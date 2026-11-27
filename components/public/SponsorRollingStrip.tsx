@@ -53,9 +53,16 @@ export function SponsorRollingStrip({
                   className="max-h-full max-w-full w-auto object-contain group-hover:scale-105 transition duration-200"
                 />
               </div>
-              <span className="text-[11px] sm:text-xs font-medium tracking-wide text-zinc-300 group-hover:text-white transition text-center line-clamp-1">
-                {sp.name}
-              </span>
+              <div className="flex flex-col items-center gap-0.5 text-center">
+                <span className="text-[11px] sm:text-xs font-semibold tracking-wide text-zinc-200 group-hover:text-white transition line-clamp-1">
+                  {sp.name}
+                </span>
+                {sp.tier && (
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E11D2E]">
+                    {sp.tier}
+                  </span>
+                )}
+              </div>
             </a>
           );
         })}

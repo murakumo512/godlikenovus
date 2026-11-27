@@ -641,7 +641,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     );
                     const startIdx = Math.max(0, allAboutMedia.indexOf(photo.url));
                     return (
-                      <div
+                      <article
                         key={photo.id}
                         onClick={() => {
                           trackAnalytics({
@@ -659,35 +659,41 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                             caption: photo.caption,
                           });
                         }}
-                        className={`group relative cursor-pointer overflow-hidden rounded-md bg-zinc-900 ${
-                          idx === 0
-                            ? "aspect-square sm:col-span-2 sm:aspect-[16/9]"
-                            : "aspect-square sm:aspect-[4/3]"
+                        className={`group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col ${
+                          idx === 0 ? "col-span-2 sm:col-span-2" : ""
                         }`}
                       >
-                        <SmartMedia
-                          src={photo.url}
-                          alt={photo.caption}
-                          fit="contain-ambient"
-                          className="w-full h-full"
-                          imgClassName="group-hover:scale-[1.03] transition duration-500"
-                          mutedLoop
-                          showVideoBadge
-                        />
-                        {photoMedia.length > 1 && (
-                          <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
-                            <Images className="w-3 h-3" />
-                            {photoMedia.length}
-                          </span>
-                        )}
+                        <div
+                          className={`relative overflow-hidden bg-zinc-900 ${
+                            idx === 0
+                              ? "aspect-[16/9]"
+                              : "aspect-square sm:aspect-[4/3]"
+                          }`}
+                        >
+                          <SmartMedia
+                            src={photo.url}
+                            alt={photo.caption}
+                            fit="contain-ambient"
+                            className="w-full h-full"
+                            imgClassName="group-hover:scale-[1.03] transition duration-500"
+                            mutedLoop
+                            showVideoBadge
+                          />
+                          {photoMedia.length > 1 && (
+                            <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/75 border border-white/20 px-2 py-0.5 text-[10px] font-semibold text-white">
+                              <Images className="w-3 h-3" />
+                              {photoMedia.length}
+                            </span>
+                          )}
+                        </div>
                         {photo.caption && (
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/35 to-transparent p-2 sm:p-4 pt-6">
-                            <span className="text-[10px] sm:text-sm text-zinc-100 block truncate">
+                          <div className="p-2.5 sm:p-4 border-t border-white/8">
+                            <span className="text-xs sm:text-sm font-medium text-zinc-100 block line-clamp-2 leading-snug">
                               {photo.caption}
                             </span>
                           </div>
                         )}
-                      </div>
+                      </article>
                     );
                   })}
                 </div>
