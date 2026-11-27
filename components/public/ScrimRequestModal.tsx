@@ -4,28 +4,34 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Swords, X } from "lucide-react";
 import { BASE_PATH } from "@/lib/base-path";
-import type { GameDivision } from "@/lib/types";
+import type { GameDivision, ScrimContact } from "@/lib/types";
 import { useLockBodyAndLenis } from "./SmoothScroll";
 import { ModalPortal } from "./MediaDisplay";
 
 export function ScrimRequestModal({
   open,
   games,
+  scrimContacts = [],
   whatsappNumber,
   onClose,
 }: {
   open: boolean;
   games: GameDivision[];
+  scrimContacts?: ScrimContact[];
   whatsappNumber: string;
   onClose: () => void;
 }) {
   const activeGames = games.filter((g) => g.enabled !== false);
+  const activePics = scrimContacts.filter(
+    (c) => c.enabled !== false && c.phone.trim()
+  );
   const [teamName, setTeamName] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [gameName, setGameName] = useState(
     activeGames[0]?.name || "Honor of Kings"
   );
+  const [selectedPicId, setSelectedPicId] = useState(activePics[0]?.id || "");
   const [preferredDate, setPreferredDate] = useState("");
   const [preferredTime, setPreferredTime] = useState("20:00");
   const [format, setFormat] = useState("BO3");
@@ -34,6 +40,10 @@ export function ScrimRequestModal({
   const [submittedCode, setSubmittedCode] = useState<string | null>(null);
 
   useLockBodyAndLenis(open);
+
+  const selectedPic =
+    activePics.find((p) => p.id === selectedPicId) || activePics[0] || null;
+  const targetWhatsapp = selectedPic?.phone || whatsappNumber;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,9 +78,9 @@ export function ScrimRequestModal({
       setSubmittedCode(scrimCode);
     }
 
-    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, "");
+    const cleanNumber = targetWhatsapp.replace(/[^0-9]/g, "");
     const message = [
-      `Halo Godlike Novus, kami ingin mengajukan *Scrim Request*!`,
+      `Halo ${selectedPic ? selectedPic.name : "Godlike Novus"}, kami ingin mengajukan *Scrim Request*!`,
       scrimCode ? `Kode Scrim: *${scrimCode}*` : "",
       `Nama Tim: ${teamName}`,
       `PIC / Kontak: ${contactName} (${contactPhone})`,
@@ -152,6 +162,26 @@ export function ScrimRequestModal({
               )}
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
+                {activePics.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                      Kirim ke PIC / Admin Scrim
+                    </label>
+                    <select
+                      value={selectedPic?.id || ""}
+                      onChange={(e) => setSelectedPicId(e.target.value)}
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
+                    >
+                      {activePics.map((pic) => (
+                        <option key={pic.id} value={pic.id}>
+                          {pic.name}
+                          {pic.division ? ` (${pic.division})` : ""} — {pic.phone}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
@@ -184,6 +214,26 @@ export function ScrimRequestModal({
                     </select>
                   </div>
                 </div>
+
+                {activePics.length > 0 && (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                      Kirim ke PIC / Admin Scrim
+                    </label>
+                    <select
+                      value={selectedPic?.id || ""}
+                      onChange={(e) => setSelectedPicId(e.target.value)}
+                      className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
+                    >
+                      {activePics.map((pic) => (
+                        <option key={pic.id} value={pic.id}>
+                          {pic.name}
+                          {pic.division ? ` (${pic.division})` : ""} — {pic.phone}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>

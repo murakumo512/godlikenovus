@@ -22,6 +22,7 @@ import {
   GameDivision,
   GameSubTeam,
   RosterMember,
+  ScrimContact,
   SiteData,
   SocialLink,
 } from "@/lib/types";
@@ -41,8 +42,8 @@ import { AdminOrdersScrimPanel } from "./AdminOrdersScrimPanel";
 import type { AdminSessionUser } from "@/lib/auth";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
-const IDLE_TIMEOUT_SECONDS = 10 * 60; // 10 menit
-const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_SECONDS * 1000;
+const IDLE_CFG_STORAGE_KEY = "gl_admin_idle_cfg";
+const IDLE_MINUTE_OPTIONS = [5, 10, 15, 30, 60] as const;
 
 type TabId = AdminTabId;
 
@@ -84,7 +85,9 @@ export function AdminDashboard({
   const [saving, setSaving] = useState(false);
   const [tabDragIdx, setTabDragIdx] = useState<number | null>(null);
   const [tabOverIdx, setTabOverIdx] = useState<number | null>(null);
-  const [idleRemainingSec, setIdleRemainingSec] = useState(IDLE_TIMEOUT_SECONDS);
+  const [idleEnabled, setIdleEnabled] = useState(false);
+  const [idleMinutes, setIdleMinutes] = useState<number>(10);
+  const [idleRemainingSec, setIdleRemainingSec] = useState(10 * 60);
   const lastActivityRef = useRef<number>(Date.now());
   const lastPingRef = useRef<number>(0);
   const [toast, setToast] = useState<{
@@ -153,11 +156,52 @@ export function AdminDashboard({
     }
     setCurrentUser(null);
     if (reason === "timeout") {
-      showToast("error", "Sesi berakhir setelah 10 menit tidak aktif. Silakan login kembali.");
+      showToast(
+        "error",
+        `Sesi berakhir setelah ${idleMinutes} menit tidak aktif. Silakan login kembali.`
+      );
     }
-  }, [showToast]);
+  }, [idleMinutes, showToast]);
 
-  // 10-minute idle timeout; resets automatically on browser refresh (mount) & user activity
+  // Load saved idle timer preference (default: OFF)
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(IDLE_CFG_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as { enabled?: unknown; minutes?: unknown };
+      if (typeof parsed.enabled === "boolean") {
+        setIdleEnabled(parsed.enabled);
+      }
+      if (
+        typeof parsed.minutes === "number" &&
+        Number.isFinite(parsed.minutes) &&
+        parsed.minutes >= 1 &&
+        parsed.minutes <= 120
+      ) {
+        setIdleMinutes(parsed.minutes);
+        setIdleRemainingSec(parsed.minutes * 60);
+      }
+    } catch {
+      // ignore invalid localStorage
+    }
+  }, []);
+
+  const updateIdleConfig = useCallback((enabled: boolean, minutes: number) => {
+    setIdleEnabled(enabled);
+    setIdleMinutes(minutes);
+    setIdleRemainingSec(minutes * 60);
+    lastActivityRef.current = Date.now();
+    try {
+      window.localStorage.setItem(
+        IDLE_CFG_STORAGE_KEY,
+        JSON.stringify({ enabled, minutes })
+      );
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  // Optional idle timeout (OFF by default); keeps server session alive while open
   useEffect(() => {
     if (!currentUser) return;
 
@@ -174,10 +218,17 @@ export function AdminDashboard({
       }
     };
 
-    // Reset idle timer immediately on mount / browser refresh and refresh server cookie
     lastActivityRef.current = Date.now();
-    setIdleRemainingSec(IDLE_TIMEOUT_SECONDS);
+    setIdleRemainingSec(idleMinutes * 60);
     pingServer();
+
+    if (!idleEnabled) {
+      // Auto-logout OFF: keep session cookie alive every 4 minutes while dashboard is open
+      const keepAliveId = window.setInterval(pingServer, 4 * 60 * 1000);
+      return () => window.clearInterval(keepAliveId);
+    }
+
+    const timeoutMs = idleMinutes * 60 * 1000;
 
     const onActivity = () => {
       const now = Date.now();
@@ -201,7 +252,7 @@ export function AdminDashboard({
     const intervalId = window.setInterval(() => {
       const remaining = Math.max(
         0,
-        Math.ceil((lastActivityRef.current + IDLE_TIMEOUT_MS - Date.now()) / 1000)
+        Math.ceil((lastActivityRef.current + timeoutMs - Date.now()) / 1000)
       );
       setIdleRemainingSec(remaining);
       if (remaining <= 0) {
@@ -214,7 +265,7 @@ export function AdminDashboard({
       events.forEach((ev) => window.removeEventListener(ev, onActivity));
       window.clearInterval(intervalId);
     };
-  }, [currentUser, handleLogout, showToast]);
+  }, [currentUser, idleEnabled, idleMinutes, handleLogout, showToast]);
 
   const handleReset = async () => {
     const check = prompt(
@@ -418,18 +469,47 @@ export function AdminDashboard({
                       ? "Read Only"
                       : "Custom"}
                 </span>
-                <span
-                  title="Batas idle sesi 10 menit (reset otomatis saat aktif atau refresh)"
-                  className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono rounded ${
-                    idleRemainingSec <= 120
-                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                      : "bg-zinc-900 text-zinc-400 border border-zinc-800"
-                  }`}
-                >
-                  <Clock className="w-3 h-3" />
-                  {String(Math.floor(idleRemainingSec / 60)).padStart(2, "0")}:
-                  {String(idleRemainingSec % 60).padStart(2, "0")}
-                </span>
+                <div className="hidden sm:inline-flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => updateIdleConfig(!idleEnabled, idleMinutes)}
+                    title={
+                      idleEnabled
+                        ? `Auto-logout aktif (${idleMinutes} menit). Klik untuk mematikan.`
+                        : "Auto-logout mati. Klik untuk mengaktifkan timer idle."
+                    }
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono rounded border cursor-pointer transition ${
+                      !idleEnabled
+                        ? "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200"
+                        : idleRemainingSec <= 120
+                          ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                          : "bg-zinc-900 text-zinc-200 border-zinc-700"
+                    }`}
+                  >
+                    <Clock className="w-3 h-3" />
+                    {idleEnabled
+                      ? `${String(Math.floor(idleRemainingSec / 60)).padStart(2, "0")}:${String(
+                          idleRemainingSec % 60
+                        ).padStart(2, "0")}`
+                      : "Idle: OFF"}
+                  </button>
+                  {idleEnabled && (
+                    <select
+                      aria-label="Durasi idle auto-logout"
+                      value={idleMinutes}
+                      onChange={(e) =>
+                        updateIdleConfig(true, Number(e.target.value) || 10)
+                      }
+                      className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 text-[10px] text-zinc-300 cursor-pointer"
+                    >
+                      {IDLE_MINUTE_OPTIONS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}m
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -3484,6 +3564,33 @@ export function AdminDashboard({
           {/* 6. OFFICIAL STORE */}
           {effectiveActiveTab === "store" && (
             <div className="space-y-5">
+              <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-3">
+                <div className="border-b border-zinc-100 pb-3">
+                  <h2 className="text-base font-semibold text-zinc-900">
+                    Nomor WhatsApp Penerima Pesanan Store
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Pesanan merchandise dari pengunjung akan dikirim ke nomor WhatsApp ini. Jika dikosongkan, otomatis memakai nomor WhatsApp utama ({data.branding.whatsappNumber || "belum diisi"}).
+                  </p>
+                </div>
+                <div className="max-w-md">
+                  <InputField
+                    label="No. WhatsApp Store (format 628xxx)"
+                    value={data.branding.storeWhatsappNumber || ""}
+                    placeholder={data.branding.whatsappNumber || "6281234567890"}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        branding: {
+                          ...data.branding,
+                          storeWhatsappNumber: v,
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </section>
+
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
@@ -4168,6 +4275,135 @@ export function AdminDashboard({
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Scrim PIC Multi-Contacts */}
+              <div className="pt-5 border-t border-zinc-200">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div>
+                    <span className="text-xs font-semibold text-zinc-800 block">
+                      Daftar PIC / No. WhatsApp Scrim Request (Multi-Kontak)
+                    </span>
+                    <span className="text-[11px] text-zinc-500">
+                      Jika diisi dan aktif, pengunjung bisa memilih PIC tujuan saat ajukan Scrim. Jika kosong, otomatis memakai No. WhatsApp Utama di atas.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next: ScrimContact = {
+                        id: `scrim-pic-${Date.now()}`,
+                        name: "",
+                        division: "",
+                        phone: "",
+                        enabled: true,
+                      };
+                      setData({
+                        ...data,
+                        scrimContacts: [...(data.scrimContacts || []), next],
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 rounded bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Tambah PIC Scrim
+                  </button>
+                </div>
+
+                {(data.scrimContacts || []).length === 0 ? (
+                  <p className="text-xs text-zinc-500 border border-dashed border-zinc-300 rounded-md p-3">
+                    Belum ada PIC Scrim tambahan. Klik &ldquo;Tambah PIC Scrim&rdquo; jika ingin menambahkan beberapa nomor WhatsApp admin/manager scrim.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
+                    {(data.scrimContacts || []).map((pic) => (
+                      <div
+                        key={pic.id}
+                        className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end p-3"
+                      >
+                        <div className="sm:col-span-3 min-w-0">
+                          <InputField
+                            label="Nama PIC"
+                            placeholder="cth: Coach Raka"
+                            value={pic.name}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                scrimContacts: (data.scrimContacts || []).map((p) =>
+                                  p.id === pic.id ? { ...p, name: v } : p
+                                ),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sm:col-span-3 min-w-0">
+                          <InputField
+                            label="Divisi (Opsional)"
+                            placeholder="cth: HoK / MLBB"
+                            value={pic.division || ""}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                scrimContacts: (data.scrimContacts || []).map((p) =>
+                                  p.id === pic.id ? { ...p, division: v } : p
+                                ),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sm:col-span-4 min-w-0">
+                          <InputField
+                            label="No. WhatsApp (628xxx)"
+                            placeholder="6281234567890"
+                            value={pic.phone}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                scrimContacts: (data.scrimContacts || []).map((p) =>
+                                  p.id === pic.id ? { ...p, phone: v } : p
+                                ),
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="sm:col-span-2 flex items-center justify-end gap-2 pb-1">
+                          <label className="inline-flex items-center gap-1.5 text-xs text-zinc-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={pic.enabled !== false}
+                              onChange={(e) =>
+                                setData({
+                                  ...data,
+                                  scrimContacts: (data.scrimContacts || []).map((p) =>
+                                    p.id === pic.id
+                                      ? { ...p, enabled: e.target.checked }
+                                      : p
+                                  ),
+                                })
+                              }
+                              className="rounded border-zinc-300"
+                            />
+                            Aktif
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setData({
+                                ...data,
+                                scrimContacts: (data.scrimContacts || []).filter(
+                                  (p) => p.id !== pic.id
+                                ),
+                              })
+                            }
+                            className="p-1.5 text-zinc-400 hover:text-red-600 cursor-pointer"
+                            title="Hapus PIC"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

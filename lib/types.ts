@@ -308,6 +308,7 @@ export interface BrandingConfig {
   heroCtaPrimary: string;
   heroCtaSecondary: string;
   whatsappNumber: string;
+  storeWhatsappNumber?: string;
   logoRed: string;
   logoWhite: string;
   logoTagline: string;
@@ -330,6 +331,14 @@ export interface ContactConfig {
   location: string;
 }
 
+export interface ScrimContact {
+  id: string;
+  name: string;
+  division: string;
+  phone: string;
+  enabled?: boolean;
+}
+
 export interface SiteData {
   sectionOrder: SectionKey[];
   hiddenSections?: SectionKey[];
@@ -346,4 +355,5 @@ export interface SiteData {
   sponsors: SponsorItem[];
   contact: ContactConfig;
   socials: SocialLink[];
+  scrimContacts?: ScrimContact[];
 }

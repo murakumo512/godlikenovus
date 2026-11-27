@@ -1183,7 +1183,9 @@ function PublicSiteInner({ data }: { data: SiteData }) {
       {/* STORE ORDER MODAL */}
       <StoreOrderModal
         product={orderProduct}
-        whatsappNumber={data.branding.whatsappNumber}
+        whatsappNumber={
+          data.branding.storeWhatsappNumber || data.branding.whatsappNumber
+        }
         templates={data.templates}
         onInspectMedia={(item) => setLightboxItem(item)}
         onClose={() => setOrderProduct(null)}
@@ -1199,6 +1201,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
       <ScrimRequestModal
         open={scrimModalOpen}
         games={data.games}
+        scrimContacts={data.scrimContacts || []}
         whatsappNumber={data.contact.whatsappNumber || data.branding.whatsappNumber}
         onClose={() => setScrimModalOpen(false)}
       />
