@@ -23,6 +23,8 @@ interface UsersFileSchema {
 }
 
 export const SESSION_COOKIE_NAME = "godlike_admin_session";
+export const SESSION_TTL_SECONDS = 10 * 60; // 10 menit
+export const SESSION_TTL_MS = SESSION_TTL_SECONDS * 1000;
 const DATA_DIR = path.join(process.cwd(), "data");
 const USERS_FILE = path.join(DATA_DIR, "admin-users.json");
 
@@ -112,6 +114,14 @@ function verifyToken(
   }
 }
 
+export async function issueSessionToken(
+  user: Pick<AdminSessionUser, "id" | "username">
+): Promise<string> {
+  const store = await readUsersStore();
+  const exp = Date.now() + SESSION_TTL_MS;
+  return signToken({ id: user.id, username: user.username, exp }, store.secret);
+}
+
 export async function authenticateAdmin(
   username: string,
   password: string
@@ -122,7 +132,7 @@ export async function authenticateAdmin(
   if (!found || !verifyPassword(password, found.passwordHash)) {
     return null;
   }
-  const exp = Date.now() + 7 * 24 * 60 * 60 * 1000;
+  const exp = Date.now() + SESSION_TTL_MS;
   const token = signToken(
     { id: found.id, username: found.username, exp },
     store.secret

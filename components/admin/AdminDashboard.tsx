@@ -12,6 +12,7 @@ import {
   Users,
   LogOut,
   GripVertical,
+  Clock,
 } from "lucide-react";
 import {
   AdminTabId,
@@ -32,7 +33,11 @@ import { MultiMediaField } from "./MultiMediaField";
 import { AdminLogin } from "./AdminLogin";
 import { SectionOrderPanel } from "./SectionOrderPanel";
 import { AdminUsersPanel } from "./AdminUsersPanel";
+import { AdminLogsPanel } from "./AdminLogsPanel";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
+
+const IDLE_TIMEOUT_SECONDS = 10 * 60; // 10 menit
+const IDLE_TIMEOUT_MS = IDLE_TIMEOUT_SECONDS * 1000;
 
 type TabId = AdminTabId;
 
@@ -74,6 +79,9 @@ export function AdminDashboard({
   const [saving, setSaving] = useState(false);
   const [tabDragIdx, setTabDragIdx] = useState<number | null>(null);
   const [tabOverIdx, setTabOverIdx] = useState<number | null>(null);
+  const [idleRemainingSec, setIdleRemainingSec] = useState(IDLE_TIMEOUT_SECONDS);
+  const lastActivityRef = useRef<number>(Date.now());
+  const lastPingRef = useRef<number>(0);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     text: string;
@@ -128,10 +136,80 @@ export function AdminDashboard({
     await persistData(data);
   };
 
-  const handleLogout = async () => {
-    await fetch(`${BASE_PATH}/api/auth/logout`, { method: "POST" });
+  const handleLogout = useCallback(async (reason: "manual" | "timeout" = "manual") => {
+    try {
+      await fetch(`${BASE_PATH}/api/auth/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+    } catch {
+      // ignore network error on logout
+    }
     setCurrentUser(null);
-  };
+    if (reason === "timeout") {
+      showToast("error", "Sesi berakhir setelah 10 menit tidak aktif. Silakan login kembali.");
+    }
+  }, [showToast]);
+
+  // 10-minute idle timeout; resets automatically on browser refresh (mount) & user activity
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const pingServer = async () => {
+      lastPingRef.current = Date.now();
+      try {
+        const res = await fetch(`${BASE_PATH}/api/auth/ping`, { method: "POST" });
+        if (res.status === 401) {
+          setCurrentUser(null);
+          showToast("error", "Sesi login berakhir. Silakan login kembali.");
+        }
+      } catch {
+        // ignore transient network errors
+      }
+    };
+
+    // Reset idle timer immediately on mount / browser refresh and refresh server cookie
+    lastActivityRef.current = Date.now();
+    setIdleRemainingSec(IDLE_TIMEOUT_SECONDS);
+    pingServer();
+
+    const onActivity = () => {
+      const now = Date.now();
+      lastActivityRef.current = now;
+      // Throttle server session ping to once every 2 minutes while actively working
+      if (now - lastPingRef.current >= 2 * 60 * 1000) {
+        pingServer();
+      }
+    };
+
+    const events: Array<keyof WindowEventMap> = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+    events.forEach((ev) => window.addEventListener(ev, onActivity, { passive: true }));
+
+    const intervalId = window.setInterval(() => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((lastActivityRef.current + IDLE_TIMEOUT_MS - Date.now()) / 1000)
+      );
+      setIdleRemainingSec(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(intervalId);
+        handleLogout("timeout");
+      }
+    }, 1000);
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, onActivity));
+      window.clearInterval(intervalId);
+    };
+  }, [currentUser, handleLogout, showToast]);
 
   const handleReset = async () => {
     const check = prompt(
@@ -179,6 +257,7 @@ export function AdminDashboard({
     { id: "contact", label: "Contact & Sosmed" },
     { id: "templates", label: "Template Pesan" },
     { id: "users", label: "Akun & Password" },
+    { id: "logs", label: "Log Aktivitas" },
   ];
 
   const tabs: { id: TabId; label: string }[] = (() => {
@@ -297,6 +376,18 @@ export function AdminDashboard({
                 <span className="hidden md:inline-block px-2 py-0.5 text-[10px] font-medium bg-zinc-800 text-zinc-300 rounded">
                   {currentUser.username}
                 </span>
+                <span
+                  title="Batas idle sesi 10 menit (reset otomatis saat aktif atau refresh)"
+                  className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono rounded ${
+                    idleRemainingSec <= 120
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                      : "bg-zinc-900 text-zinc-400 border border-zinc-800"
+                  }`}
+                >
+                  <Clock className="w-3 h-3" />
+                  {String(Math.floor(idleRemainingSec / 60)).padStart(2, "0")}:
+                  {String(idleRemainingSec % 60).padStart(2, "0")}
+                </span>
               </div>
             </div>
 
@@ -318,7 +409,7 @@ export function AdminDashboard({
                 <span>{saving ? "Menyimpan..." : "Simpan"}</span>
               </button>
               <button
-                onClick={handleLogout}
+                onClick={() => handleLogout("manual")}
                 title="Logout"
                 className="inline-flex items-center gap-1 rounded border border-zinc-700 bg-zinc-900 hover:border-red-500 hover:text-red-400 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition cursor-pointer"
               >
@@ -446,6 +537,11 @@ export function AdminDashboard({
               onShowToast={showToast}
               onResetSiteData={handleReset}
             />
+          )}
+
+          {/* LOG AKTIVITAS ADMIN */}
+          {activeTab === "logs" && (
+            <AdminLogsPanel onUnauthorized={() => setCurrentUser(null)} />
           )}
 
           {/* 0. OPENING & LOADING */}

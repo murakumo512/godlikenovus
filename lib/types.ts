@@ -20,7 +20,8 @@ export type AdminTabId =
   | "store"
   | "sponsors"
   | "contact"
-  | "users";
+  | "users"
+  | "logs";
 
 export interface RosterMember {
   id: string;

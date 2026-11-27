@@ -3,9 +3,13 @@ import {
   changeAdminPassword,
   createAdminUser,
   deleteAdminUser,
+  issueSessionToken,
   listAdminUsers,
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_SECONDS,
   verifyAdminRequest,
 } from "@/lib/auth";
+import { appendActivityLog, getClientIp } from "@/lib/activity-log";
 
 export async function GET(request: Request) {
   const admin = await verifyAdminRequest(request);
@@ -13,7 +17,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const users = await listAdminUsers();
-  return NextResponse.json({ users, currentUser: admin });
+  const freshToken = await issueSessionToken(admin);
+  const res = NextResponse.json({ users, currentUser: admin });
+  res.cookies.set(SESSION_COOKIE_NAME, freshToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_TTL_SECONDS,
+  });
+  return res;
 }
 
 export async function POST(request: Request) {
@@ -21,6 +33,8 @@ export async function POST(request: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const ip = getClientIp(request);
 
   try {
     const body = (await request.json()) as {
@@ -32,26 +46,58 @@ export async function POST(request: Request) {
       newPassword?: string;
     };
 
+    const freshToken = await issueSessionToken(admin);
+    const attach = (res: NextResponse) => {
+      res.cookies.set(SESSION_COOKIE_NAME, freshToken, {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: SESSION_TTL_SECONDS,
+      });
+      return res;
+    };
+
     if (body.action === "create") {
-      await createAdminUser(
+      const created = await createAdminUser(
         body.username || "",
         body.displayName || "",
         body.password || ""
       );
+      await appendActivityLog({
+        action: "user_create",
+        username: admin.username,
+        displayName: admin.displayName,
+        detail: `Tambah akun admin baru: ${created.username} (${created.displayName})`,
+        ip,
+      });
       const users = await listAdminUsers();
-      return NextResponse.json({ users });
+      return attach(NextResponse.json({ users }));
     }
 
     if (body.action === "change-password") {
       const targetId = body.userId || admin.id;
       await changeAdminPassword(targetId, body.newPassword || "");
-      return NextResponse.json({ ok: true });
+      await appendActivityLog({
+        action: "user_password",
+        username: admin.username,
+        displayName: admin.displayName,
+        detail: `Ubah password akun admin (${targetId === admin.id ? "akun sendiri" : targetId})`,
+        ip,
+      });
+      return attach(NextResponse.json({ ok: true }));
     }
 
     if (body.action === "delete") {
       await deleteAdminUser(body.userId || "", admin.id);
+      await appendActivityLog({
+        action: "user_delete",
+        username: admin.username,
+        displayName: admin.displayName,
+        detail: `Hapus akun admin (${body.userId})`,
+        ip,
+      });
       const users = await listAdminUsers();
-      return NextResponse.json({ users });
+      return attach(NextResponse.json({ users }));
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

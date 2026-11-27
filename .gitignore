@@ -41,6 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 data/admin-users.json
+data/admin-activity.json
 /backups/
 /public/uploads/*
 !/public/uploads/.gitkeep
