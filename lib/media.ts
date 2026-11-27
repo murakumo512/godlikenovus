@@ -39,3 +39,13 @@ export function collectMediaList(
   }
   return result;
 }
+
+export function collectVisibleMediaList(
+  hiddenImages: string[] | undefined,
+  ...sources: Array<string | string[] | undefined | null>
+): string[] {
+  const hiddenSet = new Set(
+    (hiddenImages || []).map((u) => u.trim()).filter(Boolean)
+  );
+  return collectMediaList(...sources).filter((u) => !hiddenSet.has(u));
+}

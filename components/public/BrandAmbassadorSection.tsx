@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ArrowUpRight, Images, X } from "lucide-react";
 import { BrandAmbassador, HomeSectionsConfig } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
-import { collectMediaList, isAnyVideoUrl } from "@/lib/media";
+import { collectVisibleMediaList, isAnyVideoUrl } from "@/lib/media";
+import { trackAnalytics } from "@/lib/analytics-client";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
@@ -173,7 +174,7 @@ function AmbassadorLandscapeCard({
 }
 
 export function BrandAmbassadorSection({
-  ambassadors,
+  ambassadors: rawAmbassadors,
   homeSections,
   fallbackLogo,
   onInspectMedia,
@@ -183,11 +184,14 @@ export function BrandAmbassadorSection({
   fallbackLogo?: string;
   onInspectMedia: (item: LightboxMediaItem) => void;
 }) {
+  const ambassadors = (rawAmbassadors || []).filter(
+    (ba) => ba.enabled !== false
+  );
   const [selectedBa, setSelectedBa] = useState<BrandAmbassador | null>(null);
 
   useLockBodyAndLenis(Boolean(selectedBa));
 
-  if (!ambassadors || ambassadors.length === 0) return null;
+  if (ambassadors.length === 0) return null;
 
   const isSingle = ambassadors.length === 1;
 
@@ -228,7 +232,8 @@ export function BrandAmbassadorSection({
           }
         >
           {ambassadors.map((ba) => {
-            const baMediaCount = collectMediaList(
+            const baMediaCount = collectVisibleMediaList(
+              ba.hiddenImages,
               ba.bannerImage,
               ba.photo,
               ba.images
@@ -236,7 +241,16 @@ export function BrandAmbassadorSection({
             return (
             <article
               key={ba.id}
-              onClick={() => setSelectedBa(ba)}
+              onClick={() => {
+                setSelectedBa(ba);
+                trackAnalytics({
+                  type: "media",
+                  mediaKey: `ba:${ba.id}`,
+                  mediaLabel: `${ba.name} (BA)`,
+                  mediaCategory: "Brand Ambassador",
+                  mediaUrl: ba.bannerImage || ba.photo,
+                });
+              }}
               className="group cursor-pointer"
             >
               <div className="@container relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-white/12 bg-[#050507] group-hover:border-[#E11D2E]/70 transition shadow-lg">
@@ -303,7 +317,8 @@ export function BrandAmbassadorSection({
               className="flex-1 min-h-0 overflow-y-auto overscroll-contain md:overflow-hidden md:col-span-12 md:grid md:grid-cols-12 md:h-full"
             >
               <MediaCarousel
-                items={collectMediaList(
+                items={collectVisibleMediaList(
+                  selectedBa.hiddenImages,
                   selectedBa.bannerImage,
                   selectedBa.photo,
                   selectedBa.images
@@ -314,7 +329,8 @@ export function BrandAmbassadorSection({
                 onInspect={(url, idx) =>
                   onInspectMedia({
                     url,
-                    items: collectMediaList(
+                    items: collectVisibleMediaList(
+                      selectedBa.hiddenImages,
                       selectedBa.bannerImage,
                       selectedBa.photo,
                       selectedBa.images

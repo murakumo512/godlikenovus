@@ -4,7 +4,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowUpRight, Award, Images, X } from "lucide-react";
 import { GameDivision, HomeSectionsConfig, RosterMember } from "@/lib/types";
-import { collectMediaList } from "@/lib/media";
+import { collectVisibleMediaList } from "@/lib/media";
+import { trackAnalytics } from "@/lib/analytics-client";
 import { ScrollSection, useLockBodyAndLenis } from "./SmoothScroll";
 import {
   LightboxMediaItem,
@@ -15,7 +16,7 @@ import {
 } from "./MediaDisplay";
 
 export function RosterSection({
-  games,
+  games: rawGames,
   homeSections,
   onInspectMedia,
 }: {
@@ -23,6 +24,7 @@ export function RosterSection({
   homeSections: HomeSectionsConfig;
   onInspectMedia: (item: LightboxMediaItem) => void;
 }) {
+  const games = rawGames.filter((g) => g.enabled !== false);
   const [activeGameId, setActiveGameId] = useState(games[0]?.id || "");
   const [selectedSubTeamId, setSelectedSubTeamId] = useState<string | null>(
     null
@@ -38,7 +40,9 @@ export function RosterSection({
 
   if (!activeGame) return null;
 
-  const subTeams = activeGame.subTeams || [];
+  const subTeams = (activeGame.subTeams || []).filter(
+    (st) => st.enabled !== false
+  );
   const hasSubTeams = subTeams.length > 0;
 
   const activeSubTeam =
@@ -48,9 +52,9 @@ export function RosterSection({
 
   const showTeamDirectory = hasSubTeams && !activeSubTeam;
 
-  const currentRoster = activeSubTeam
-    ? activeSubTeam.roster
-    : activeGame.roster;
+  const currentRoster = (
+    activeSubTeam ? activeSubTeam.roster : activeGame.roster
+  ).filter((m) => m.enabled !== false);
   const currentBanner =
     activeSubTeam?.bannerImage ||
     activeSubTeam?.logo ||
@@ -58,7 +62,8 @@ export function RosterSection({
   const currentTitle = activeSubTeam ? activeSubTeam.name : activeGame.name;
   const currentDescription =
     activeSubTeam?.description || activeGame.description;
-  const currentBannerList = collectMediaList(
+  const currentBannerList = collectVisibleMediaList(
+    activeSubTeam ? activeSubTeam.hiddenImages : activeGame.hiddenImages,
     currentBanner,
     activeSubTeam ? activeSubTeam.bannerImages : activeGame.bannerImages
   );
@@ -304,14 +309,24 @@ export function RosterSection({
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-5">
                   {players.map((player) => {
-                    const playerMediaCount = collectMediaList(
+                    const playerMediaCount = collectVisibleMediaList(
+                      player.hiddenImages,
                       player.photo,
                       player.images
                     ).length;
                     return (
                     <div
                       key={player.id}
-                      onClick={() => setSelectedMember(player)}
+                      onClick={() => {
+                        setSelectedMember(player);
+                        trackAnalytics({
+                          type: "media",
+                          mediaKey: `roster:${player.id}`,
+                          mediaLabel: `${player.ign} (${player.role})`,
+                          mediaCategory: "Roster",
+                          mediaUrl: player.photo,
+                        });
+                      }}
                       className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                     >
                       <div className="relative aspect-square sm:aspect-[3/3.6] w-full bg-zinc-900 overflow-hidden">
@@ -384,7 +399,8 @@ export function RosterSection({
                 className="flex-1 min-h-0 overflow-y-auto overscroll-contain"
               >
                 <MediaCarousel
-                  items={collectMediaList(
+                  items={collectVisibleMediaList(
+                    selectedMember.hiddenImages,
                     selectedMember.photo,
                     selectedMember.images
                   )}
@@ -394,7 +410,8 @@ export function RosterSection({
                   onInspect={(url, idx) =>
                     onInspectMedia({
                       url,
-                      items: collectMediaList(
+                      items: collectVisibleMediaList(
+                        selectedMember.hiddenImages,
                         selectedMember.photo,
                         selectedMember.images
                       ),

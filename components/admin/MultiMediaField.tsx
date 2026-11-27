@@ -12,6 +12,8 @@ import {
   ChevronRight,
   Star,
   Images,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 import { isVideoFileUrl } from "@/lib/media";
@@ -30,6 +32,8 @@ interface MultiMediaFieldProps {
   values: string[];
   onChange: (urls: string[]) => void;
   onPromoteToCover?: (url: string, index: number) => void;
+  hiddenUrls?: string[];
+  onToggleHidden?: (url: string) => void;
 }
 
 export function MultiMediaField({
@@ -37,6 +41,8 @@ export function MultiMediaField({
   values,
   onChange,
   onPromoteToCover,
+  hiddenUrls = [],
+  onToggleHidden,
 }: MultiMediaFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { scheduleAutoSave } = useContext(AdminAutoSaveContext);
@@ -233,6 +239,7 @@ export function MultiMediaField({
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
           {values.map((url, idx) => {
             const isVid = isVideoFileUrl(url);
+            const isHidden = hiddenUrls.includes(url);
             return (
               <div
                 key={`${url}-${idx}`}
@@ -254,7 +261,9 @@ export function MultiMediaField({
                   overIdx === idx && dragIdx !== idx
                     ? "border-red-500 ring-2 ring-red-400"
                     : "border-zinc-200"
-                } ${dragIdx === idx ? "opacity-45" : ""}`}
+                } ${dragIdx === idx ? "opacity-45" : ""} ${
+                  isHidden ? "opacity-55" : ""
+                }`}
               >
                 <div className="relative aspect-square bg-zinc-900 flex items-center justify-center overflow-hidden">
                   {isVid ? (
@@ -276,6 +285,24 @@ export function MultiMediaField({
                   <span className="absolute top-1 left-1 rounded bg-black/75 px-1.5 py-0.5 text-[9px] font-semibold text-white">
                     #{idx + 1}
                   </span>
+                  {onToggleHidden && (
+                    <button
+                      type="button"
+                      onClick={() => onToggleHidden(url)}
+                      title={isHidden ? "Tampilkan gambar ini" : "Sembunyikan gambar ini"}
+                      className={`absolute bottom-1 left-1 rounded-full p-1 text-white transition cursor-pointer ${
+                        isHidden
+                          ? "bg-amber-600 hover:bg-amber-500"
+                          : "bg-black/75 hover:bg-zinc-700"
+                      }`}
+                    >
+                      {isHidden ? (
+                        <EyeOff className="w-3 h-3" />
+                      ) : (
+                        <Eye className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => removeItem(idx)}

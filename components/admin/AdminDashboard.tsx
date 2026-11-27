@@ -13,6 +13,8 @@ import {
   LogOut,
   GripVertical,
   Clock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   AdminTabId,
@@ -34,6 +36,8 @@ import { AdminLogin } from "./AdminLogin";
 import { SectionOrderPanel } from "./SectionOrderPanel";
 import { AdminUsersPanel } from "./AdminUsersPanel";
 import { AdminLogsPanel } from "./AdminLogsPanel";
+import { AdminAnalyticsPanel } from "./AdminAnalyticsPanel";
+import type { AdminSessionUser } from "@/lib/auth";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
 const IDLE_TIMEOUT_SECONDS = 10 * 60; // 10 menit
@@ -65,7 +69,7 @@ export function AdminDashboard({
   initialUser,
 }: {
   initialData: SiteData;
-  initialUser: { id: string; username: string; displayName: string } | null;
+  initialUser: AdminSessionUser | null;
 }) {
   const [currentUser, setCurrentUser] = useState(initialUser);
   const [data, setData] = useState<SiteData>(initialData);
@@ -256,11 +260,19 @@ export function AdminDashboard({
     { id: "sponsors", label: "Sponsors" },
     { id: "contact", label: "Contact & Sosmed" },
     { id: "templates", label: "Template Pesan" },
+    { id: "analytics", label: "Statistik Web" },
     { id: "users", label: "Akun & Password" },
     { id: "logs", label: "Log Aktivitas" },
   ];
 
-  const tabs: { id: TabId; label: string }[] = (() => {
+  const isReadOnly = currentUser.role === "read";
+  const isCustomRole = currentUser.role === "custom";
+  const allowedTabSet = new Set<TabId>([
+    ...(currentUser.allowedTabs || []),
+    "users",
+  ]);
+
+  const orderedTabs: { id: TabId; label: string }[] = (() => {
     const customOrder = data.adminTabOrder;
     if (!Array.isArray(customOrder) || customOrder.length === 0) {
       return defaultTabs;
@@ -277,6 +289,14 @@ export function AdminDashboard({
     return ordered;
   })();
 
+  const tabs = isCustomRole
+    ? orderedTabs.filter((t) => allowedTabSet.has(t.id))
+    : orderedTabs;
+
+  const effectiveActiveTab = tabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : tabs[0]?.id || "users";
+
   const handleTabDrop = (targetIdx: number) => {
     if (tabDragIdx === null || tabDragIdx === targetIdx) {
       setTabDragIdx(null);
@@ -290,6 +310,11 @@ export function AdminDashboard({
     scheduleAutoSave();
     setTabDragIdx(null);
     setTabOverIdx(null);
+  };
+
+  const toggleUrl = (list: string[] | undefined, url: string): string[] => {
+    const cur = list || [];
+    return cur.includes(url) ? cur.filter((u) => u !== url) : [...cur, url];
   };
 
   const activeGame =
@@ -377,6 +402,21 @@ export function AdminDashboard({
                   {currentUser.username}
                 </span>
                 <span
+                  className={`hidden md:inline-block px-2 py-0.5 text-[10px] font-semibold uppercase rounded ${
+                    currentUser.role === "full"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : currentUser.role === "read"
+                        ? "bg-amber-500/20 text-amber-300"
+                        : "bg-blue-500/20 text-blue-300"
+                  }`}
+                >
+                  {currentUser.role === "full"
+                    ? "Full"
+                    : currentUser.role === "read"
+                      ? "Read Only"
+                      : "Custom"}
+                </span>
+                <span
                   title="Batas idle sesi 10 menit (reset otomatis saat aktif atau refresh)"
                   className={`hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono rounded ${
                     idleRemainingSec <= 120
@@ -400,14 +440,16 @@ export function AdminDashboard({
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Lihat Web</span>
               </Link>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 rounded bg-red-600 hover:bg-red-500 disabled:opacity-60 px-3.5 py-1.5 text-xs font-semibold text-white transition cursor-pointer"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>{saving ? "Menyimpan..." : "Simpan"}</span>
-              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 rounded bg-red-600 hover:bg-red-500 disabled:opacity-60 px-3.5 py-1.5 text-xs font-semibold text-white transition cursor-pointer"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{saving ? "Menyimpan..." : "Simpan"}</span>
+                </button>
+              )}
               <button
                 onClick={() => handleLogout("manual")}
                 title="Logout"
@@ -422,7 +464,7 @@ export function AdminDashboard({
           {/* Mobile Horizontal Tab Strip */}
           <div className="lg:hidden border-t border-zinc-800 bg-zinc-900 px-3 flex items-center gap-1 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
-              const active = activeTab === tab.id;
+              const active = effectiveActiveTab === tab.id;
               return (
                 <button
                   key={tab.id}
@@ -473,7 +515,7 @@ export function AdminDashboard({
               )}
             </div>
             {tabs.map((tab, idx) => {
-              const active = activeTab === tab.id;
+              const active = effectiveActiveTab === tab.id;
               return (
                 <div
                   key={tab.id}
@@ -521,17 +563,33 @@ export function AdminDashboard({
 
         {/* Form Panels */}
         <main className="lg:col-span-9 min-w-0 space-y-5">
-          {/* URUTAN SECTION WEBSITE */}
-          {activeTab === "sections" && (
-            <SectionOrderPanel
-              data={data}
-              setData={setData}
-              onJumpTab={(t) => setActiveTab(t as TabId)}
+          {isReadOnly && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs text-amber-900">
+              Anda login dengan mode <strong>Read Only</strong>. Anda dapat melihat seluruh pengaturan, statistik, dan log, tetapi tidak dapat mengubah atau menyimpan data.
+            </div>
+          )}
+
+          {/* STATISTIK WEB */}
+          {effectiveActiveTab === "analytics" && (
+            <AdminAnalyticsPanel
+              role={currentUser.role}
+              onUnauthorized={() => setCurrentUser(null)}
             />
           )}
 
+          {/* URUTAN SECTION WEBSITE */}
+          {effectiveActiveTab === "sections" && (
+            <fieldset disabled={isReadOnly} className="space-y-5 disabled:opacity-75">
+              <SectionOrderPanel
+                data={data}
+                setData={setData}
+                onJumpTab={(t) => setActiveTab(t as TabId)}
+              />
+            </fieldset>
+          )}
+
           {/* AKUN & PASSWORD ADMIN */}
-          {activeTab === "users" && (
+          {effectiveActiveTab === "users" && (
             <AdminUsersPanel
               currentUser={currentUser}
               onShowToast={showToast}
@@ -540,13 +598,13 @@ export function AdminDashboard({
           )}
 
           {/* LOG AKTIVITAS ADMIN */}
-          {activeTab === "logs" && (
+          {effectiveActiveTab === "logs" && (
             <AdminLogsPanel onUnauthorized={() => setCurrentUser(null)} />
           )}
 
           {/* 0. OPENING & LOADING */}
-          {activeTab === "opening" && (
-            <div className="space-y-5">
+          {effectiveActiveTab === "opening" && (
+            <fieldset disabled={isReadOnly} className="space-y-5 disabled:opacity-75">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
                   <div>
@@ -778,11 +836,11 @@ export function AdminDashboard({
                   allowClear
                 />
               </section>
-            </div>
+            </fieldset>
           )}
 
           {/* 1. HOME, BRANDING & NAVBAR */}
-          {activeTab === "branding" && (
+          {effectiveActiveTab === "branding" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -1202,7 +1260,7 @@ export function AdminDashboard({
           )}
 
           {/* 2. TEMPLATE KIRIM PESAN */}
-          {activeTab === "templates" && (
+          {effectiveActiveTab === "templates" && (
             <div className="space-y-5">
               {/* Store Order WA Template */}
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
@@ -1632,7 +1690,7 @@ export function AdminDashboard({
           )}
 
           {/* 3. GAMES & ROSTER */}
-          {activeTab === "games" && (
+          {effectiveActiveTab === "games" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -2243,6 +2301,22 @@ export function AdminDashboard({
                                     <MultiMediaField
                                       label="Foto / Video Tambahan Anggota (Swipe ala IG)"
                                       values={member.images || []}
+                                      hiddenUrls={member.hiddenImages || []}
+                                      onToggleHidden={(url) =>
+                                        setTargetRoster((list) =>
+                                          list.map((m) =>
+                                            m.id === member.id
+                                              ? {
+                                                  ...m,
+                                                  hiddenImages: toggleUrl(
+                                                    m.hiddenImages,
+                                                    url
+                                                  ),
+                                                }
+                                              : m
+                                          )
+                                        )
+                                      }
                                       onChange={(urls) =>
                                         setTargetRoster((list) =>
                                           list.map((m) =>
@@ -2306,7 +2380,7 @@ export function AdminDashboard({
           )}
 
           {/* 4. ABOUT US */}
-          {activeTab === "about" && (
+          {effectiveActiveTab === "about" && (
             <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
               <div className="border-b border-zinc-100 pb-3">
                 <h2 className="text-base font-semibold text-zinc-900">
@@ -2486,7 +2560,28 @@ export function AdminDashboard({
                 <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
                   {data.about.photos.map((ph) => (
                     <div key={ph.id} className="p-3.5 space-y-2.5">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={ph.enabled !== false}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                about: {
+                                  ...data.about,
+                                  photos: data.about.photos.map((p) =>
+                                    p.id === ph.id
+                                      ? { ...p, enabled: e.target.checked }
+                                      : p
+                                  ),
+                                },
+                              })
+                            }
+                            className="accent-red-600 w-3.5 h-3.5"
+                          />
+                          {ph.enabled !== false ? "Tampil di Web" : "Disembunyikan"}
+                        </label>
                         <button
                           type="button"
                           onClick={() =>
@@ -2524,6 +2619,20 @@ export function AdminDashboard({
                       <MultiMediaField
                         label="Foto / Video Tambahan (Swipe ala IG)"
                         values={ph.images || []}
+                        hiddenUrls={ph.hiddenImages || []}
+                        onToggleHidden={(url) =>
+                          setData({
+                            ...data,
+                            about: {
+                              ...data.about,
+                              photos: data.about.photos.map((p) =>
+                                p.id === ph.id
+                                  ? { ...p, hiddenImages: toggleUrl(p.hiddenImages, url) }
+                                  : p
+                              ),
+                            },
+                          })
+                        }
                         onChange={(urls) =>
                           setData({
                             ...data,
@@ -2570,7 +2679,7 @@ export function AdminDashboard({
           )}
 
           {/* 5. GALLERY EVENTS */}
-          {activeTab === "gallery" && (
+          {effectiveActiveTab === "gallery" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -2664,7 +2773,25 @@ export function AdminDashboard({
                 <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
                   {data.gallery.map((evt) => (
                     <div key={evt.id} className="p-3.5 sm:p-4 space-y-3">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={evt.enabled !== false}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                gallery: data.gallery.map((g) =>
+                                  g.id === evt.id
+                                    ? { ...g, enabled: e.target.checked }
+                                    : g
+                                ),
+                              })
+                            }
+                            className="accent-red-600 w-3.5 h-3.5"
+                          />
+                          {evt.enabled !== false ? "Tampil di Web" : "Disembunyikan"}
+                        </label>
                         <button
                           type="button"
                           onClick={() =>
@@ -2746,6 +2873,17 @@ export function AdminDashboard({
                       <MultiMediaField
                         label="Foto & Video Aktivitas Tambahan"
                         values={evt.images || []}
+                        hiddenUrls={evt.hiddenImages || []}
+                        onToggleHidden={(url) =>
+                          setData((prev) => ({
+                            ...prev,
+                            gallery: prev.gallery.map((g) =>
+                              g.id === evt.id
+                                ? { ...g, hiddenImages: toggleUrl(g.hiddenImages, url) }
+                                : g
+                            ),
+                          }))
+                        }
                         onChange={(urls) =>
                           setData((prev) => ({
                             ...prev,
@@ -2802,7 +2940,7 @@ export function AdminDashboard({
           )}
 
           {/* 5B. BRAND AMBASSADOR */}
-          {activeTab === "ambassadors" && (
+          {effectiveActiveTab === "ambassadors" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -2923,10 +3061,26 @@ export function AdminDashboard({
 
                       return (
                         <div key={ba.id} className="p-4 space-y-3.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
-                              {ba.name || "Brand Ambassador"}
-                            </span>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-700">
+                                {ba.name || "Brand Ambassador"}
+                              </span>
+                              <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={ba.enabled !== false}
+                                  onChange={(e) =>
+                                    updateBa((item) => ({
+                                      ...item,
+                                      enabled: e.target.checked,
+                                    }))
+                                  }
+                                  className="accent-red-600 w-3.5 h-3.5"
+                                />
+                                {ba.enabled !== false ? "Tampil di Web" : "Disembunyikan"}
+                              </label>
+                            </div>
                             <button
                               type="button"
                               onClick={() =>
@@ -3050,6 +3204,13 @@ export function AdminDashboard({
                           <MultiMediaField
                             label="Foto / Video Tambahan Brand Ambassador (Swipe ala IG)"
                             values={ba.images || []}
+                            hiddenUrls={ba.hiddenImages || []}
+                            onToggleHidden={(url) =>
+                              updateBa((item) => ({
+                                ...item,
+                                hiddenImages: toggleUrl(item.hiddenImages, url),
+                              }))
+                            }
                             onChange={(urls) =>
                               updateBa((item) => ({ ...item, images: urls }))
                             }
@@ -3205,7 +3366,7 @@ export function AdminDashboard({
           )}
 
           {/* 6. OFFICIAL STORE */}
-          {activeTab === "store" && (
+          {effectiveActiveTab === "store" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -3331,25 +3492,45 @@ export function AdminDashboard({
                 <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
                   {data.store.map((prod) => (
                     <div key={prod.id} className="p-3.5 sm:p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={prod.inStock}
-                            onChange={(e) =>
-                              setData({
-                                ...data,
-                                store: data.store.map((p) =>
-                                  p.id === prod.id
-                                    ? { ...p, inStock: e.target.checked }
-                                    : p
-                                ),
-                              })
-                            }
-                            className="accent-red-600 w-3.5 h-3.5"
-                          />
-                          Stok Tersedia
-                        </label>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={prod.inStock}
+                              onChange={(e) =>
+                                setData({
+                                  ...data,
+                                  store: data.store.map((p) =>
+                                    p.id === prod.id
+                                      ? { ...p, inStock: e.target.checked }
+                                      : p
+                                  ),
+                                })
+                              }
+                              className="accent-red-600 w-3.5 h-3.5"
+                            />
+                            Stok Tersedia
+                          </label>
+                          <label className="inline-flex items-center gap-2 text-xs font-medium text-zinc-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={prod.enabled !== false}
+                              onChange={(e) =>
+                                setData({
+                                  ...data,
+                                  store: data.store.map((p) =>
+                                    p.id === prod.id
+                                      ? { ...p, enabled: e.target.checked }
+                                      : p
+                                  ),
+                                })
+                              }
+                              className="accent-red-600 w-3.5 h-3.5"
+                            />
+                            {prod.enabled !== false ? "Tampil di Web" : "Disembunyikan"}
+                          </label>
+                        </div>
                         <button
                           type="button"
                           onClick={() =>
@@ -3463,6 +3644,17 @@ export function AdminDashboard({
                       <MultiMediaField
                         label="Foto / Video Produk Tambahan (Swipe ala IG)"
                         values={prod.images || []}
+                        hiddenUrls={prod.hiddenImages || []}
+                        onToggleHidden={(url) =>
+                          setData({
+                            ...data,
+                            store: data.store.map((p) =>
+                              p.id === prod.id
+                                ? { ...p, hiddenImages: toggleUrl(p.hiddenImages, url) }
+                                : p
+                            ),
+                          })
+                        }
                         onChange={(urls) =>
                           setData({
                             ...data,
@@ -3501,7 +3693,7 @@ export function AdminDashboard({
           )}
 
           {/* 7. SPONSORS */}
-          {activeTab === "sponsors" && (
+          {effectiveActiveTab === "sponsors" && (
             <div className="space-y-5">
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
@@ -3583,7 +3775,25 @@ export function AdminDashboard({
                 <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-md">
                   {data.sponsors.map((sp) => (
                     <div key={sp.id} className="p-3.5 sm:p-4 space-y-3">
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between gap-2">
+                        <label className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={sp.enabled !== false}
+                            onChange={(e) =>
+                              setData({
+                                ...data,
+                                sponsors: data.sponsors.map((s) =>
+                                  s.id === sp.id
+                                    ? { ...s, enabled: e.target.checked }
+                                    : s
+                                ),
+                              })
+                            }
+                            className="accent-red-600 w-3.5 h-3.5"
+                          />
+                          {sp.enabled !== false ? "Tampil di Web" : "Disembunyikan"}
+                        </label>
                         <button
                           type="button"
                           onClick={() =>
@@ -3657,7 +3867,7 @@ export function AdminDashboard({
           )}
 
           {/* 8. CONTACT & SOCIAL MEDIA */}
-          {activeTab === "contact" && (
+          {effectiveActiveTab === "contact" && (
             <div className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-5">
               <div className="border-b border-zinc-100 pb-3">
                 <h2 className="text-base font-semibold text-zinc-900">

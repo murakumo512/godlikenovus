@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Lock, LogIn, ArrowLeft, Loader2 } from "lucide-react";
 import { BrandingConfig } from "@/lib/types";
+import type { AdminSessionUser } from "@/lib/auth";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
 export function AdminLogin({
@@ -11,7 +12,7 @@ export function AdminLogin({
   onSuccess,
 }: {
   branding: BrandingConfig;
-  onSuccess: (user: { id: string; username: string; displayName: string }) => void;
+  onSuccess: (user: AdminSessionUser) => void;
 }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +37,7 @@ export function AdminLogin({
         body: JSON.stringify({ username, password }),
       });
       const json = (await res.json()) as {
-        user?: { id: string; username: string; displayName: string };
+        user?: AdminSessionUser;
         error?: string;
       };
       if (!res.ok || !json.user) {

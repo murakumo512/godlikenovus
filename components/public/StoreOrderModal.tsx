@@ -5,7 +5,7 @@ import { X, ShoppingBag, MessageCircle } from "lucide-react";
 import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
-import { collectMediaList } from "@/lib/media";
+import { collectVisibleMediaList } from "@/lib/media";
 import { LightboxMediaItem, MediaCarousel, ModalPortal } from "./MediaDisplay";
 import { useLockBodyAndLenis } from "./SmoothScroll";
 
@@ -90,7 +90,11 @@ export function StoreOrderModal({
       >
         {/* Left / Top: Swipeable IG-Style Product Media (Click for Fullscreen Zoom) */}
         <MediaCarousel
-          items={collectMediaList(product.image, product.images)}
+          items={collectVisibleMediaList(
+            product.hiddenImages,
+            product.image,
+            product.images
+          )}
           alt={product.name}
           fit="contain-ambient"
           className="md:col-span-5 border-b md:border-b-0 md:border-r border-white/10"
@@ -98,7 +102,11 @@ export function StoreOrderModal({
           onInspect={(url, idx) =>
             onInspectMedia?.({
               url,
-              items: collectMediaList(product.image, product.images),
+              items: collectVisibleMediaList(
+                product.hiddenImages,
+                product.image,
+                product.images
+              ),
               initialIndex: idx,
               title: product.name,
               caption: product.description,

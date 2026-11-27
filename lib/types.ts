@@ -21,7 +21,10 @@ export type AdminTabId =
   | "sponsors"
   | "contact"
   | "users"
-  | "logs";
+  | "logs"
+  | "analytics";
+
+export type AdminRole = "full" | "read" | "custom";
 
 export interface RosterMember {
   id: string;
@@ -31,6 +34,8 @@ export interface RosterMember {
   isCoach: boolean;
   photo: string;
   images?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   bio: string;
   achievements: string;
 }
@@ -43,6 +48,8 @@ export interface GameSubTeam {
   description?: string;
   bannerImage?: string;
   bannerImages?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   roster: RosterMember[];
 }
 
@@ -54,6 +61,8 @@ export interface GameDivision {
   description: string;
   bannerImage: string;
   bannerImages?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   subTeams?: GameSubTeam[];
   roster: RosterMember[];
 }
@@ -72,6 +81,8 @@ export interface BrandAmbassador {
   team: string;
   photo: string;
   images?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   games: string[];
   bio: string;
   socials: SocialLink[];
@@ -92,6 +103,8 @@ export interface AboutPhoto {
   id: string;
   url: string;
   images?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   caption: string;
 }
 
@@ -111,6 +124,8 @@ export interface GalleryEvent {
   category: string;
   image: string;
   images?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   videoUrl?: string;
   description: string;
 }
@@ -123,6 +138,8 @@ export interface StoreProduct {
   badge: string;
   image: string;
   images?: string[];
+  hiddenImages?: string[];
+  enabled?: boolean;
   description: string;
   sizes: string[];
   inStock: boolean;
@@ -134,6 +151,7 @@ export interface SponsorItem {
   tier: string;
   logo: string;
   website: string;
+  enabled?: boolean;
 }
 
 export interface NavLabels {

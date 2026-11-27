@@ -32,6 +32,12 @@ export async function DELETE(request: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (admin.role !== "full") {
+    return NextResponse.json(
+      { error: "Hanya admin Full Access yang dapat membersihkan log." },
+      { status: 403 }
+    );
+  }
   await clearActivityLogs();
   const freshToken = await issueSessionToken(admin);
   const res = NextResponse.json({ ok: true });

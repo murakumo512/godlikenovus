@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { DEFAULT_SITE_DATA } from "@/lib/default-data";
 import {
   issueSessionToken,
+  mergeSiteDataForCustomRole,
   SESSION_COOKIE_NAME,
   SESSION_TTL_SECONDS,
   verifyAdminRequest,
@@ -58,6 +59,12 @@ export async function PUT(request: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (admin.role === "read") {
+    return NextResponse.json(
+      { error: "Mode Read-Only tidak diizinkan mengubah konten." },
+      { status: 403 }
+    );
+  }
 
   try {
     const body = (await request.json()) as SiteData;
@@ -68,7 +75,11 @@ export async function PUT(request: Request) {
       );
     }
     const prev = await getSiteData();
-    const saved = await saveSiteData(body);
+    const payloadToSave =
+      admin.role === "custom"
+        ? mergeSiteDataForCustomRole(prev, body, admin.allowedTabs)
+        : body;
+    const saved = await saveSiteData(payloadToSave);
     await appendActivityLog({
       action: "edit",
       username: admin.username,
@@ -99,6 +110,12 @@ export async function POST(request: Request) {
   const admin = await verifyAdminRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (admin.role !== "full") {
+    return NextResponse.json(
+      { error: "Hanya admin Full Access yang dapat mereset konten." },
+      { status: 403 }
+    );
   }
 
   try {

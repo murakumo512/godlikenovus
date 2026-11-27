@@ -14,6 +14,12 @@ export async function POST(request: Request) {
   if (!admin) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (admin.role === "read") {
+    return NextResponse.json(
+      { error: "Mode Read-Only tidak diizinkan mengupload file." },
+      { status: 403 }
+    );
+  }
 
   try {
     const formData = await request.formData();

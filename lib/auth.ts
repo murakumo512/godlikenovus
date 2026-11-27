@@ -2,12 +2,15 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import { cookies } from "next/headers";
+import type { AdminRole, AdminTabId, SiteData } from "./types";
 
 export interface AdminUserRecord {
   id: string;
   username: string;
   displayName: string;
   passwordHash: string;
+  role?: AdminRole;
+  allowedTabs?: AdminTabId[];
   createdAt: string;
 }
 
@@ -15,6 +18,8 @@ export interface AdminSessionUser {
   id: string;
   username: string;
   displayName: string;
+  role: AdminRole;
+  allowedTabs: AdminTabId[];
 }
 
 interface UsersFileSchema {
@@ -66,6 +71,8 @@ async function readUsersStore(): Promise<UsersFileSchema> {
         username: "admin",
         displayName: "Owner Admin",
         passwordHash: hashPassword("godlike2026"),
+        role: "full",
+        allowedTabs: [],
         createdAt: new Date().toISOString(),
       },
     ],
@@ -122,6 +129,18 @@ export async function issueSessionToken(
   return signToken({ id: user.id, username: user.username, exp }, store.secret);
 }
 
+function toSessionUser(u: AdminUserRecord): AdminSessionUser {
+  const role: AdminRole = u.role || "full";
+  const allowedTabs = Array.isArray(u.allowedTabs) ? u.allowedTabs : [];
+  return {
+    id: u.id,
+    username: u.username,
+    displayName: u.displayName,
+    role,
+    allowedTabs,
+  };
+}
+
 export async function authenticateAdmin(
   username: string,
   password: string
@@ -139,11 +158,7 @@ export async function authenticateAdmin(
   );
   return {
     token,
-    user: {
-      id: found.id,
-      username: found.username,
-      displayName: found.displayName,
-    },
+    user: toSessionUser(found),
   };
 }
 
@@ -156,11 +171,7 @@ export async function getSessionAdminFromToken(
   if (!verified) return null;
   const found = store.users.find((u) => u.id === verified.id);
   if (!found) return null;
-  return {
-    id: found.id,
-    username: found.username,
-    displayName: found.displayName,
-  };
+  return toSessionUser(found);
 }
 
 export async function getCurrentAdmin(): Promise<AdminSessionUser | null> {
@@ -187,6 +198,8 @@ export async function listAdminUsers() {
     id: u.id,
     username: u.username,
     displayName: u.displayName,
+    role: (u.role || "full") as AdminRole,
+    allowedTabs: Array.isArray(u.allowedTabs) ? u.allowedTabs : [],
     createdAt: u.createdAt,
   }));
 }
@@ -194,7 +207,9 @@ export async function listAdminUsers() {
 export async function createAdminUser(
   username: string,
   displayName: string,
-  password: string
+  password: string,
+  role: AdminRole = "full",
+  allowedTabs: AdminTabId[] = []
 ) {
   const cleanUser = username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
   if (cleanUser.length < 3) {
@@ -212,6 +227,8 @@ export async function createAdminUser(
     username: cleanUser,
     displayName: displayName.trim() || cleanUser,
     passwordHash: hashPassword(password),
+    role,
+    allowedTabs: role === "custom" ? allowedTabs : [],
     createdAt: new Date().toISOString(),
   };
   store.users.push(newUser);
@@ -220,8 +237,64 @@ export async function createAdminUser(
     id: newUser.id,
     username: newUser.username,
     displayName: newUser.displayName,
+    role: newUser.role || "full",
+    allowedTabs: newUser.allowedTabs || [],
     createdAt: newUser.createdAt,
   };
+}
+
+export async function updateAdminUserRole(
+  userId: string,
+  requesterId: string,
+  role: AdminRole,
+  allowedTabs: AdminTabId[] = []
+) {
+  const store = await readUsersStore();
+  const idx = store.users.findIndex((u) => u.id === userId);
+  if (idx === -1) {
+    throw new Error("User tidak ditemukan.");
+  }
+  if (userId === requesterId && role !== "full") {
+    throw new Error("Tidak bisa menurunkan hak akses akun sendiri yang sedang login.");
+  }
+  const fullCount = store.users.filter((u) => (u.role || "full") === "full").length;
+  if ((store.users[idx].role || "full") === "full" && role !== "full" && fullCount <= 1) {
+    throw new Error("Minimal harus ada 1 akun dengan mode Full Access.");
+  }
+  store.users[idx].role = role;
+  store.users[idx].allowedTabs = role === "custom" ? allowedTabs : [];
+  await writeUsersStore(store);
+}
+
+const TAB_DATA_KEYS: Partial<Record<AdminTabId, Array<keyof SiteData>>> = {
+  sections: ["sectionOrder", "hiddenSections", "adminTabOrder"],
+  opening: ["opening"],
+  branding: ["branding", "homeSections"],
+  templates: ["templates"],
+  games: ["games", "homeSections"],
+  about: ["about", "homeSections"],
+  gallery: ["gallery", "homeSections"],
+  ambassadors: ["ambassadors", "homeSections"],
+  store: ["store", "homeSections"],
+  sponsors: ["sponsors", "homeSections"],
+  contact: ["contact", "socials", "homeSections"],
+};
+
+export function mergeSiteDataForCustomRole(
+  prev: SiteData,
+  next: SiteData,
+  allowedTabs: AdminTabId[]
+): SiteData {
+  const merged = { ...prev };
+  const allowedKeys = new Set<keyof SiteData>();
+  for (const tab of allowedTabs) {
+    const keys = TAB_DATA_KEYS[tab];
+    if (keys) keys.forEach((k) => allowedKeys.add(k));
+  }
+  for (const k of allowedKeys) {
+    (merged as Record<string, unknown>)[k] = next[k];
+  }
+  return merged;
 }
 
 export async function changeAdminPassword(

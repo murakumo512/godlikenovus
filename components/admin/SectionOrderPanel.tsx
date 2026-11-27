@@ -113,6 +113,56 @@ export function SectionOrderPanel({
 
   return (
     <div className="space-y-5">
+      {/* Enable / Disable Opening & Loading */}
+      <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-900">
+            Layar Opening &amp; Loading (0–100%)
+          </h3>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {data.opening.enabled !== false
+              ? "Aktif — tampil saat pengunjung pertama kali membuka website."
+              : "Dinonaktifkan — pengunjung langsung masuk ke halaman Home."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onJumpTab("opening")}
+            className="rounded border border-zinc-300 bg-white hover:border-red-600 hover:text-red-600 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition cursor-pointer"
+          >
+            Edit Opening
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              setData((prev) => ({
+                ...prev,
+                opening: {
+                  ...prev.opening,
+                  enabled: prev.opening.enabled === false,
+                },
+              }))
+            }
+            className={`inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+              data.opening.enabled !== false
+                ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                : "border-zinc-300 bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+            }`}
+          >
+            {data.opening.enabled !== false ? (
+              <>
+                <Eye className="w-3.5 h-3.5" /> Aktif
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-3.5 h-3.5" /> Nonaktif
+              </>
+            )}
+          </button>
+        </div>
+      </section>
+
       <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-100 pb-3">
           <div>

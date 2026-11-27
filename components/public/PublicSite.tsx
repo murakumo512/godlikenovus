@@ -19,7 +19,8 @@ import {
   StoreProduct,
 } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
-import { collectMediaList, isAnyVideoUrl } from "@/lib/media";
+import { collectVisibleMediaList, isAnyVideoUrl } from "@/lib/media";
+import { trackAnalytics } from "@/lib/analytics-client";
 import {
   DEFAULT_CONTACT_WA_TEMPLATE,
   DEFAULT_SECTION_ORDER,
@@ -62,14 +63,24 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     null
   );
 
-  const rawCategories = Array.from(new Set(data.gallery.map((g) => g.category)));
+  const visibleGallery = data.gallery.filter((g) => g.enabled !== false);
+  const visibleAboutPhotos = data.about.photos.filter((p) => p.enabled !== false);
+  const visibleStore = data.store.filter((p) => p.enabled !== false);
+  const visibleSponsors = data.sponsors.filter((s) => s.enabled !== false);
+
+  const rawCategories = Array.from(new Set(visibleGallery.map((g) => g.category)));
   const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORY_KEY);
   const [activeEvent, setActiveEvent] = useState<GalleryEvent | null>(null);
 
   useLockBodyAndLenis(Boolean(activeEvent));
 
   const activeEventMedia = activeEvent
-    ? collectMediaList(activeEvent.image, activeEvent.images, activeEvent.videoUrl)
+    ? collectVisibleMediaList(
+        activeEvent.hiddenImages,
+        activeEvent.image,
+        activeEvent.images,
+        activeEvent.videoUrl
+      )
     : [];
 
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
@@ -80,8 +91,44 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
   const filteredGallery =
     selectedCategory === ALL_CATEGORY_KEY
-      ? data.gallery
-      : data.gallery.filter((g) => g.category === selectedCategory);
+      ? visibleGallery
+      : visibleGallery.filter((g) => g.category === selectedCategory);
+
+  // Analytics: pageview + unique section views per visit
+  useEffect(() => {
+    trackAnalytics({ type: "pageview" });
+
+    const seenSections = new Set<string>();
+    const sectionIds = [
+      "top",
+      "roster",
+      "about",
+      "gallery",
+      "ambassadors",
+      "store",
+      "sponsors",
+      "contact",
+    ];
+    const observers: IntersectionObserver[] = [];
+    sectionIds.forEach((secId) => {
+      const el = document.getElementById(secId);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && !seenSections.has(secId)) {
+              seenSections.add(secId);
+              trackAnalytics({ type: "section", section: secId });
+            }
+          });
+        },
+        { threshold: 0.25 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
 
   const formatRupiah = (n: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -418,24 +465,38 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 </div>
 
                 <div className="lg:col-span-7 grid grid-cols-2 gap-2 sm:gap-4">
-                  {data.about.photos.map((photo, idx) => {
-                    const allAboutMedia = collectMediaList(
-                      ...data.about.photos.flatMap((p) => [p.url, ...(p.images || [])])
+                  {visibleAboutPhotos.map((photo, idx) => {
+                    const allAboutMedia = collectVisibleMediaList(
+                      undefined,
+                      ...visibleAboutPhotos.flatMap((p) =>
+                        collectVisibleMediaList(p.hiddenImages, p.url, p.images)
+                      )
                     );
-                    const photoMedia = collectMediaList(photo.url, photo.images);
+                    const photoMedia = collectVisibleMediaList(
+                      photo.hiddenImages,
+                      photo.url,
+                      photo.images
+                    );
                     const startIdx = Math.max(0, allAboutMedia.indexOf(photo.url));
                     return (
                       <div
                         key={photo.id}
-                        onClick={() =>
+                        onClick={() => {
+                          trackAnalytics({
+                            type: "media",
+                            mediaKey: `about:${photo.id}`,
+                            mediaLabel: photo.caption || "About Photo",
+                            mediaCategory: "About",
+                            mediaUrl: photo.url,
+                          });
                           setLightboxItem({
                             url: photo.url,
                             items: allAboutMedia,
                             initialIndex: startIdx,
                             title: data.about.title,
                             caption: photo.caption,
-                          })
-                        }
+                          });
+                        }}
                         className={`group relative cursor-pointer overflow-hidden rounded-md bg-zinc-900 ${
                           idx === 0
                             ? "aspect-square sm:col-span-2 sm:aspect-[16/9]"
@@ -522,16 +583,27 @@ function PublicSiteInner({ data }: { data: SiteData }) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-6">
                   {filteredGallery.map((evt) => {
-                    const totalPhotos =
-                      (evt.image ? 1 : 0) + (evt.images?.length || 0);
-                    const hasVideo =
-                      isAnyVideoUrl(evt.image) ||
-                      Boolean(evt.videoUrl) ||
-                      Boolean(evt.images?.some((u) => isAnyVideoUrl(u)));
+                    const evtMedia = collectVisibleMediaList(
+                      evt.hiddenImages,
+                      evt.image,
+                      evt.images,
+                      evt.videoUrl
+                    );
+                    const totalPhotos = evtMedia.length;
+                    const hasVideo = evtMedia.some((u) => isAnyVideoUrl(u));
                     return (
                       <article
                         key={evt.id}
-                        onClick={() => setActiveEvent(evt)}
+                        onClick={() => {
+                          setActiveEvent(evt);
+                          trackAnalytics({
+                            type: "media",
+                            mediaKey: `gallery:${evt.id}`,
+                            mediaLabel: evt.title,
+                            mediaCategory: "Gallery",
+                            mediaUrl: evt.image,
+                          });
+                        }}
                         className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                       >
                         <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-zinc-900">
@@ -627,12 +699,25 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
-                  {data.store.map((product) => {
-                    const productMedia = collectMediaList(product.image, product.images);
+                  {visibleStore.map((product) => {
+                    const productMedia = collectVisibleMediaList(
+                      product.hiddenImages,
+                      product.image,
+                      product.images
+                    );
                     return (
                     <div
                       key={product.id}
-                      onClick={() => setOrderProduct(product)}
+                      onClick={() => {
+                        setOrderProduct(product);
+                        trackAnalytics({
+                          type: "media",
+                          mediaKey: `store:${product.id}`,
+                          mediaLabel: product.name,
+                          mediaCategory: "Store",
+                          mediaUrl: product.image,
+                        });
+                      }}
                       className="group cursor-pointer overflow-hidden rounded-md border border-white/10 bg-zinc-950/70 hover:border-white/25 transition flex flex-col"
                     >
                       <div className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden">
@@ -722,12 +807,21 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 border-t border-l border-white/10">
-                  {data.sponsors.map((sp) => (
+                  {visibleSponsors.map((sp) => (
                     <a
                       key={sp.id}
                       href={sp.website || "#sponsors"}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() =>
+                        trackAnalytics({
+                          type: "media",
+                          mediaKey: `sponsor:${sp.id}`,
+                          mediaLabel: sp.name,
+                          mediaCategory: "Sponsor",
+                          mediaUrl: sp.logo,
+                        })
+                      }
                       className="group flex flex-col items-center justify-center border-r border-b border-white/10 py-7 sm:py-8 px-4 hover:bg-white/[0.02] transition"
                     >
                       <img
