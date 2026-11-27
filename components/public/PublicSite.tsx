@@ -29,6 +29,7 @@ import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { RosterSection } from "./RosterSection";
 import { BrandAmbassadorSection } from "./BrandAmbassadorSection";
 import { StoreOrderModal } from "./StoreOrderModal";
+import { SponsorRollingStrip } from "./SponsorRollingStrip";
 import { SocialIcon } from "./SocialIcon";
 import { KprPreloader } from "./KprPreloader";
 import {
@@ -806,39 +807,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                  {visibleSponsors.map((sp) => (
-                    <a
-                      key={sp.id}
-                      href={sp.website || "#sponsors"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() =>
-                        trackAnalytics({
-                          type: "media",
-                          mediaKey: `sponsor:${sp.id}`,
-                          mediaLabel: sp.name,
-                          mediaCategory: "Sponsor",
-                          mediaUrl: sp.logo,
-                        })
-                      }
-                      className="group flex flex-col items-center justify-center rounded-lg border border-white/12 bg-zinc-950/70 hover:border-[#E11D2E]/60 py-8 sm:py-10 px-6 hover:bg-white/[0.03] transition shadow-sm"
-                    >
-                      <img
-                        src={assetUrl(sp.logo)}
-                        alt={sp.name}
-                        className="h-24 sm:h-28 md:h-32 w-auto max-w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-300"
-                      />
-                      <h3 className="mt-5 font-display text-xl sm:text-2xl font-bold uppercase text-white tracking-wide text-center group-hover:text-[#E11D2E] transition">
-                        {sp.name}
-                      </h3>
-                      <span className="mt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-400 group-hover:text-zinc-200 flex items-center gap-1 transition">
-                        {sp.tier}
-                        <ArrowUpRight className="w-3.5 h-3.5 opacity-75" />
-                      </span>
-                    </a>
-                  ))}
-                </div>
+                <SponsorRollingStrip sponsors={visibleSponsors} />
               </div>
             </ScrollSection>
           </div>
