@@ -10,35 +10,56 @@ export function SponsorRollingStrip({
 }: {
   sponsors: SponsorItem[];
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+  const halfWidthRef = useRef(0);
   const pausedRef = useRef(false);
   const draggingRef = useRef(false);
   const startXRef = useRef(0);
-  const startScrollRef = useRef(0);
+  const startOffsetRef = useRef(0);
   const didDragRef = useRef(false);
 
-  // Repeat items enough times so seamless infinite rolling works even with 1-4 sponsors
-  const unitCount = Math.max(4, Math.ceil(10 / Math.max(1, sponsors.length)));
+  // Repeat just enough times to fill wide screens seamlessly
+  const unitCount = Math.max(2, Math.ceil(6 / Math.max(1, sponsors.length)));
   const halfItems = Array.from({ length: unitCount }, () => sponsors).flat();
   const loopItems = [...halfItems, ...halfItems];
 
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el || sponsors.length === 0) return;
+    const track = trackRef.current;
+    if (!track || sponsors.length === 0) return;
+
+    const measure = () => {
+      halfWidthRef.current = track.scrollWidth / 2;
+    };
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
 
     let rafId = 0;
-    const step = () => {
-      if (!pausedRef.current && !draggingRef.current && el.scrollWidth > el.clientWidth) {
-        el.scrollLeft += 0.65;
-        const halfWidth = el.scrollWidth / 2;
-        if (el.scrollLeft >= halfWidth) {
-          el.scrollLeft -= halfWidth;
+    let lastTime = performance.now();
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime);
+      lastTime = now;
+
+      const half = halfWidthRef.current;
+      if (!pausedRef.current && !draggingRef.current && half > 0) {
+        offsetRef.current += (dt * 42) / 1000; // ~42px/sec smooth glide
+        if (offsetRef.current >= half) {
+          offsetRef.current -= half;
         }
+        track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
       }
       rafId = requestAnimationFrame(step);
     };
     rafId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafId);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
   }, [sponsors.length]);
 
   if (sponsors.length === 0) return null;
@@ -50,9 +71,19 @@ export function SponsorRollingStrip({
     return `https://${val}`;
   };
 
+  const applyDragOffset = (nextOffset: number) => {
+    const track = trackRef.current;
+    const half = halfWidthRef.current;
+    if (!track || half <= 0) return;
+    let wrapped = nextOffset % half;
+    if (wrapped < 0) wrapped += half;
+    offsetRef.current = wrapped;
+    track.style.transform = `translate3d(${-wrapped}px, 0, 0)`;
+  };
+
   return (
     <div
-      ref={trackRef}
+      ref={containerRef}
       onMouseEnter={() => {
         pausedRef.current = true;
       }}
@@ -61,37 +92,33 @@ export function SponsorRollingStrip({
         draggingRef.current = false;
       }}
       onPointerDown={(e) => {
-        if (e.pointerType !== "mouse") return;
-        const el = trackRef.current;
-        if (!el) return;
         draggingRef.current = true;
         didDragRef.current = false;
         startXRef.current = e.clientX;
-        startScrollRef.current = el.scrollLeft;
+        startOffsetRef.current = offsetRef.current;
+        (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
       }}
       onPointerMove={(e) => {
-        if (!draggingRef.current || e.pointerType !== "mouse") return;
-        const el = trackRef.current;
-        if (!el) return;
+        if (!draggingRef.current) return;
         const dx = e.clientX - startXRef.current;
         if (Math.abs(dx) > 6) didDragRef.current = true;
-        el.scrollLeft = startScrollRef.current - dx;
-        const halfWidth = el.scrollWidth / 2;
-        if (el.scrollLeft >= halfWidth) el.scrollLeft -= halfWidth;
-        else if (el.scrollLeft < 0) el.scrollLeft += halfWidth;
+        applyDragOffset(startOffsetRef.current - dx);
       }}
-      onPointerUp={() => {
+      onPointerUp={(e) => {
+        draggingRef.current = false;
+        (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+      }}
+      onPointerCancel={() => {
         draggingRef.current = false;
       }}
-      onTouchStart={() => {
-        pausedRef.current = true;
-      }}
-      onTouchEnd={() => {
-        pausedRef.current = false;
-      }}
-      className="relative w-full overflow-x-auto no-scrollbar select-none cursor-grab active:cursor-grabbing py-5 sm:py-6 border-y border-white/10"
+      style={{ touchAction: "pan-y" }}
+      className="relative w-full overflow-hidden select-none cursor-grab active:cursor-grabbing py-5 sm:py-6 border-y border-white/10"
     >
-      <div className="flex items-center gap-10 sm:gap-16 w-max px-4">
+      <div
+        ref={trackRef}
+        style={{ willChange: "transform" }}
+        className="flex items-center gap-10 sm:gap-16 w-max px-4"
+      >
         {loopItems.map((sp, idx) => {
           const href = normalizeHref(sp.website);
           return (
@@ -125,6 +152,7 @@ export function SponsorRollingStrip({
                 src={assetUrl(sp.logo)}
                 alt={sp.name}
                 draggable={false}
+                decoding="async"
                 className="h-11 sm:h-14 md:h-16 w-auto max-w-[150px] sm:max-w-[185px] object-contain group-hover:scale-105 transition duration-300"
               />
               <span className="text-[11px] sm:text-xs font-medium tracking-wide text-zinc-400 group-hover:text-white transition whitespace-nowrap">
