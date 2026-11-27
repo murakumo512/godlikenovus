@@ -845,6 +845,70 @@ export function AdminDashboard({
               <section className="rounded-md border border-zinc-200 bg-white p-4 sm:p-6 space-y-4">
                 <div className="border-b border-zinc-100 pb-3">
                   <h2 className="text-base font-semibold text-zinc-900">
+                    Tema Background Website
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">
+                    Pilih tampilan nuansa warna background website publik yang paling nyaman dibaca.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-2">
+                  {(
+                    [
+                      {
+                        id: "dark-crimson",
+                        title: "1. Existing (Dark Crimson)",
+                        desc: "Gelap elegan dengan aksen merah-putih.",
+                        preview: "bg-gradient-to-br from-[#09090b] via-[#1c0a0e] to-zinc-900 text-white border-zinc-700",
+                      },
+                      {
+                        id: "red-white",
+                        title: "2. Merah–Putih Editorial",
+                        desc: "Terang bersih putih-merah, kontras tinggi.",
+                        preview: "bg-gradient-to-br from-white via-rose-50 to-red-100 text-zinc-900 border-red-200",
+                      },
+                      {
+                        id: "gaming-red-white",
+                        title: "3. Gaming Merah–Putih",
+                        desc: "Grid taktis esports + sorot merah-putih.",
+                        preview: "bg-gradient-to-br from-[#19060a] via-[#4a0b16] to-zinc-200 text-white border-red-500/50",
+                      },
+                    ] as const
+                  ).map((opt) => {
+                    const active =
+                      (data.branding.siteTheme || "dark-crimson") === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          setData({
+                            ...data,
+                            branding: { ...data.branding, siteTheme: opt.id },
+                          })
+                        }
+                        className={`text-left rounded-md border p-3 transition cursor-pointer ${
+                          active
+                            ? "border-red-600 ring-2 ring-red-500/30 bg-red-50/40"
+                            : "border-zinc-200 hover:border-zinc-400 bg-white"
+                        }`}
+                      >
+                        <div
+                          className={`h-8 w-full rounded border mb-2 ${opt.preview}`}
+                        />
+                        <div className="text-xs font-semibold text-zinc-900">
+                          {opt.title}
+                        </div>
+                        <div className="text-[11px] text-zinc-500 mt-0.5">
+                          {opt.desc}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="border-b border-zinc-100 pb-3 pt-2">
+                  <h2 className="text-base font-semibold text-zinc-900">
                     Identitas &amp; Konten Hero Home
                   </h2>
                   <p className="text-xs text-zinc-500 mt-0.5">

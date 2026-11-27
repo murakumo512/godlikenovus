@@ -249,7 +249,10 @@ export interface HomeSectionsConfig {
   footerCopyright: string;
 }
 
+export type SiteTheme = "dark-crimson" | "red-white" | "gaming-red-white";
+
 export interface BrandingConfig {
+  siteTheme?: SiteTheme;
   teamName: string;
   estYear: string;
   tagline: string;

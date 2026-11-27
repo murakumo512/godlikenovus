@@ -302,7 +302,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     </span>
                   </div>
 
-                  <h1 className="font-display text-5xl sm:text-7xl lg:text-8xl font-bold uppercase leading-[0.92] bg-gradient-to-r from-white via-rose-100 to-[#E11D2E] bg-clip-text text-transparent">
+                  <h1 className="hero-title-gradient font-display text-5xl sm:text-7xl lg:text-8xl font-bold uppercase leading-[0.92] bg-gradient-to-r from-white via-rose-100 to-[#E11D2E] bg-clip-text text-transparent">
                     {data.branding.tagline}
                   </h1>
 
@@ -806,7 +806,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 border-t border-l border-white/10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {visibleSponsors.map((sp) => (
                     <a
                       key={sp.id}
@@ -822,16 +822,19 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                           mediaUrl: sp.logo,
                         })
                       }
-                      className="group flex flex-col items-center justify-center border-r border-b border-white/10 py-7 sm:py-8 px-4 hover:bg-white/[0.02] transition"
+                      className="group flex flex-col items-center justify-center rounded-lg border border-white/12 bg-zinc-950/70 hover:border-[#E11D2E]/60 py-8 sm:py-10 px-6 hover:bg-white/[0.03] transition shadow-sm"
                     >
                       <img
                         src={assetUrl(sp.logo)}
                         alt={sp.name}
-                        className="h-9 sm:h-12 w-auto object-contain opacity-75 group-hover:opacity-100 transition"
+                        className="h-24 sm:h-28 md:h-32 w-auto max-w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-105 transition duration-300"
                       />
-                      <span className="mt-3 text-[11px] text-zinc-500 group-hover:text-zinc-300 flex items-center gap-1 transition">
+                      <h3 className="mt-5 font-display text-xl sm:text-2xl font-bold uppercase text-white tracking-wide text-center group-hover:text-[#E11D2E] transition">
+                        {sp.name}
+                      </h3>
+                      <span className="mt-1 text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-400 group-hover:text-zinc-200 flex items-center gap-1 transition">
                         {sp.tier}
-                        <ArrowUpRight className="w-3 h-3 opacity-60" />
+                        <ArrowUpRight className="w-3.5 h-3.5 opacity-75" />
                       </span>
                     </a>
                   ))}
@@ -947,17 +950,61 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     }
   };
 
+  const siteTheme = data.branding.siteTheme || "dark-crimson";
+
   return (
-    <div className="relative min-h-screen bg-[#09090b] text-zinc-100 overflow-x-hidden">
-      {/* Godlike Red-to-White Ambient Atmospheric Gradient */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 45% at 15% 0%, rgba(225,29,46,0.14) 0%, transparent 65%), radial-gradient(ellipse 70% 45% at 85% 100%, rgba(255,255,255,0.06) 0%, transparent 65%)",
-        }}
-      />
+    <div
+      data-site-theme={siteTheme}
+      className="relative min-h-screen bg-[#09090b] text-zinc-100 overflow-x-hidden"
+    >
+      {/* Theme Background Layer */}
+      {siteTheme === "red-white" ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 85% 45% at 15% 0%, rgba(225,29,46,0.12) 0%, transparent 65%), radial-gradient(ellipse 75% 45% at 85% 100%, rgba(225,29,46,0.08) 0%, transparent 65%)",
+          }}
+        />
+      ) : siteTheme === "gaming-red-white" ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 90% 50% at 18% 0%, rgba(225,29,46,0.28) 0%, transparent 60%), radial-gradient(ellipse 80% 50% at 88% 100%, rgba(255,255,255,0.12) 0%, transparent 62%)",
+            }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.14]"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, rgba(225,29,46,0.35) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.22) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
+          <div
+            className="absolute -inset-x-20 top-1/3 h-64 -rotate-6 opacity-20 blur-3xl"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(225,29,46,0.75) 35%, rgba(255,255,255,0.65) 65%, transparent 100%)",
+            }}
+          />
+        </div>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 45% at 15% 0%, rgba(225,29,46,0.14) 0%, transparent 65%), radial-gradient(ellipse 70% 45% at 85% 100%, rgba(255,255,255,0.06) 0%, transparent 65%)",
+          }}
+        />
+      )}
       <ScrollHudRail sections={hudSections} />
 
       <KprPreloader
