@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { HeroHighlightSlide, SiteData } from "@/lib/types";
 import { assetUrl } from "@/lib/base-path";
@@ -78,6 +78,8 @@ export function HeroHighlightCarousel({
   }, [data]);
 
   const [index, setIndex] = useState(0);
+  const swipeStartXRef = useRef<number | null>(null);
+  const swipeStartYRef = useRef<number | null>(null);
   const safeIdx = index % Math.max(1, slides.length);
   const current = slides[safeIdx];
 
@@ -89,11 +91,44 @@ export function HeroHighlightCarousel({
     return () => window.clearInterval(id);
   }, [slides.length]);
 
+  const handleSwipeStart = (clientX: number, clientY: number) => {
+    swipeStartXRef.current = clientX;
+    swipeStartYRef.current = clientY;
+  };
+
+  const handleSwipeEnd = (clientX: number, clientY: number) => {
+    if (swipeStartXRef.current === null || swipeStartYRef.current === null) return;
+    const dx = clientX - swipeStartXRef.current;
+    const dy = clientY - swipeStartYRef.current;
+    swipeStartXRef.current = null;
+    swipeStartYRef.current = null;
+    if (slides.length <= 1) return;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) {
+        setIndex((prev) => (prev + 1) % slides.length);
+      } else {
+        setIndex((prev) => (prev - 1 + slides.length) % slides.length);
+      }
+    }
+  };
+
   if (!current) return null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
-      <div className="godlike-card group relative overflow-hidden rounded-xl min-h-[340px] sm:min-h-[420px] md:min-h-[460px] flex items-end">
+      <div
+        onPointerDown={(e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          handleSwipeStart(e.clientX, e.clientY);
+        }}
+        onPointerUp={(e) => handleSwipeEnd(e.clientX, e.clientY)}
+        onPointerCancel={() => {
+          swipeStartXRef.current = null;
+          swipeStartYRef.current = null;
+        }}
+        style={{ touchAction: "pan-y" }}
+        className="godlike-card group relative overflow-hidden rounded-xl min-h-[340px] sm:min-h-[420px] md:min-h-[460px] flex items-end select-none cursor-grab active:cursor-grabbing"
+      >
         {/* Background Media */}
         {current.image && (
           <div className="pointer-events-none absolute inset-0">

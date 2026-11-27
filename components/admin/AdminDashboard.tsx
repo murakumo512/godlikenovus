@@ -21,6 +21,7 @@ import {
   BrandAmbassador,
   GameDivision,
   GameSubTeam,
+  HeroHighlightSlide,
   RosterMember,
   ScrimContact,
   SiteData,
@@ -1094,6 +1095,208 @@ export function AdminDashboard({
                     );
                   })}
                 </div>
+
+                <div className="border-b border-zinc-100 pb-3 pt-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 className="text-base font-semibold text-zinc-900">
+                        Highlight Carousel Atas (Profil Godlike Pro)
+                      </h2>
+                      <p className="text-xs text-zinc-500 mt-0.5">
+                        Jika dikosongkan, slide otomatis diambil dari Hero, Scrim Request, Gallery pertama, &amp; Store pertama.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {(data.heroHighlights || []).length === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const presets: HeroHighlightSlide[] = [
+                              {
+                                id: `hl-${Date.now()}-1`,
+                                badge: `${data.branding.teamName} · ${data.branding.estYear}`,
+                                title: data.branding.tagline || "RISE BEYOND LIMITS",
+                                subtitle: data.branding.heroSubtitle || "",
+                                image:
+                                  data.homeSections.heroBgImage ||
+                                  data.branding.logoTagline ||
+                                  data.branding.logoWhite,
+                                ctaText: data.branding.heroCtaPrimary || "Lihat Roster",
+                                ctaHref: data.homeSections.heroCtaPrimaryHref || "#roster",
+                                enabled: true,
+                              },
+                              {
+                                id: `hl-${Date.now()}-2`,
+                                badge: data.homeSections.scrimBadge || "Tantang Tim Kami",
+                                title: `${data.homeSections.scrimTitleWhite || "SCRIM"} ${data.homeSections.scrimTitleAccent || "REQUEST"}`,
+                                subtitle:
+                                  data.homeSections.scrimSubtitle ||
+                                  "Siap uji strategi dan mekanik tim kamu melawan skuad Godlike Novus?",
+                                image: data.homeSections.scrimImage || "/images/scrim-swords.svg",
+                                ctaText: data.homeSections.scrimButtonText || "Ajukan Scrim Request",
+                                ctaHref: "#scrim-modal",
+                                enabled: true,
+                              },
+                            ];
+                            setData({ ...data, heroHighlights: presets });
+                          }}
+                          className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white hover:bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 cursor-pointer"
+                        >
+                          Muat Slide Bawaan
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next: HeroHighlightSlide = {
+                            id: `hl-${Date.now()}`,
+                            badge: "GODLIKE HIGHLIGHT",
+                            title: "Judul Highlight Baru",
+                            subtitle: "Deskripsi singkat highlight atau promo terbaru.",
+                            image: data.homeSections.heroBgImage || data.branding.logoWhite,
+                            ctaText: "Selengkapnya",
+                            ctaHref: "#roster",
+                            enabled: true,
+                          };
+                          setData({
+                            ...data,
+                            heroHighlights: [...(data.heroHighlights || []), next],
+                          });
+                        }}
+                        className="inline-flex items-center gap-1 rounded bg-red-600 px-2.5 py-1.5 text-xs font-medium text-white cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Tambah Slide
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {(data.heroHighlights || []).length > 0 && (
+                  <div className="space-y-3">
+                    {(data.heroHighlights || []).map((slide, sIdx) => (
+                      <div
+                        key={slide.id}
+                        className="rounded-md border border-zinc-200 bg-zinc-50/70 p-3.5 space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-zinc-800">
+                            Slide #{sIdx + 1} — {slide.title || "Tanpa Judul"}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <label className="inline-flex items-center gap-1.5 text-xs text-zinc-700 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={slide.enabled !== false}
+                                onChange={(e) =>
+                                  setData({
+                                    ...data,
+                                    heroHighlights: (data.heroHighlights || []).map((s) =>
+                                      s.id === slide.id
+                                        ? { ...s, enabled: e.target.checked }
+                                        : s
+                                    ),
+                                  })
+                                }
+                                className="rounded border-zinc-300"
+                              />
+                              Aktif
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setData({
+                                  ...data,
+                                  heroHighlights: (data.heroHighlights || []).filter(
+                                    (s) => s.id !== slide.id
+                                  ),
+                                })
+                              }
+                              className="p-1 text-zinc-400 hover:text-red-600 cursor-pointer"
+                              title="Hapus Slide"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <InputField
+                            label="Label / Badge Atas"
+                            value={slide.badge || ""}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                heroHighlights: (data.heroHighlights || []).map((s) =>
+                                  s.id === slide.id ? { ...s, badge: v } : s
+                                ),
+                              })
+                            }
+                          />
+                          <InputField
+                            label="Judul Utama Slide"
+                            value={slide.title}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                heroHighlights: (data.heroHighlights || []).map((s) =>
+                                  s.id === slide.id ? { ...s, title: v } : s
+                                ),
+                              })
+                            }
+                          />
+                          <InputField
+                            label="Teks Tombol"
+                            value={slide.ctaText || ""}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                heroHighlights: (data.heroHighlights || []).map((s) =>
+                                  s.id === slide.id ? { ...s, ctaText: v } : s
+                                ),
+                              })
+                            }
+                          />
+                          <InputField
+                            label="Link Tujuan (#roster, #store, #scrim-modal, #gallery, atau URL)"
+                            value={slide.ctaHref || ""}
+                            onChange={(v) =>
+                              setData({
+                                ...data,
+                                heroHighlights: (data.heroHighlights || []).map((s) =>
+                                  s.id === slide.id ? { ...s, ctaHref: v } : s
+                                ),
+                              })
+                            }
+                          />
+                        </div>
+                        <TextareaField
+                          label="Deskripsi Singkat"
+                          value={slide.subtitle}
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              heroHighlights: (data.heroHighlights || []).map((s) =>
+                                s.id === slide.id ? { ...s, subtitle: v } : s
+                              ),
+                            })
+                          }
+                        />
+                        <ImageField
+                          label="Gambar / Banner Slide"
+                          value={slide.image}
+                          acceptMedia="image"
+                          onChange={(v) =>
+                            setData({
+                              ...data,
+                              heroHighlights: (data.heroHighlights || []).map((s) =>
+                                s.id === slide.id ? { ...s, image: v } : s
+                              ),
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="border-b border-zinc-100 pb-3 pt-2">
                   <h2 className="text-base font-semibold text-zinc-900">
