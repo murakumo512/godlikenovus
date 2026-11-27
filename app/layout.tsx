@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${jakarta.variable} ${barlow.variable} scroll-smooth antialiased`}
+      className={`${jakarta.variable} ${barlow.variable} antialiased`}
     >
       <body className="min-h-screen bg-[#0a0a0c] text-zinc-100 font-sans selection:bg-[#E11D2E] selection:text-white">
         {children}

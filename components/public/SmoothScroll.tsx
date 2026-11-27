@@ -32,7 +32,7 @@ export function SmoothScrollProvider({
 }) {
   const lenisRef = useRef<Lenis | null>(null);
   const lockCountRef = useRef(0);
-  const savedScrollYRef = useRef(0);
+  const touchBlockerRef = useRef<((e: TouchEvent) => void) | null>(null);
 
   useEffect(() => {
     const lenis = new Lenis({
@@ -85,35 +85,30 @@ export function SmoothScrollProvider({
   const acquireLock = useRef(() => {
     lockCountRef.current += 1;
     if (lockCountRef.current === 1) {
-      savedScrollYRef.current = window.scrollY || window.pageYOffset || 0;
       lenisRef.current?.stop();
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${savedScrollYRef.current}px`;
-      document.body.style.left = "0";
-      document.body.style.right = "0";
-      document.body.style.width = "100%";
+      const blockBackdropTouch = (e: TouchEvent) => {
+        const target = e.target as HTMLElement | null;
+        // Allow scrolling inside modal scrollable regions marked with data-lenis-prevent
+        if (target?.closest("[data-lenis-prevent]")) return;
+        e.preventDefault();
+      };
+      touchBlockerRef.current = blockBackdropTouch;
+      document.addEventListener("touchmove", blockBackdropTouch, {
+        passive: false,
+      });
     }
     return () => {
       lockCountRef.current = Math.max(0, lockCountRef.current - 1);
       if (lockCountRef.current === 0) {
-        const y = savedScrollYRef.current;
-        const prevBehavior = document.documentElement.style.scrollBehavior;
-        document.documentElement.style.scrollBehavior = "auto";
+        if (touchBlockerRef.current) {
+          document.removeEventListener("touchmove", touchBlockerRef.current);
+          touchBlockerRef.current = null;
+        }
         document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.left = "";
-        document.body.style.right = "";
-        document.body.style.width = "";
-        window.scrollTo({ top: y, left: 0, behavior: "instant" as ScrollBehavior });
         lenisRef.current?.start();
-        lenisRef.current?.scrollTo(y, { immediate: true, force: true });
-        requestAnimationFrame(() => {
-          document.documentElement.style.scrollBehavior = prevBehavior;
-        });
       }
     };
   }).current;
