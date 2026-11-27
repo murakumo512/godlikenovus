@@ -16,6 +16,30 @@ interface KprPreloaderProps {
 
 type Stage = "loading" | "godlike" | "shutter" | "done";
 
+const VISITOR_SESSION_KEY = "gl_site_session_ts";
+const VISITOR_SESSION_TTL_MS = 5 * 60 * 1000; // 5 menit
+
+function hasActiveVisitorSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const raw = window.localStorage.getItem(VISITOR_SESSION_KEY);
+    if (!raw) return false;
+    const ts = Number(raw);
+    return !Number.isNaN(ts) && Date.now() - ts < VISITOR_SESSION_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+function touchVisitorSession() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(VISITOR_SESSION_KEY, String(Date.now()));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function KprPreloader({
   opening,
   teamName,
@@ -30,17 +54,20 @@ export function KprPreloader({
   const anyEnabled = isLoadingOn || isRevealOn;
 
   const [stage, setStage] = useState<Stage>(() => {
-    if (!anyEnabled) return "done";
+    if (!anyEnabled || hasActiveVisitorSession()) return "done";
     return isLoadingOn ? "loading" : "godlike";
   });
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (!anyEnabled) {
+    if (!anyEnabled || hasActiveVisitorSession()) {
+      touchVisitorSession();
       setStage("done");
       document.body.style.overflow = "";
       return;
     }
+
+    touchVisitorSession();
 
     document.body.style.overflow = "hidden";
 

@@ -123,6 +123,56 @@ function PublicSiteInner({ data }: { data: SiteData }) {
       ? visibleGallery
       : visibleGallery.filter((g) => g.category === selectedCategory);
 
+  // 5-minute public visitor session: preserve scroll & avoid restart when switching apps
+  useEffect(() => {
+    const SESSION_TS_KEY = "gl_site_session_ts";
+    const SCROLL_Y_KEY = "gl_site_scroll_y";
+    const TTL = 5 * 60 * 1000;
+
+    try {
+      const rawTs = window.localStorage.getItem(SESSION_TS_KEY);
+      const savedY = Number(window.localStorage.getItem(SCROLL_Y_KEY) || "0");
+      if (rawTs && Date.now() - Number(rawTs) < TTL && savedY > 80) {
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: savedY, behavior: "instant" as ScrollBehavior });
+        });
+      }
+      window.localStorage.setItem(SESSION_TS_KEY, String(Date.now()));
+    } catch {
+      // ignore storage errors
+    }
+
+    let scrollTimer: ReturnType<typeof setTimeout> | null = null;
+    const saveState = () => {
+      try {
+        window.localStorage.setItem(SESSION_TS_KEY, String(Date.now()));
+        window.localStorage.setItem(SCROLL_Y_KEY, String(window.scrollY || 0));
+      } catch {
+        // ignore
+      }
+    };
+
+    const onScrollSave = () => {
+      if (scrollTimer) clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(saveState, 250);
+    };
+
+    const onVisibility = () => {
+      saveState();
+    };
+
+    window.addEventListener("scroll", onScrollSave, { passive: true });
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", saveState);
+
+    return () => {
+      if (scrollTimer) clearTimeout(scrollTimer);
+      window.removeEventListener("scroll", onScrollSave);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", saveState);
+    };
+  }, []);
+
   // Analytics: pageview + unique section views per visit
   useEffect(() => {
     trackAnalytics({ type: "pageview" });
@@ -827,7 +877,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
       case "sponsors":
         return (
           <div key="sponsors" className={topOffsetClass}>
-            <ScrollSection id="sponsors" showDivider={!isFirstSection}>
+            <ScrollSection id="sponsors" skipEnter={true} showDivider={!isFirstSection}>
               <div className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 <div className="mb-8 sm:mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                   <div>
