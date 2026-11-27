@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="bladeLeft" x1="36" y1="36" x2="206" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.55" stop-color="#E4E4E7" />
+      <stop offset="1" stop-color="#71717A" />
+    </linearGradient>
+    <linearGradient id="bladeRight" x1="220" y1="36" x2="50" y2="206" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="0.55" stop-color="#D4D4D8" />
+      <stop offset="1" stop-color="#52525B" />
+    </linearGradient>
+    <linearGradient id="crimsonGlow" x1="128" y1="18" x2="128" y2="238" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB7185" />
+      <stop offset="0.5" stop-color="#E11D2E" />
+      <stop offset="1" stop-color="#881337" />
+    </linearGradient>
+  </defs>
+
+  <!-- Subtle hexagonal esports crest -->
+  <path
+    d="M128 22L216 66V156C216 196 177 224 128 238C79 224 40 196 40 156V66L128 22Z"
+    fill="#141418"
+    fill-opacity="0.72"
+    stroke="url(#crimsonGlow)"
+    stroke-width="3"
+  />
+  <path
+    d="M128 36L202 74V152C202 184 169 208 128 220C87 208 54 184 54 152V74L128 36Z"
+    stroke="#E11D2E"
+    stroke-opacity="0.35"
+    stroke-width="1.5"
+  />
+
+  <!-- Left-to-right sword (back) -->
+  <g>
+    <path d="M58 54L74 52L176 154L162 168L60 66L58 54Z" fill="url(#bladeLeft)" />
+    <path d="M58 54L169 161" stroke="#E11D2E" stroke-width="2.5" stroke-linecap="round" />
+    <!-- Crossguard -->
+    <path d="M150 182L186 146L194 154L158 190L150 182Z" fill="#E11D2E" />
+    <!-- Grip & Pommel -->
+    <path d="M174 174L198 198" stroke="#27272A" stroke-width="10" stroke-linecap="round" />
+    <path d="M174 174L198 198" stroke="#E11D2E" stroke-width="3" stroke-dasharray="4 5" stroke-linecap="round" />
+    <circle cx="204" cy="204" r="8" fill="#E11D2E" stroke="#FFFFFF" stroke-width="2" />
+  </g>
+
+  <!-- Right-to-left sword (front) -->
+  <g>
+    <path d="M198 54L182 52L80 154L94 168L196 66L198 54Z" fill="url(#bladeRight)" />
+    <path d="M198 54L87 161" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.85" />
+    <!-- Crossguard -->
+    <path d="M106 182L70 146L62 154L98 190L106 182Z" fill="#E11D2E" />
+    <!-- Grip & Pommel -->
+    <path d="M82 174L58 198" stroke="#27272A" stroke-width="10" stroke-linecap="round" />
+    <path d="M82 174L58 198" stroke="#E11D2E" stroke-width="3" stroke-dasharray="4 5" stroke-linecap="round" />
+    <circle cx="52" cy="204" r="8" fill="#E11D2E" stroke="#FFFFFF" stroke-width="2" />
+  </g>
+
+  <!-- Center clash spark -->
+  <path
+    d="M128 96L134 114L152 120L134 126L128 144L122 126L104 120L122 114L128 96Z"
+    fill="#E11D2E"
+    stroke="#FFFFFF"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+</svg>

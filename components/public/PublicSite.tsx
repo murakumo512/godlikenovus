@@ -247,6 +247,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     Array.isArray(data.ambassadors) && data.ambassadors.length > 0;
 
   const navLabels = {
+    scrim: data.branding.navLabels?.scrim || "Scrim",
     roster: data.branding.navLabels?.roster || "Roster",
     about: data.branding.navLabels?.about || "About",
     gallery: data.branding.navLabels?.gallery || "Gallery",
@@ -274,6 +275,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     { anchorId: string; label: string }
   > = {
     hero: { anchorId: "top", label: hs.heroNavLabel || "Home" },
+    scrim: { anchorId: "scrim", label: navLabels.scrim },
     roster: { anchorId: "roster", label: navLabels.roster },
     about: { anchorId: "about", label: navLabels.about },
     gallery: { anchorId: "gallery", label: navLabels.gallery },
@@ -481,6 +483,87 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               </div>
             </div>
           </ScrollSection>
+        );
+
+      case "scrim":
+        return (
+          <div key="scrim" className={topOffsetClass}>
+            <ScrollSection
+              id="scrim"
+              showDivider={!isFirstSection}
+              className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8"
+            >
+              <div className="max-w-6xl mx-auto">
+                <div className="relative overflow-hidden border border-white/12 bg-zinc-950/75 p-6 sm:p-10 md:p-12">
+                  <div
+                    className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#E11D2E]/15 blur-3xl"
+                    aria-hidden="true"
+                  />
+                  <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div className="md:col-span-7 space-y-4">
+                      {(hs.scrimBadge || "Tantang Tim Kami") && (
+                        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#E11D2E]">
+                          <Swords className="w-3.5 h-3.5" />
+                          {hs.scrimBadge || "Tantang Tim Kami"}
+                        </span>
+                      )}
+                      <h2 className="font-display text-3xl sm:text-5xl font-bold uppercase text-white leading-[0.94]">
+                        {hs.scrimTitleWhite || "SCRIM"}{" "}
+                        <span className="text-[#E11D2E]">
+                          {hs.scrimTitleAccent || "REQUEST"}
+                        </span>
+                      </h2>
+                      <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-xl">
+                        {hs.scrimSubtitle ||
+                          "Siap uji strategi dan mekanik tim kamu melawan skuad Godlike Novus? Pilih divisi, tentukan jadwal, dan kirim tantangan scrim sekarang."}
+                      </p>
+
+                      {data.games.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {data.games.map((g) => (
+                            <span
+                              key={g.id}
+                              className="px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider border border-white/15 bg-white/5 text-zinc-200"
+                            >
+                              {g.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setScrimModalOpen(true)}
+                          className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#E11D2E] via-rose-600 to-rose-500 hover:brightness-110 px-7 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_24px_rgba(225,29,46,0.32)] transition cursor-pointer"
+                        >
+                          <Swords className="w-4 h-4" />
+                          {hs.scrimButtonText || "Ajukan Scrim Request"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-5 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setScrimModalOpen(true)}
+                        title={hs.scrimButtonText || "Ajukan Scrim Request"}
+                        className="group relative flex items-center justify-center w-48 h-48 sm:w-60 sm:h-60 md:w-64 md:h-64 border border-white/10 bg-black/35 p-5 hover:border-[#E11D2E]/60 transition cursor-pointer"
+                      >
+                        <img
+                          src={assetUrl(hs.scrimImage || "/images/scrim-swords.svg")}
+                          alt="Scrim Request"
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-contain group-hover:scale-105 transition duration-300"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ScrollSection>
+          </div>
         );
 
       case "roster":
@@ -996,15 +1079,6 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     >
                       <Send className="w-4 h-4" />
                       {tpl.contactSubmitButtonText || "Kirim via WhatsApp"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setScrimModalOpen(true)}
-                      className="inline-flex items-center gap-2 border border-white/25 hover:border-[#E11D2E] px-6 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
-                    >
-                      <Swords className="w-4 h-4 text-[#E11D2E]" />
-                      Ajukan Scrim Request
                     </button>
                   </div>
                 </form>

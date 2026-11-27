@@ -2,6 +2,7 @@ import { SectionKey, SiteData } from "./types";
 
 export const DEFAULT_SECTION_ORDER: SectionKey[] = [
   "hero",
+  "scrim",
   "roster",
   "about",
   "gallery",
@@ -154,6 +155,13 @@ export const DEFAULT_SITE_DATA: SiteData = {
     sponsorsBadge: "Partner Resmi",
     sponsorsTitleWhite: "OFFICIAL",
     sponsorsTitleAccent: "PARTNERS",
+    scrimBadge: "Tantang Tim Kami",
+    scrimTitleWhite: "SCRIM",
+    scrimTitleAccent: "REQUEST",
+    scrimSubtitle:
+      "Siap uji strategi dan mekanik tim kamu melawan skuad Godlike Novus? Pilih divisi, tentukan jadwal, dan kirim tantangan scrim sekarang.",
+    scrimButtonText: "Ajukan Scrim Request",
+    scrimImage: "/images/scrim-swords.svg",
     contactBadge: "Hubungi Kami",
     footerCopyright: "",
   },

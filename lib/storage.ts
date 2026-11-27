@@ -27,7 +27,16 @@ export function normalizeSectionOrder(rawOrder?: SectionKey[]): SectionKey[] {
   }
   for (const def of DEFAULT_SECTION_ORDER) {
     if (!result.includes(def)) {
-      result.push(def);
+      if (def === "scrim") {
+        const heroIdx = result.indexOf("hero");
+        if (heroIdx !== -1) {
+          result.splice(heroIdx + 1, 0, "scrim");
+        } else {
+          result.unshift("scrim");
+        }
+      } else {
+        result.push(def);
+      }
     }
   }
   return result;

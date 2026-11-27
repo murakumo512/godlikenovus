@@ -4277,6 +4277,83 @@ export function AdminDashboard({
                 </div>
               </div>
 
+              {/* Scrim Section Banner Settings */}
+              <div className="pt-5 border-t border-zinc-200 space-y-4">
+                <div>
+                  <span className="text-xs font-semibold text-zinc-800 block">
+                    Seksi Scrim Request (Banner &amp; Gambar Pedang)
+                  </span>
+                  <span className="text-[11px] text-zinc-500">
+                    Posisi &amp; ON/OFF seksi Scrim bisa diatur di tab &ldquo;Urutan Section&rdquo;.
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <InputField
+                    label="Badge"
+                    value={data.homeSections.scrimBadge ?? "Tantang Tim Kami"}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, scrimBadge: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Putih"
+                    value={data.homeSections.scrimTitleWhite ?? "SCRIM"}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, scrimTitleWhite: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Judul Aksen Merah"
+                    value={data.homeSections.scrimTitleAccent ?? "REQUEST"}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, scrimTitleAccent: v },
+                      })
+                    }
+                  />
+                  <InputField
+                    label="Teks Tombol"
+                    value={data.homeSections.scrimButtonText ?? "Ajukan Scrim Request"}
+                    onChange={(v) =>
+                      setData({
+                        ...data,
+                        homeSections: { ...data.homeSections, scrimButtonText: v },
+                      })
+                    }
+                  />
+                </div>
+                <TextareaField
+                  label="Deskripsi Seksi Scrim"
+                  value={
+                    data.homeSections.scrimSubtitle ??
+                    "Siap uji strategi dan mekanik tim kamu melawan skuad Godlike Novus? Pilih divisi, tentukan jadwal, dan kirim tantangan scrim sekarang."
+                  }
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: { ...data.homeSections, scrimSubtitle: v },
+                    })
+                  }
+                />
+                <ImageField
+                  label="Gambar Ilustrasi Scrim (Default: Pedang Bersilangan)"
+                  value={data.homeSections.scrimImage ?? "/images/scrim-swords.svg"}
+                  onChange={(v) =>
+                    setData({
+                      ...data,
+                      homeSections: { ...data.homeSections, scrimImage: v },
+                    })
+                  }
+                />
+              </div>
+
               {/* Scrim PIC Multi-Contacts */}
               <div className="pt-5 border-t border-zinc-200">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">

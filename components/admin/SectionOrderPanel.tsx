@@ -21,6 +21,11 @@ const SECTION_LABELS: Record<
     desc: "Judul besar, tagline, tombol utama, dan teks berjalan.",
     targetTab: "branding",
   },
+  scrim: {
+    title: "Scrim Request (Tantang Kami)",
+    desc: "Banner ajakan scrim dengan ilustrasi pedang yang bisa diganti & diatur PIC-nya.",
+    targetTab: "contact",
+  },
   roster: {
     title: "Divisi Game & Roster",
     desc: "Daftar game (HoK, RF), sub-divisi tim, coach, dan player.",

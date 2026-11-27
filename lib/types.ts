@@ -1,5 +1,6 @@
 export type SectionKey =
   | "hero"
+  | "scrim"
   | "roster"
   | "about"
   | "gallery"
@@ -201,6 +202,7 @@ export interface SponsorItem {
 }
 
 export interface NavLabels {
+  scrim?: string;
   roster: string;
   about: string;
   gallery: string;
@@ -293,6 +295,12 @@ export interface HomeSectionsConfig {
   sponsorsBadge: string;
   sponsorsTitleWhite: string;
   sponsorsTitleAccent: string;
+  scrimBadge?: string;
+  scrimTitleWhite?: string;
+  scrimTitleAccent?: string;
+  scrimSubtitle?: string;
+  scrimButtonText?: string;
+  scrimImage?: string;
   contactBadge: string;
   footerCopyright: string;
 }
