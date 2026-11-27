@@ -1,7 +1,7 @@
 export async function compressImageForUpload(
   file: File,
-  maxDimension = 1600,
-  quality = 0.86
+  maxDimension = 2400,
+  quality = 0.92
 ): Promise<File> {
   if (typeof window === "undefined") return file;
   const type = file.type || "";
@@ -16,7 +16,7 @@ export async function compressImageForUpload(
     img.onload = () => {
       try {
         const { naturalWidth: w, naturalHeight: h } = img;
-        if (w <= maxDimension && h <= maxDimension && file.size <= 700 * 1024) {
+        if (w <= maxDimension && h <= maxDimension && file.size <= 1200 * 1024) {
           URL.revokeObjectURL(objectUrl);
           resolve(file);
           return;
