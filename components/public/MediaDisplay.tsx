@@ -383,7 +383,12 @@ export function MediaCarousel({
   onInspect?: (url: string, index: number) => void;
 }) {
   const [slide, setSlide] = useState(0);
-  const startXRef = useRef<number | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const pointerIdRef = useRef<number | null>(null);
+  const startXRef = useRef<number>(0);
+  const startYRef = useRef<number>(0);
+  const axisLockRef = useRef<"x" | "y" | null>(null);
   const swipedRef = useRef(false);
 
   const total = items.length;
@@ -393,40 +398,74 @@ export function MediaCarousel({
 
   useEffect(() => {
     setSlide(0);
+    setDragX(0);
+    setDragging(false);
   }, [items.join("|")]);
 
   if (total === 0) return null;
 
-  const beginSwipe = (x: number) => {
-    startXRef.current = x;
-    swipedRef.current = false;
-  };
-
-  const endSwipe = (x: number) => {
-    if (startXRef.current === null || total <= 1) {
-      startXRef.current = null;
-      return;
-    }
-    const dx = x - startXRef.current;
-    startXRef.current = null;
-    if (Math.abs(dx) > 35) {
+  const finishSwipe = (dx: number) => {
+    if (total > 1 && Math.abs(dx) > 40) {
       swipedRef.current = true;
       if (dx < 0) setSlide((s) => (s + 1) % total);
       else setSlide((s) => (s - 1 + total) % total);
     }
+    setDragging(false);
+    setDragX(0);
+    pointerIdRef.current = null;
+    axisLockRef.current = null;
   };
 
   return (
     <div className={`flex flex-col bg-black overflow-hidden ${className}`}>
       <div
-        onTouchStart={(e) => beginSwipe(e.touches[0]?.clientX ?? 0)}
-        onTouchEnd={(e) => endSwipe(e.changedTouches[0]?.clientX ?? 0)}
         onPointerDown={(e) => {
-          if (e.pointerType === "mouse") beginSwipe(e.clientX);
+          if (total <= 1) return;
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          const target = e.target as HTMLElement | null;
+          if (target?.closest("button, a, video, iframe")) return;
+          pointerIdRef.current = e.pointerId;
+          startXRef.current = e.clientX;
+          startYRef.current = e.clientY;
+          axisLockRef.current = null;
+          swipedRef.current = false;
+          setDragX(0);
+        }}
+        onPointerMove={(e) => {
+          if (pointerIdRef.current !== e.pointerId) return;
+          const dx = e.clientX - startXRef.current;
+          const dy = e.clientY - startYRef.current;
+          if (!axisLockRef.current) {
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+              axisLockRef.current = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+              if (axisLockRef.current === "x") {
+                setDragging(true);
+                (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+              }
+            }
+          }
+          if (axisLockRef.current === "y") {
+            setDragging(false);
+            setDragX(0);
+            pointerIdRef.current = null;
+            return;
+          }
+          if (axisLockRef.current === "x") {
+            if (Math.abs(dx) > 8) swipedRef.current = true;
+            setDragX(dx);
+          }
         }}
         onPointerUp={(e) => {
-          if (e.pointerType === "mouse") endSwipe(e.clientX);
+          if (pointerIdRef.current !== e.pointerId) return;
+          const dx = e.clientX - startXRef.current;
+          try {
+            (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+          } catch {
+            // ignore
+          }
+          finishSwipe(axisLockRef.current === "x" ? dx : 0);
         }}
+        onPointerCancel={() => finishSwipe(0)}
         onClick={() => {
           if (swipedRef.current) {
             swipedRef.current = false;
@@ -436,48 +475,62 @@ export function MediaCarousel({
             onInspect(current, safeIdx);
           }
         }}
-        className={`relative flex-1 bg-black flex items-center justify-center overflow-hidden select-none ${stageClassName} ${
-          !isVid && onInspect ? "cursor-zoom-in" : ""
+        style={{ touchAction: total > 1 ? "pan-y" : undefined }}
+        className={`relative flex-1 bg-black overflow-hidden select-none ${stageClassName} ${
+          total > 1
+            ? "cursor-grab active:cursor-grabbing"
+            : !isVid && onInspect
+              ? "cursor-zoom-in"
+              : ""
         }`}
       >
-        {isVid ? (
-          <SmartMedia
-            src={current}
-            alt={alt}
-            fit="contain"
-            className="w-full h-full aspect-video"
-            controls
-            mutedLoop={false}
-          />
-        ) : fit === "contain-ambient" ? (
-          <motion.div
-            key={`${current}-${safeIdx}`}
-            initial={{ opacity: 0.4, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full h-full"
-          >
-            <SmartMedia
-              src={current}
-              alt={`${alt} (${safeIdx + 1})`}
-              fit="contain-ambient"
-              className="w-full h-full"
-            />
-          </motion.div>
-        ) : (
-          <motion.img
-            key={`${current}-${safeIdx}`}
-            src={assetUrl(current)}
-            alt={`${alt} (${safeIdx + 1})`}
-            draggable={false}
-            initial={{ opacity: 0.4, scale: 0.985 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className={`w-full max-h-[55vh] md:max-h-full h-auto md:h-full select-none ${
-              fit === "cover" ? "object-cover" : "object-contain"
-            }`}
-          />
-        )}
+        <div
+          className="flex w-full h-full"
+          style={{
+            transform: `translate3d(calc(-${safeIdx * 100}% + ${dragX}px), 0, 0)`,
+            transition: dragging
+              ? "none"
+              : "transform 340ms cubic-bezier(0.22, 1, 0.36, 1)",
+            willChange: "transform",
+          }}
+        >
+          {items.map((itemUrl, itemIdx) => {
+            const itemIsVid = isAnyVideoUrl(itemUrl);
+            return (
+              <div
+                key={`${itemUrl}-${itemIdx}`}
+                className="w-full h-full shrink-0 flex items-center justify-center"
+              >
+                {itemIsVid ? (
+                  <SmartMedia
+                    src={itemUrl}
+                    alt={alt}
+                    fit="contain"
+                    className="w-full h-full aspect-video"
+                    controls
+                    mutedLoop={false}
+                  />
+                ) : fit === "contain-ambient" ? (
+                  <SmartMedia
+                    src={itemUrl}
+                    alt={`${alt} (${itemIdx + 1})`}
+                    fit="contain-ambient"
+                    className="w-full h-full"
+                  />
+                ) : (
+                  <img
+                    src={assetUrl(itemUrl)}
+                    alt={`${alt} (${itemIdx + 1})`}
+                    draggable={false}
+                    className={`w-full max-h-[55vh] md:max-h-full h-auto md:h-full select-none ${
+                      fit === "cover" ? "object-cover" : "object-contain"
+                    }`}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
 
         {total > 1 && (
           <>

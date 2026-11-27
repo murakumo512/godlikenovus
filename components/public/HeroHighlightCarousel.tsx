@@ -13,10 +13,10 @@ export function HeroHighlightCarousel({
   onOpenScrim: () => void;
 }) {
   const slides = useMemo<HeroHighlightSlide[]>(() => {
-    const custom = (data.heroHighlights || []).filter(
-      (s) => s.enabled !== false && s.title.trim()
-    );
-    if (custom.length > 0) return custom;
+    const rawCustom = data.heroHighlights || [];
+    if (rawCustom.length > 0) {
+      return rawCustom.filter((s) => s.enabled !== false && s.title.trim());
+    }
 
     const auto: HeroHighlightSlide[] = [
       {
@@ -124,17 +124,14 @@ export function HeroHighlightCarousel({
         onPointerDown={(e) => {
           if (slides.length <= 1) return;
           if (e.pointerType === "mouse" && e.button !== 0) return;
-          // Let interactive controls (buttons/links) handle their own clicks cleanly unless dragged
           const target = e.target as HTMLElement | null;
-          if (target?.closest("[data-carousel-control]")) return;
+          if (target?.closest("a, button, [data-carousel-control]")) return;
           pointerIdRef.current = e.pointerId;
           startXRef.current = e.clientX;
           startYRef.current = e.clientY;
           axisLockRef.current = null;
           didDragRef.current = false;
-          setIsDragging(true);
           setDragOffsetPx(0);
-          (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
         }}
         onPointerMove={(e) => {
           if (pointerIdRef.current !== e.pointerId) return;
@@ -144,6 +141,10 @@ export function HeroHighlightCarousel({
           if (!axisLockRef.current) {
             if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
               axisLockRef.current = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+              if (axisLockRef.current === "x") {
+                setIsDragging(true);
+                (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+              }
             }
           }
 
@@ -162,7 +163,11 @@ export function HeroHighlightCarousel({
         onPointerUp={(e) => {
           if (pointerIdRef.current !== e.pointerId) return;
           const dx = e.clientX - startXRef.current;
-          (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+          try {
+            (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+          } catch {
+            // ignore if not captured
+          }
           finishDrag(axisLockRef.current === "x" ? dx : 0);
         }}
         onPointerCancel={() => {
@@ -175,8 +180,10 @@ export function HeroHighlightCarousel({
             didDragRef.current = false;
           }
         }}
-        style={{ touchAction: "pan-y" }}
-        className="godlike-card relative overflow-hidden rounded-xl select-none cursor-grab active:cursor-grabbing"
+        style={{ touchAction: slides.length > 1 ? "pan-y" : undefined }}
+        className={`godlike-card relative overflow-hidden rounded-xl select-none ${
+          slides.length > 1 ? "cursor-grab active:cursor-grabbing" : ""
+        }`}
       >
         {/* Sliding Horizontal Track (1:1 real-time drag follow) */}
         <div

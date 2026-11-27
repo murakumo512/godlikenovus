@@ -1138,11 +1138,37 @@ export function AdminDashboard({
                                 enabled: true,
                               },
                             ];
+                            const firstEvt = data.gallery.find((g) => g.enabled !== false);
+                            if (firstEvt) {
+                              presets.push({
+                                id: `hl-${Date.now()}-3`,
+                                badge: firstEvt.category || "Event & Turnamen",
+                                title: firstEvt.title,
+                                subtitle: firstEvt.description,
+                                image: firstEvt.image,
+                                ctaText: "Lihat Gallery",
+                                ctaHref: "#gallery",
+                                enabled: true,
+                              });
+                            }
+                            const firstProd = data.store.find((p) => p.enabled !== false);
+                            if (firstProd) {
+                              presets.push({
+                                id: `hl-${Date.now()}-4`,
+                                badge: "Official Store",
+                                title: firstProd.name,
+                                subtitle: firstProd.description,
+                                image: firstProd.image,
+                                ctaText: "Buka Store",
+                                ctaHref: "#store",
+                                enabled: true,
+                              });
+                            }
                             setData({ ...data, heroHighlights: presets });
                           }}
                           className="inline-flex items-center gap-1 rounded border border-zinc-300 bg-white hover:bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 cursor-pointer"
                         >
-                          Muat Slide Bawaan
+                          Muat 4 Slide Bawaan
                         </button>
                       )}
                       <button
