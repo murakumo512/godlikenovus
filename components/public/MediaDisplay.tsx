@@ -148,12 +148,15 @@ export function MediaLightbox({
   const [idx, setIdx] = useState(0);
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [pinchScale, setPinchScale] = useState(1);
 
   const pointerIdRef = useRef<number | null>(null);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const axisLockRef = useRef<"x" | "y" | null>(null);
   const swipedRef = useRef(false);
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchBaseScaleRef = useRef(1);
 
   useLockBodyAndLenis(Boolean(item));
 
@@ -171,7 +174,12 @@ export function MediaLightbox({
     setIdx(item?.initialIndex ?? 0);
     setDragX(0);
     setDragging(false);
+    setPinchScale(1);
   }, [item?.url, item?.initialIndex]);
+
+  useEffect(() => {
+    setPinchScale(1);
+  }, [safeIdx]);
 
   useEffect(() => {
     if (!item) return;
@@ -331,10 +339,40 @@ export function MediaLightbox({
             </button>
           </div>
 
-          {/* Swipeable 1:1 Drag-Follow Image Stage */}
+          {/* Swipeable 1:1 Drag-Follow + 2-Finger Pinch-Zoom Image Stage */}
           <div
+            onTouchStart={(e) => {
+              if (e.touches.length === 2) {
+                // Cancel single-finger drag when 2-finger pinch starts
+                pointerIdRef.current = null;
+                setDragging(false);
+                setDragX(0);
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                pinchStartDistRef.current = Math.hypot(dx, dy);
+                pinchBaseScaleRef.current = pinchScale;
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length === 2 && pinchStartDistRef.current) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const dist = Math.hypot(dx, dy);
+                const nextScale = Math.max(
+                  1,
+                  Math.min(3.5, (dist / pinchStartDistRef.current) * pinchBaseScaleRef.current)
+                );
+                setPinchScale(nextScale);
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (e.touches.length < 2) {
+                pinchStartDistRef.current = null;
+                if (pinchScale < 1.08) setPinchScale(1);
+              }
+            }}
             onPointerDown={(e) => {
-              if (total <= 1) return;
+              if (total <= 1 || pinchScale > 1.05) return;
               if (e.pointerType === "mouse" && e.button !== 0) return;
               const target = e.target as HTMLElement | null;
               if (target?.closest("button, a, video, iframe")) return;
@@ -346,7 +384,7 @@ export function MediaLightbox({
               setDragX(0);
             }}
             onPointerMove={(e) => {
-              if (pointerIdRef.current !== e.pointerId) return;
+              if (pointerIdRef.current !== e.pointerId || pinchScale > 1.05) return;
               const dx = e.clientX - startXRef.current;
               const dy = e.clientY - startYRef.current;
               if (!axisLockRef.current) {
@@ -380,7 +418,7 @@ export function MediaLightbox({
               finishDrag(axisLockRef.current === "x" ? dx : 0);
             }}
             onPointerCancel={() => finishDrag(0)}
-            style={{ touchAction: total > 1 ? "pan-y" : undefined }}
+            style={{ touchAction: "pan-y pinch-zoom" }}
             className={`relative w-full bg-black overflow-hidden select-none shrink-0 ${
               total > 1 ? "cursor-grab active:cursor-grabbing" : ""
             }`}
@@ -402,7 +440,7 @@ export function MediaLightbox({
                 return (
                   <div
                     key={`${url}-${mIdx}`}
-                    className="w-full shrink-0 flex items-center justify-center bg-black"
+                    className="w-full shrink-0 flex items-center justify-center bg-black overflow-hidden"
                   >
                     {mYt ? (
                       <div className="w-full aspect-video bg-black">
@@ -427,9 +465,22 @@ export function MediaLightbox({
                         src={mResolved}
                         alt={item.title || item.caption || "Preview"}
                         draggable={false}
+                        style={{
+                          transform:
+                            mIdx === safeIdx && pinchScale > 1
+                              ? `scale(${pinchScale})`
+                              : undefined,
+                          transition: pinchStartDistRef.current
+                            ? "none"
+                            : "transform 180ms ease-out",
+                        }}
                         onClick={() => {
                           if (swipedRef.current) {
                             swipedRef.current = false;
+                            return;
+                          }
+                          if (pinchScale > 1.05) {
+                            setPinchScale(1);
                             return;
                           }
                           setZoomed(true);
@@ -626,7 +677,7 @@ export function MediaCarousel({
             onInspect(current, safeIdx);
           }
         }}
-        style={{ touchAction: total > 1 ? "pan-y" : undefined }}
+        style={{ touchAction: total > 1 ? "pan-y pinch-zoom" : "pinch-zoom" }}
         className={`relative flex-1 bg-black overflow-hidden select-none ${stageClassName} ${
           total > 1
             ? "cursor-grab active:cursor-grabbing"

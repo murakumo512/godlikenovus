@@ -912,7 +912,29 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                       }}
                       className="godlike-card group w-[calc(50%-0.3125rem)] md:w-[calc(33.333%-1rem)] lg:w-[calc(25%-1.125rem)] cursor-pointer overflow-hidden rounded-md flex flex-col"
                     >
-                      <div className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden">
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLightboxItem({
+                            url: product.image,
+                            items: productMedia,
+                            initialIndex: 0,
+                            title: product.name,
+                            caption: `${formatRupiah(product.price)}${
+                              product.description ? ` — ${product.description}` : ""
+                            }`,
+                          });
+                          trackAnalytics({
+                            type: "media",
+                            mediaKey: `store:${product.id}`,
+                            mediaLabel: product.name,
+                            mediaCategory: "Store",
+                            mediaUrl: product.image,
+                          });
+                        }}
+                        title="Klik untuk lihat foto penuh"
+                        className="relative aspect-square sm:aspect-[4/4.2] bg-zinc-900 overflow-hidden cursor-zoom-in"
+                      >
                         <SmartMedia
                           src={product.image}
                           alt={product.name}

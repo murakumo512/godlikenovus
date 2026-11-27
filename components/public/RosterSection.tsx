@@ -46,9 +46,11 @@ export function RosterSection({
     null
   );
 
-  useLockBodyAndLenis(
-    Boolean(selectedMember) || (isProProfile && Boolean(selectedProGameId))
-  );
+  const isFocusedModalOpen = isProProfile
+    ? Boolean(selectedProGameId)
+    : Boolean(selectedSubTeamId);
+
+  useLockBodyAndLenis(Boolean(selectedMember) || isFocusedModalOpen);
   useHistoryBack(
     isProProfile && Boolean(selectedProGameId) && !selectedSubTeamId,
     () => setSelectedProGameId(null),
@@ -219,7 +221,7 @@ export function RosterSection({
           </div>
         ) : (
           <AnimatePresence mode="wait">
-          {showTeamDirectory && activeGame ? (
+          {hasSubTeams && activeGame ? (
             /* STEP 2: Sub-Division Team List */
             <motion.div
               key={`${activeGame.id}-directory`}
@@ -504,9 +506,9 @@ export function RosterSection({
         </AnimatePresence>
         )}
 
-        {/* Focused Instagram-Style Drill-Down Modal for Godlike Pro (Game -> Team -> Roster) */}
+        {/* Focused Instagram-Style Drill-Down Modal (Both Godlike Pro & Existing Sub-Teams) */}
         <AnimatePresence>
-        {isProProfile && activeGame && (
+        {isFocusedModalOpen && activeGame && (
           <ModalPortal>
             <motion.div
               role="dialog"
@@ -518,7 +520,7 @@ export function RosterSection({
               transition={{ duration: 0.2 }}
               onClick={() => {
                 setSelectedSubTeamId(null);
-                setSelectedProGameId(null);
+                if (isProProfile) setSelectedProGameId(null);
               }}
               className="fixed inset-0 z-[75] bg-black/90 p-0 sm:p-5 flex items-center justify-center overflow-hidden"
             >
@@ -538,7 +540,7 @@ export function RosterSection({
                     onClick={() => {
                       if (activeSubTeam) {
                         setSelectedSubTeamId(null);
-                      } else {
+                      } else if (isProProfile) {
                         setSelectedProGameId(null);
                       }
                     }}
@@ -556,7 +558,7 @@ export function RosterSection({
                     type="button"
                     onClick={() => {
                       setSelectedSubTeamId(null);
-                      setSelectedProGameId(null);
+                      if (isProProfile) setSelectedProGameId(null);
                     }}
                     className="p-1.5 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
                     aria-label="Tutup"
