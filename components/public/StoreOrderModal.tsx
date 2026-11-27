@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { X, ShoppingBag, MessageCircle } from "lucide-react";
+import { BASE_PATH } from "@/lib/base-path";
 import { MessageTemplatesConfig, StoreProduct } from "@/lib/types";
 import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { DEFAULT_STORE_WA_TEMPLATE } from "@/lib/default-data";
@@ -28,9 +29,10 @@ export function StoreOrderModal({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [size, setSize] = useState(product?.sizes?.[0] || "L");
-  const [qty, setQty] = useState(1);
+  const [qtyText, setQtyText] = useState("1");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useLockBodyAndLenis(Boolean(product));
 
@@ -38,11 +40,13 @@ export function StoreOrderModal({
     if (product?.sizes?.length) {
       setSize(product.sizes[0]);
     }
+    setQtyText("1");
   }, [product]);
 
   if (!product) return null;
 
-  const totalPrice = product.price * qty;
+  const parsedQty = Math.max(1, parseInt(qtyText || "1", 10) || 1);
+  const totalPrice = product.price * parsedQty;
 
   const formatRupiah = (n: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -51,24 +55,55 @@ export function StoreOrderModal({
       maximumFractionDigits: 0,
     }).format(n);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    let orderCode = "";
+    try {
+      const res = await fetch(`${BASE_PATH}/api/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          size,
+          qty: parsedQty,
+          unitPrice: product.price,
+          customerName: name,
+          customerPhone: phone,
+          address,
+          notes: notes || "-",
+        }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { order?: { orderCode: string } };
+        orderCode = json.order?.orderCode || "";
+      }
+    } catch {
+      // continue to WhatsApp even if offline
+    } finally {
+      setSubmitting(false);
+    }
+
     const cleanNumber = whatsappNumber.replace(/[^0-9]/g, "");
     const rawTemplate =
       templates.storeWhatsappTemplate || DEFAULT_STORE_WA_TEMPLATE;
 
-    const message = renderWhatsappTemplate(rawTemplate, {
+    const baseMessage = renderWhatsappTemplate(rawTemplate, {
       product: product.name,
       category: product.category,
       price: formatRupiah(product.price),
       size,
-      qty,
+      qty: parsedQty,
       total: formatRupiah(totalPrice),
       name,
       phone,
       address,
       notes: notes || "-",
     });
+    const message = orderCode
+      ? `${baseMessage}\n\nKode Pesanan: *${orderCode}*`
+      : baseMessage;
 
     const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank", "noopener,noreferrer");
@@ -210,15 +245,43 @@ export function StoreOrderModal({
               <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
                 {templates.storeQtyLabel || "Jumlah (Qty)"}
               </label>
-              <input
-                type="number"
-                min={1}
-                max={50}
-                required
-                value={qty}
-                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-                className="w-full rounded-lg border border-zinc-800 bg-zinc-900/90 px-3.5 py-2 text-sm text-white focus:border-[#E11D2E] focus:outline-none"
-              />
+              <div className="flex items-center rounded-lg border border-zinc-800 bg-zinc-900/90 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQtyText(String(Math.max(1, parsedQty - 1)))
+                  }
+                  className="px-3 py-2 text-sm font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                  aria-label="Kurangi jumlah"
+                >
+                  −
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  required
+                  value={qtyText}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/[^0-9]/g, "");
+                    setQtyText(digits);
+                  }}
+                  onBlur={() => {
+                    if (!qtyText || parseInt(qtyText, 10) < 1) {
+                      setQtyText("1");
+                    }
+                  }}
+                  className="w-full bg-transparent px-2 py-2 text-center text-sm font-semibold text-white focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setQtyText(String(parsedQty + 1))}
+                  className="px-3 py-2 text-sm font-bold text-zinc-300 hover:bg-zinc-800 hover:text-white cursor-pointer"
+                  aria-label="Tambah jumlah"
+                >
+                  +
+                </button>
+              </div>
             </div>
           </div>
 
@@ -266,13 +329,15 @@ export function StoreOrderModal({
 
           <button
             type="submit"
-            disabled={!product.inStock}
+            disabled={!product.inStock || submitting}
             className="w-full flex items-center justify-center gap-2 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 py-3.5 text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
           >
             <MessageCircle className="w-4 h-4" />
-            {product.inStock
-              ? templates.storeSubmitButtonText || "Kirim Pesanan ke WhatsApp"
-              : "Stok Habis"}
+            {submitting
+              ? "Memproses Pesanan..."
+              : product.inStock
+                ? templates.storeSubmitButtonText || "Kirim Pesanan ke WhatsApp"
+                : "Stok Habis"}
           </button>
         </form>
         </div>

@@ -26,6 +26,7 @@ const EDITABLE_TAB_OPTIONS: Array<{ id: AdminTabId; label: string }> = [
   { id: "sponsors", label: "Sponsors" },
   { id: "contact", label: "Contact & Sosmed" },
   { id: "templates", label: "Template Pesan" },
+  { id: "orders", label: "Pesanan & Scrim" },
   { id: "analytics", label: "Statistik Web" },
   { id: "logs", label: "Log Aktivitas" },
 ];

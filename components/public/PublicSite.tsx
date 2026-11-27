@@ -11,6 +11,8 @@ import {
   Send,
   Play,
   Images,
+  PackageCheck,
+  Swords,
 } from "lucide-react";
 import {
   GalleryEvent,
@@ -30,6 +32,8 @@ import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { RosterSection } from "./RosterSection";
 import { BrandAmbassadorSection } from "./BrandAmbassadorSection";
 import { StoreOrderModal } from "./StoreOrderModal";
+import { OrderStatusModal } from "./OrderStatusModal";
+import { ScrimRequestModal } from "./ScrimRequestModal";
 import { SponsorRollingStrip } from "./SponsorRollingStrip";
 import { SocialIcon } from "./SocialIcon";
 import { KprPreloader } from "./KprPreloader";
@@ -86,11 +90,29 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     : [];
 
   const [orderProduct, setOrderProduct] = useState<StoreProduct | null>(null);
+  const [orderStatusOpen, setOrderStatusOpen] = useState(false);
+  const [scrimModalOpen, setScrimModalOpen] = useState(false);
 
   useHistoryBack(mobileMenuOpen, () => setMobileMenuOpen(false), "nav");
   useHistoryBack(Boolean(activeEvent), () => setActiveEvent(null), "gallery");
   useHistoryBack(Boolean(orderProduct), () => setOrderProduct(null), "store");
+  useHistoryBack(orderStatusOpen, () => setOrderStatusOpen(false), "order-status");
+  useHistoryBack(scrimModalOpen, () => setScrimModalOpen(false), "scrim");
   useHistoryBack(Boolean(lightboxItem), () => setLightboxItem(null), "lightbox");
+
+  // Auto-hide mobile burger menu when user scrolls
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnScroll = () => setMobileMenuOpen(false);
+    window.addEventListener("scroll", closeOnScroll, { passive: true });
+    window.addEventListener("wheel", closeOnScroll, { passive: true });
+    window.addEventListener("touchmove", closeOnScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", closeOnScroll);
+      window.removeEventListener("wheel", closeOnScroll);
+      window.removeEventListener("touchmove", closeOnScroll);
+    };
+  }, [mobileMenuOpen]);
 
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -698,11 +720,21 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                       </span>
                     </h2>
                   </div>
-                  {hs.storeSubtitle && (
-                    <p className="text-zinc-400 text-xs sm:text-sm max-w-md">
-                      {hs.storeSubtitle}
-                    </p>
-                  )}
+                  <div className="flex flex-col sm:items-end gap-2.5">
+                    {hs.storeSubtitle && (
+                      <p className="text-zinc-400 text-xs sm:text-sm max-w-md sm:text-right">
+                        {hs.storeSubtitle}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setOrderStatusOpen(true)}
+                      className="inline-flex items-center gap-1.5 self-start sm:self-end rounded border border-white/20 hover:border-[#E11D2E] bg-zinc-900/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-200 hover:text-white transition cursor-pointer"
+                    >
+                      <PackageCheck className="w-3.5 h-3.5 text-[#E11D2E]" />
+                      Cek Status Pesanan
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6">
@@ -907,13 +939,24 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#E11D2E] via-rose-600 to-rose-400 hover:brightness-110 px-7 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(225,29,46,0.3)] transition cursor-pointer"
-                  >
-                    <Send className="w-4 h-4" />
-                    {tpl.contactSubmitButtonText || "Kirim via WhatsApp"}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-2.5 bg-gradient-to-r from-[#E11D2E] via-rose-600 to-rose-400 hover:brightness-110 px-7 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(225,29,46,0.3)] transition cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" />
+                      {tpl.contactSubmitButtonText || "Kirim via WhatsApp"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setScrimModalOpen(true)}
+                      className="inline-flex items-center gap-2 border border-white/25 hover:border-[#E11D2E] px-6 py-3.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
+                    >
+                      <Swords className="w-4 h-4 text-[#E11D2E]" />
+                      Ajukan Scrim Request
+                    </button>
+                  </div>
                 </form>
               </div>
             </ScrollSection>
@@ -1094,6 +1137,20 @@ function PublicSiteInner({ data }: { data: SiteData }) {
         templates={data.templates}
         onInspectMedia={(item) => setLightboxItem(item)}
         onClose={() => setOrderProduct(null)}
+      />
+
+      {/* ORDER & SCRIM STATUS TRACKING MODAL */}
+      <OrderStatusModal
+        open={orderStatusOpen}
+        onClose={() => setOrderStatusOpen(false)}
+      />
+
+      {/* SCRIM REQUEST MODAL */}
+      <ScrimRequestModal
+        open={scrimModalOpen}
+        games={data.games}
+        whatsappNumber={data.contact.whatsappNumber || data.branding.whatsappNumber}
+        onClose={() => setScrimModalOpen(false)}
       />
 
       {/* GALLERY EVENT DETAIL MODAL (Instagram Style) */}

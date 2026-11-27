@@ -102,7 +102,7 @@ export function SmartMedia({
         <img
           src={resolved}
           alt={alt}
-          loading="lazy"
+          decoding="async"
           className={`relative z-[1] w-full h-full object-contain ${imgClassName}`}
         />
       </div>
@@ -114,7 +114,7 @@ export function SmartMedia({
       <img
         src={resolved}
         alt={alt}
-        loading="lazy"
+        decoding="async"
         className={`w-full h-full ${
           fit === "cover" ? "object-cover" : "object-contain"
         } ${imgClassName}`}

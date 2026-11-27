@@ -22,7 +22,53 @@ export type AdminTabId =
   | "contact"
   | "users"
   | "logs"
-  | "analytics";
+  | "analytics"
+  | "orders";
+
+export type OrderStatus =
+  | "pending"
+  | "processing"
+  | "shipped"
+  | "completed"
+  | "cancelled";
+
+export interface StoreOrder {
+  id: string;
+  orderCode: string;
+  productId: string;
+  productName: string;
+  size: string;
+  qty: number;
+  unitPrice: number;
+  totalPrice: number;
+  customerName: string;
+  customerPhone: string;
+  address: string;
+  notes: string;
+  status: OrderStatus;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ScrimStatus = "pending" | "approved" | "completed" | "rejected";
+
+export interface ScrimRequest {
+  id: string;
+  scrimCode: string;
+  teamName: string;
+  contactName: string;
+  contactPhone: string;
+  gameName: string;
+  preferredDate: string;
+  preferredTime: string;
+  format: string;
+  notes: string;
+  status: ScrimStatus;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type AdminRole = "full" | "read" | "custom";
 

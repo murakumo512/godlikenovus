@@ -37,6 +37,7 @@ import { SectionOrderPanel } from "./SectionOrderPanel";
 import { AdminUsersPanel } from "./AdminUsersPanel";
 import { AdminLogsPanel } from "./AdminLogsPanel";
 import { AdminAnalyticsPanel } from "./AdminAnalyticsPanel";
+import { AdminOrdersScrimPanel } from "./AdminOrdersScrimPanel";
 import type { AdminSessionUser } from "@/lib/auth";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
@@ -260,6 +261,7 @@ export function AdminDashboard({
     { id: "sponsors", label: "Sponsors" },
     { id: "contact", label: "Contact & Sosmed" },
     { id: "templates", label: "Template Pesan" },
+    { id: "orders", label: "Pesanan & Scrim" },
     { id: "analytics", label: "Statistik Web" },
     { id: "users", label: "Akun & Password" },
     { id: "logs", label: "Log Aktivitas" },
@@ -574,6 +576,15 @@ export function AdminDashboard({
             <AdminAnalyticsPanel
               role={currentUser.role}
               onUnauthorized={() => setCurrentUser(null)}
+            />
+          )}
+
+          {/* PESANAN STORE & SCRIM REQUEST */}
+          {effectiveActiveTab === "orders" && (
+            <AdminOrdersScrimPanel
+              role={currentUser.role}
+              onUnauthorized={() => setCurrentUser(null)}
+              onToast={showToast}
             />
           )}
 
