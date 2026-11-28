@@ -32,6 +32,8 @@ import { renderWhatsappTemplate } from "@/lib/template-utils";
 import { RosterSection } from "./RosterSection";
 import { HeroHighlightCarousel } from "./HeroHighlightCarousel";
 import { BrandAmbassadorSection } from "./BrandAmbassadorSection";
+import { ManagementSection } from "./ManagementSection";
+import { CreatorsSection } from "./CreatorsSection";
 import { StoreOrderModal } from "./StoreOrderModal";
 import { OrderStatusModal } from "./OrderStatusModal";
 import { ScrimRequestModal } from "./ScrimRequestModal";
@@ -254,6 +256,8 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     about: data.branding.navLabels?.about || "About",
     gallery: data.branding.navLabels?.gallery || "Gallery",
     ambassadors: data.branding.navLabels?.ambassadors || "Ambassador",
+    management: data.branding.navLabels?.management || "Management",
+    creators: data.branding.navLabels?.creators || "Creators",
     store: data.branding.navLabels?.store || "Store",
     sponsors: data.branding.navLabels?.sponsors || "Sponsors",
     contact: data.branding.navLabels?.contact || "Contact",
@@ -282,6 +286,8 @@ function PublicSiteInner({ data }: { data: SiteData }) {
     about: { anchorId: "about", label: navLabels.about },
     gallery: { anchorId: "gallery", label: navLabels.gallery },
     ambassadors: { anchorId: "ambassadors", label: navLabels.ambassadors },
+    management: { anchorId: "management", label: navLabels.management },
+    creators: { anchorId: "creators", label: navLabels.creators },
     store: { anchorId: "store", label: navLabels.store },
     sponsors: { anchorId: "sponsors", label: navLabels.sponsors },
     contact: { anchorId: "contact", label: navLabels.contact },
@@ -845,6 +851,28 @@ function PublicSiteInner({ data }: { data: SiteData }) {
               ambassadors={data.ambassadors}
               homeSections={hs}
               fallbackLogo={navbarLogo}
+              onInspectMedia={(item) => setLightboxItem(item)}
+            />
+          </div>
+        );
+
+      case "management":
+        return (
+          <div key="management" className={topOffsetClass}>
+            <ManagementSection
+              divisions={data.management || []}
+              homeSections={hs}
+              fallbackLogo={navbarLogo}
+            />
+          </div>
+        );
+
+      case "creators":
+        return (
+          <div key="creators" className={topOffsetClass}>
+            <CreatorsSection
+              creators={data.creators || []}
+              homeSections={hs}
               onInspectMedia={(item) => setLightboxItem(item)}
             />
           </div>

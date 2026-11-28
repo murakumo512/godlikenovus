@@ -275,6 +275,8 @@ const TAB_DATA_KEYS: Partial<Record<AdminTabId, Array<keyof SiteData>>> = {
   about: ["about", "homeSections"],
   gallery: ["gallery", "homeSections"],
   ambassadors: ["ambassadors", "homeSections"],
+  management: ["management", "homeSections"],
+  creators: ["creators", "homeSections"],
   store: ["store", "homeSections"],
   sponsors: ["sponsors", "homeSections"],
   contact: ["contact", "socials", "homeSections"],

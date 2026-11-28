@@ -46,6 +46,16 @@ const SECTION_LABELS: Record<
     desc: "Banner landscape BA (foto kiri + aksen kanan) dan profil sosmed.",
     targetTab: "ambassadors",
   },
+  management: {
+    title: "Our Management",
+    desc: "Preview foto bertumpuk di bawah BA yang membuka halaman khusus /management.",
+    targetTab: "management",
+  },
+  creators: {
+    title: "Content Creator Hub",
+    desc: "Daftar streamer & kreator konten resmi dengan modal profil & link channel.",
+    targetTab: "creators",
+  },
   store: {
     title: "Official Store",
     desc: "Katalog jersey & merchandise terhubung ke order WhatsApp.",

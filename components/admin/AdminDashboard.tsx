@@ -40,6 +40,8 @@ import { AdminUsersPanel } from "./AdminUsersPanel";
 import { AdminLogsPanel } from "./AdminLogsPanel";
 import { AdminAnalyticsPanel } from "./AdminAnalyticsPanel";
 import { AdminOrdersScrimPanel } from "./AdminOrdersScrimPanel";
+import { AdminManagementPanel } from "./AdminManagementPanel";
+import { AdminCreatorsPanel } from "./AdminCreatorsPanel";
 import type { AdminSessionUser } from "@/lib/auth";
 import { assetUrl, BASE_PATH } from "@/lib/base-path";
 
@@ -309,6 +311,8 @@ export function AdminDashboard({
     { id: "about", label: "About Us" },
     { id: "gallery", label: "Gallery" },
     { id: "ambassadors", label: "Brand Ambassador" },
+    { id: "management", label: "Our Management" },
+    { id: "creators", label: "Content Creator Hub" },
     { id: "store", label: "Store" },
     { id: "sponsors", label: "Sponsors" },
     { id: "contact", label: "Contact & Sosmed" },
@@ -3885,6 +3889,16 @@ export function AdminDashboard({
                 )}
               </section>
             </div>
+          )}
+
+          {/* 5B. OUR MANAGEMENT */}
+          {effectiveActiveTab === "management" && (
+            <AdminManagementPanel data={data} setData={setData} />
+          )}
+
+          {/* 5C. CONTENT CREATOR HUB */}
+          {effectiveActiveTab === "creators" && (
+            <AdminCreatorsPanel data={data} setData={setData} />
           )}
 
           {/* 6. OFFICIAL STORE */}

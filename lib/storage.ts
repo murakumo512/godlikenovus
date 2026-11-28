@@ -1,6 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
-import { DEFAULT_SECTION_ORDER, DEFAULT_SITE_DATA } from "./default-data";
+import {
+  DEFAULT_MANAGEMENT_DIVISIONS,
+  DEFAULT_SECTION_ORDER,
+  DEFAULT_SITE_DATA,
+} from "./default-data";
 import { SectionKey, SiteData } from "./types";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -33,6 +37,20 @@ export function normalizeSectionOrder(rawOrder?: SectionKey[]): SectionKey[] {
           result.splice(heroIdx + 1, 0, "scrim");
         } else {
           result.unshift("scrim");
+        }
+      } else if (def === "management") {
+        const baIdx = result.indexOf("ambassadors");
+        if (baIdx !== -1) {
+          result.splice(baIdx + 1, 0, "management");
+        } else {
+          result.push("management");
+        }
+      } else if (def === "creators") {
+        const mgmtIdx = result.indexOf("management");
+        if (mgmtIdx !== -1) {
+          result.splice(mgmtIdx + 1, 0, "creators");
+        } else {
+          result.push("creators");
         }
       } else {
         result.push(def);
@@ -170,6 +188,11 @@ export function normalizeSiteData(raw: Partial<SiteData>): SiteData {
       : DEFAULT_SITE_DATA.socials,
     scrimContacts: Array.isArray(raw.scrimContacts) ? raw.scrimContacts : [],
     heroHighlights: Array.isArray(raw.heroHighlights) ? raw.heroHighlights : [],
+    creators: Array.isArray(raw.creators) ? raw.creators : [],
+    management:
+      Array.isArray(raw.management) && raw.management.length > 0
+        ? raw.management
+        : DEFAULT_MANAGEMENT_DIVISIONS,
   };
 }
 

@@ -22,6 +22,8 @@ const EDITABLE_TAB_OPTIONS: Array<{ id: AdminTabId; label: string }> = [
   { id: "about", label: "About Us" },
   { id: "gallery", label: "Gallery" },
   { id: "ambassadors", label: "Brand Ambassador" },
+  { id: "management", label: "Our Management" },
+  { id: "creators", label: "Content Creator Hub" },
   { id: "store", label: "Store" },
   { id: "sponsors", label: "Sponsors" },
   { id: "contact", label: "Contact & Sosmed" },

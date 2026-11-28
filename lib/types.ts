@@ -5,6 +5,8 @@ export type SectionKey =
   | "about"
   | "gallery"
   | "ambassadors"
+  | "management"
+  | "creators"
   | "store"
   | "sponsors"
   | "contact";
@@ -18,6 +20,8 @@ export type AdminTabId =
   | "about"
   | "gallery"
   | "ambassadors"
+  | "management"
+  | "creators"
   | "store"
   | "sponsors"
   | "contact"
@@ -208,6 +212,8 @@ export interface NavLabels {
   about: string;
   gallery: string;
   ambassadors?: string;
+  management?: string;
+  creators?: string;
   store: string;
   sponsors: string;
   contact: string;
@@ -288,6 +294,15 @@ export interface HomeSectionsConfig {
   baTitleWhite: string;
   baTitleAccent: string;
   baSubtitle: string;
+  managementBadge?: string;
+  managementTitleWhite?: string;
+  managementTitleAccent?: string;
+  managementSubtitle?: string;
+  managementButtonText?: string;
+  creatorsBadge?: string;
+  creatorsTitleWhite?: string;
+  creatorsTitleAccent?: string;
+  creatorsSubtitle?: string;
   storeBadge: string;
   storeTitleWhite: string;
   storeTitleAccent: string;
@@ -363,6 +378,40 @@ export interface ScrimContact {
   enabled?: boolean;
 }
 
+export interface ContentCreator {
+  id: string;
+  name: string;
+  handle: string;
+  platform: "tiktok" | "youtube" | "instagram" | "twitch" | "facebook" | "other";
+  role: string;
+  followers?: string;
+  photo: string;
+  images?: string[];
+  hiddenImages?: string[];
+  videoUrl?: string;
+  bio: string;
+  channelUrl: string;
+  enabled?: boolean;
+}
+
+export interface ManagementMember {
+  id: string;
+  name: string;
+  role: string;
+  photo: string;
+  bio?: string;
+  socialUrl?: string;
+  enabled?: boolean;
+}
+
+export interface ManagementDivision {
+  id: string;
+  name: string;
+  description?: string;
+  enabled?: boolean;
+  members: ManagementMember[];
+}
+
 export interface SiteData {
   sectionOrder: SectionKey[];
   hiddenSections?: SectionKey[];
@@ -375,6 +424,8 @@ export interface SiteData {
   about: AboutSection;
   gallery: GalleryEvent[];
   ambassadors: BrandAmbassador[];
+  management?: ManagementDivision[];
+  creators?: ContentCreator[];
   store: StoreProduct[];
   sponsors: SponsorItem[];
   contact: ContactConfig;

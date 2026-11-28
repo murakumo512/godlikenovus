@@ -1,4 +1,4 @@
-import { SectionKey, SiteData } from "./types";
+import { ManagementDivision, SectionKey, SiteData } from "./types";
 
 export const DEFAULT_SECTION_ORDER: SectionKey[] = [
   "hero",
@@ -7,9 +7,56 @@ export const DEFAULT_SECTION_ORDER: SectionKey[] = [
   "about",
   "gallery",
   "ambassadors",
+  "management",
+  "creators",
   "store",
   "sponsors",
   "contact",
+];
+
+export const DEFAULT_MANAGEMENT_DIVISIONS: ManagementDivision[] = [
+  {
+    id: "mgmt-community-leader",
+    name: "Community Leader",
+    description: "Pimpinan utama komunitas & pengarah visi strategis Godlike Novus.",
+    enabled: true,
+    members: [],
+  },
+  {
+    id: "mgmt-competitive",
+    name: "Competitive Division",
+    description: "Pengelolaan tim kompetitif, jadwal scrim, turnamen, dan performa roster.",
+    enabled: true,
+    members: [],
+  },
+  {
+    id: "mgmt-media-content",
+    name: "Media & Content",
+    description: "Produksi konten kreatif, desain visual, sosial media, dan publikasi.",
+    enabled: true,
+    members: [],
+  },
+  {
+    id: "mgmt-community-hr",
+    name: "Community & HR",
+    description: "Rekrutmen anggota, keterlibatan komunitas, dan kesejahteraan tim.",
+    enabled: true,
+    members: [],
+  },
+  {
+    id: "mgmt-sekretaris",
+    name: "Sekretaris",
+    description: "Administrasi organisasi, dokumentasi, dan koordinasi operasional.",
+    enabled: true,
+    members: [],
+  },
+  {
+    id: "mgmt-bizdev",
+    name: "BizDev",
+    description: "Kemitraan strategis, sponsorship, kolaborasi brand, dan pengembangan bisnis.",
+    enabled: true,
+    members: [],
+  },
 ];
 
 export const DEFAULT_STORE_WA_TEMPLATE = [
