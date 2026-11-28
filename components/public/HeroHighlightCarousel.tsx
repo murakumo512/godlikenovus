@@ -181,7 +181,7 @@ export function HeroHighlightCarousel({
           }
         }}
         style={{ touchAction: slides.length > 1 ? "pan-y pinch-zoom" : undefined }}
-        className={`godlike-highlight-bg relative w-full overflow-hidden rounded-none border-x-0 select-none ${
+        className={`godlike-highlight-bg relative w-full overflow-hidden rounded-none border-0 select-none ${
           slides.length > 1 ? "cursor-grab active:cursor-grabbing" : ""
         }`}
       >

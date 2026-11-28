@@ -144,21 +144,21 @@
   color: #ffffff !important;
 }
 
-/* Hero Highlight Carousel crimson gradient with distinct geometric/diagonal esports motif */
+/* Hero Highlight Carousel borderless crimson gradient with subtle organic doodle-art motif */
 .godlike-highlight-bg {
   position: relative;
-  background-color: #460814;
+  background-color: #5b0a18;
   background-image:
-    radial-gradient(circle at 82% 28%, rgba(255, 62, 92, 0.34) 0%, transparent 52%),
-    radial-gradient(circle at 14% 84%, rgba(225, 29, 46, 0.28) 0%, transparent 55%),
-    linear-gradient(125deg, #2b050c 0%, #5c0c1b 52%, #3a0610 100%);
-  border: 1px solid rgba(255, 96, 118, 0.3);
-  box-shadow: 0 18px 42px -18px rgba(225, 29, 46, 0.45);
+    radial-gradient(circle at 22% 28%, rgba(255, 76, 102, 0.3) 0%, transparent 56%),
+    radial-gradient(circle at 78% 74%, rgba(225, 29, 46, 0.26) 0%, transparent 56%),
+    linear-gradient(135deg, #4b0713 0%, #720f22 50%, #480713 100%);
+  border: none;
+  box-shadow: none;
 }
 
 .godlike-highlight-pattern {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320' fill='none'%3E%3Cpath d='M0 320L320 0M-80 240L240 -80M80 400L400 80' stroke='%23ff6b81' stroke-opacity='0.14' stroke-width='1.5'/%3E%3Cpolygon points='160,28 274,94 274,226 160,292 46,226 46,94' stroke='%23ff8093' stroke-opacity='0.11' stroke-width='1.2'/%3E%3Cpath d='M220 40L280 40L280 100' stroke='%23ff5c72' stroke-opacity='0.2' stroke-width='1.5'/%3E%3C/svg%3E");
-  background-size: 320px 320px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='460' viewBox='0 0 800 460' fill='none'%3E%3Cpath d='M-40 120C60 40 155 45 190 125C225 205 140 245 110 190C80 135 165 75 290 115C415 155 485 265 620 215C715 180 760 115 840 140' stroke='%23ff7a90' stroke-opacity='0.18' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M-30 340C95 270 215 390 355 325C495 260 565 340 650 385C720 422 775 370 835 320' stroke='%23ff7a90' stroke-opacity='0.15' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M520 70C548 52 586 68 576 102C566 136 520 124 530 92' stroke='%23ff8da0' stroke-opacity='0.2' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M255 370L261 384L275 390L261 396L255 410L249 396L235 390L249 384L255 370Z' stroke='%23ff8da0' stroke-opacity='0.18' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M690 88L694 98L704 102L694 106L690 116L686 106L676 102L686 98L690 88Z' stroke='%23ff8da0' stroke-opacity='0.18' stroke-width='1.5' stroke-linejoin='round'/%3E%3Ccircle cx='395' cy='95' r='16' stroke='%23ff8da0' stroke-opacity='0.14' stroke-width='1.6' stroke-dasharray='5 6'/%3E%3C/svg%3E");
+  background-size: 800px 460px;
   background-repeat: repeat;
 }
 
