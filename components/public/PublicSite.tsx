@@ -626,13 +626,13 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                     className="text-zinc-300 text-xs sm:text-base leading-relaxed"
                   />
 
-                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-3 sm:gap-6 pt-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 gap-4 sm:gap-6 pt-2">
                     {data.about.stats.map((stat, i) => (
                       <div key={i} className="border-t border-white/15 pt-2.5">
                         <div className="font-display text-2xl sm:text-4xl font-bold text-white leading-none">
                           {stat.value}
                         </div>
-                        <div className="text-[9px] sm:text-[11px] font-medium uppercase tracking-wider text-zinc-400 mt-1 truncate">
+                        <div className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-zinc-400 mt-1.5 leading-snug break-words">
                           {stat.label}
                         </div>
                       </div>

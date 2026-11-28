@@ -298,7 +298,7 @@ export function BrandAmbassadorSection({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[80] bg-black/90 p-2.5 sm:p-5 flex items-center justify-center"
+          className="fixed inset-0 h-[100dvh] z-[80] bg-black/90 p-2.5 sm:p-5 pb-6 sm:pb-5 flex items-center justify-center"
           onClick={() => setSelectedBa(null)}
         >
           <motion.div
@@ -337,7 +337,8 @@ export function BrandAmbassadorSection({
                 )}
                 alt={selectedBa.name}
                 fit="contain"
-                className="md:col-span-6 min-h-0 md:h-full"
+                className="md:col-span-6 min-h-0 md:h-full shrink-0"
+                stageClassName="h-[34dvh] sm:h-[40dvh] md:h-auto md:min-h-[240px]"
                 onInspect={(url, idx) =>
                   onInspectMedia({
                     url,
@@ -372,7 +373,7 @@ export function BrandAmbassadorSection({
                   </button>
                 </div>
 
-                <div className="p-4 sm:p-6 space-y-5">
+                <div className="p-4 pb-10 sm:p-6 space-y-5">
                   <h3 className="font-display text-3xl sm:text-4xl font-bold uppercase text-white leading-none">
                     {selectedBa.name}
                   </h3>
