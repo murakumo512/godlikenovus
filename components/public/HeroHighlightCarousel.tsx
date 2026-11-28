@@ -118,7 +118,7 @@ export function HeroHighlightCarousel({
   if (slides.length === 0) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-6 sm:pb-8">
+    <div className="w-full pt-0 pb-6 sm:pb-8">
       <div
         ref={containerRef}
         onPointerDown={(e) => {
@@ -181,7 +181,7 @@ export function HeroHighlightCarousel({
           }
         }}
         style={{ touchAction: slides.length > 1 ? "pan-y pinch-zoom" : undefined }}
-        className={`godlike-highlight-bg relative overflow-hidden rounded-xl select-none ${
+        className={`godlike-highlight-bg relative w-full overflow-hidden rounded-none border-x-0 select-none ${
           slides.length > 1 ? "cursor-grab active:cursor-grabbing" : ""
         }`}
       >
@@ -233,8 +233,8 @@ export function HeroHighlightCarousel({
                 </div>
               )}
 
-              {/* Content Bottom-Left */}
-              <div className="relative z-10 w-full p-6 sm:p-10 md:p-12 pb-16 sm:pb-12">
+              {/* Content Bottom-Left (aligned inside max-w-7xl) */}
+              <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-8 sm:py-12 pb-16 sm:pb-12">
                 <div className="max-w-xl space-y-3 sm:space-y-4">
                   {slide.badge && (
                     <span className="block text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-rose-200">
