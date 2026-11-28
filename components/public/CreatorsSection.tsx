@@ -221,7 +221,7 @@ export function CreatorsSection({
                       alt={selectedCreator.name}
                       fit="contain"
                       className="md:col-span-6 shrink-0 md:h-full"
-                      stageClassName="aspect-[4/3] md:aspect-auto md:h-full md:min-h-[240px]"
+                      stageClassName="aspect-square sm:aspect-[4/3] md:aspect-auto md:h-full md:min-h-[240px]"
                       onInspect={(url, idx) =>
                         onInspectMedia({
                           url,

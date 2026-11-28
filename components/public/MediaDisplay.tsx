@@ -527,10 +527,10 @@ export function MediaLightbox({
                           setZoomScale(2.2);
                         }
                       }}
-                      className={`w-full object-contain select-none ${
+                      className={`max-w-full w-auto h-auto object-contain select-none ${
                         isZoomed
-                          ? "max-h-[78vh] cursor-grab active:cursor-grabbing"
-                          : "max-h-[66vh] cursor-zoom-in"
+                          ? "max-h-[76dvh] cursor-grab active:cursor-grabbing"
+                          : "max-h-[64dvh] cursor-zoom-in"
                       }`}
                     />
                   )}
@@ -746,7 +746,7 @@ export function MediaCarousel({
             return (
               <div
                 key={`${itemUrl}-${itemIdx}`}
-                className="w-full h-full shrink-0 flex items-center justify-center"
+                className="w-full h-full shrink-0 flex items-center justify-center overflow-hidden"
               >
                 {itemIsVid ? (
                   <SmartMedia
@@ -769,9 +769,11 @@ export function MediaCarousel({
                     src={assetUrl(itemUrl)}
                     alt={`${alt} (${itemIdx + 1})`}
                     draggable={false}
-                    className={`w-full max-h-[55vh] md:max-h-full h-auto md:h-full select-none ${
-                      fit === "cover" ? "object-cover" : "object-contain"
-                    }`}
+                    className={
+                      fit === "cover"
+                        ? "w-full h-full object-cover select-none"
+                        : "w-full h-full max-w-full max-h-[55dvh] md:max-h-full object-contain select-none"
+                    }
                   />
                 )}
               </div>
@@ -858,7 +860,7 @@ export function MediaCarousel({
                     src={assetUrl(mUrl)}
                     alt={`Thumbnail ${mIdx + 1}`}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 )}
               </button>

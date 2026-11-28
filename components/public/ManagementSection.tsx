@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, Users } from "lucide-react";
 import { HomeSectionsConfig, ManagementDivision } from "@/lib/types";
-import { assetUrl } from "@/lib/base-path";
 import { ScrollSection } from "./SmoothScroll";
+import { SmartMedia } from "./MediaDisplay";
 
 export function ManagementSection({
   divisions: rawDivisions,
@@ -117,15 +117,14 @@ export function ManagementSection({
                         className="absolute inset-0 rounded-xl overflow-hidden border border-white/15 bg-zinc-950 shadow-2xl transition-transform duration-300 group-hover:scale-[1.03]"
                       >
                         <div className="relative w-full h-full flex flex-col">
-                          <div className="relative flex-1 bg-zinc-900 overflow-hidden flex items-center justify-center">
-                            <img
-                              src={assetUrl(card.photo)}
+                          <div className="relative flex-1 bg-zinc-950 overflow-hidden flex items-center justify-center">
+                            <SmartMedia
+                              src={card.photo}
                               alt={card.name}
-                              loading="lazy"
-                              decoding="async"
-                              className="w-full h-full object-cover object-top"
+                              fit="contain-ambient"
+                              className="w-full h-full"
                             />
-                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/85 via-black/15 to-transparent" />
                           </div>
                           <div className="absolute inset-x-0 bottom-0 p-4">
                             <span className="block text-[10px] font-semibold uppercase tracking-wider text-[#E11D2E]">
