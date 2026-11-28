@@ -283,7 +283,7 @@ export function MediaLightbox({
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
         className={`w-full rounded-xl border border-white/12 bg-[#0e0e12] shadow-2xl flex flex-col overflow-hidden transition-all duration-200 ${
-          isZoomed ? "max-w-5xl max-h-[94vh]" : "max-w-2xl max-h-[92vh]"
+          isZoomed ? "max-w-5xl max-h-[90dvh]" : "max-w-2xl max-h-[84dvh] sm:max-h-[90dvh]"
         }`}
       >
         {/* Top IG Header + PC Zoom Controls */}

@@ -119,7 +119,7 @@ export function StoreOrderModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 p-2.5 sm:p-4"
+      className="fixed inset-0 h-[100dvh] z-[80] flex items-center justify-center bg-black/90 p-2.5 sm:p-4 pb-6 sm:pb-4"
       onClick={onClose}
     >
       <motion.div
@@ -128,7 +128,7 @@ export function StoreOrderModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
+        className="relative w-full max-w-3xl max-h-[82dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
       >
         {/* Left / Top: Swipeable IG-Style Product Media (Click for Fullscreen Zoom) */}
         <MediaCarousel
@@ -330,7 +330,7 @@ export function StoreOrderModal({
           <button
             type="submit"
             disabled={!product.inStock || submitting}
-            className="w-full flex items-center justify-center gap-2 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 py-3.5 text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 bg-[#E11D2E] hover:bg-red-600 disabled:bg-zinc-800 disabled:text-zinc-500 py-3.5 text-sm font-semibold uppercase tracking-wider text-white transition cursor-pointer mb-6 sm:mb-0"
           >
             <MessageCircle className="w-4 h-4" />
             {submitting

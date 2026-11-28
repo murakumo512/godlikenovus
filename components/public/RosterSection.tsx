@@ -522,7 +522,7 @@ export function RosterSection({
                 setSelectedSubTeamId(null);
                 if (isProProfile) setSelectedProGameId(null);
               }}
-              className="fixed inset-0 z-[75] bg-black/90 p-0 sm:p-5 flex items-center justify-center overflow-hidden"
+              className="fixed inset-0 h-[100dvh] z-[75] bg-black/90 p-0 sm:p-5 flex items-center justify-center overflow-hidden"
             >
               <motion.div
                 data-lenis-prevent
@@ -531,7 +531,7 @@ export function RosterSection({
                 exit={{ opacity: 0, scale: 0.97, y: 12 }}
                 transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-5xl sm:rounded-xl border-0 sm:border border-white/12 bg-[#0b0b0f] shadow-2xl flex flex-col overflow-hidden"
+                className="w-full h-full sm:h-auto sm:max-h-[90dvh] sm:max-w-5xl sm:rounded-xl border-0 sm:border border-white/12 bg-[#0b0b0f] shadow-2xl flex flex-col overflow-hidden"
               >
                 {/* Sticky Focused Modal Top Bar */}
                 <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5 border-b border-white/10 bg-[#0b0b0f] shrink-0">
@@ -785,7 +785,7 @@ export function RosterSection({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.97, y: 8 }}
               transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md max-h-[88vh] flex flex-col border border-white/10 bg-[#0e0e11] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-md max-h-[82dvh] sm:max-h-[88dvh] flex flex-col border border-white/10 bg-[#0e0e11] overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0e0e11] shrink-0">

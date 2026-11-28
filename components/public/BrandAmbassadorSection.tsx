@@ -307,7 +307,7 @@ export function BrandAmbassadorSection({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-4xl max-h-[90vh] md:h-[82vh] rounded-lg overflow-hidden bg-[#0e0e11] border border-white/12 shadow-2xl flex flex-col md:grid md:grid-cols-12"
+            className="relative w-full max-w-4xl max-h-[82dvh] sm:max-h-[90dvh] md:h-[82dvh] rounded-lg overflow-hidden bg-[#0e0e11] border border-white/12 shadow-2xl flex flex-col md:grid md:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="md:hidden flex items-center justify-between px-4 py-2.5 border-b border-white/10 bg-[#0e0e11] shrink-0">

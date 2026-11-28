@@ -1342,7 +1342,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[80] bg-black/90 p-2.5 sm:p-5 flex items-center justify-center"
+          className="fixed inset-0 h-[100dvh] z-[80] bg-black/90 p-2.5 sm:p-5 pb-6 sm:pb-5 flex items-center justify-center"
           onClick={() => setActiveEvent(null)}
         >
           <motion.div
@@ -1351,7 +1351,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 8 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-            className="relative w-full max-w-5xl max-h-[90vh] md:h-[85vh] overflow-hidden border border-white/10 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
+            className="relative w-full max-w-5xl max-h-[82dvh] sm:max-h-[90dvh] md:h-[85dvh] overflow-hidden border border-white/10 bg-[#0e0e11] shadow-2xl flex flex-col md:grid md:grid-cols-12"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0e0e11] shrink-0">
@@ -1406,7 +1406,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                   </button>
                 </div>
 
-                <div className="p-5 sm:p-6 space-y-4">
+                <div className="p-5 pb-12 sm:p-6 space-y-4">
                   <div>
                     <h3 className="font-display text-2xl sm:text-3xl font-bold uppercase text-white leading-tight">
                       {activeEvent.title}

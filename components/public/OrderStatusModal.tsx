@@ -143,7 +143,7 @@ export function OrderStatusModal({
               exit={{ opacity: 0, scale: 0.97, y: 8 }}
               transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-lg max-h-[86vh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] p-4 sm:p-6 shadow-2xl space-y-4"
+              className="relative w-full max-w-lg max-h-[82dvh] sm:max-h-[86dvh] overflow-y-auto overscroll-contain rounded-lg border border-white/12 bg-[#0e0e11] p-4 pb-10 sm:p-6 shadow-2xl space-y-4"
             >
               <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
                 <div>
