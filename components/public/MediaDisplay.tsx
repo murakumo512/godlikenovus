@@ -722,7 +722,7 @@ export function MediaCarousel({
             onInspect(current, safeIdx);
           }
         }}
-        style={{ touchAction: total > 1 ? "pan-y pinch-zoom" : "pinch-zoom" }}
+        style={{ touchAction: "pan-y pinch-zoom" }}
         className={`relative flex-1 bg-black overflow-hidden select-none ${stageClassName} ${
           total > 1
             ? "cursor-grab active:cursor-grabbing"
