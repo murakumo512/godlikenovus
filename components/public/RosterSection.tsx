@@ -283,11 +283,11 @@ export function RosterSection({
                       <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
                         <div>
                           {team.shortName && (
-                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] block truncate">
+                            <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] block leading-snug break-words">
                               {team.shortName}
                             </span>
                           )}
-                          <h3 className="font-display text-base sm:text-2xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-tight mt-0.5 truncate">
+                          <h3 className="font-display text-base sm:text-2xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-snug break-words mt-0.5">
                             {team.name}
                           </h3>
                           {team.description && (
@@ -605,11 +605,11 @@ export function RosterSection({
                               <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between">
                                 <div>
                                   {team.shortName && (
-                                    <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] block truncate">
+                                    <span className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#E11D2E] block leading-snug break-words">
                                       {team.shortName}
                                     </span>
                                   )}
-                                  <h3 className="font-display text-base sm:text-xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-tight mt-0.5 truncate">
+                                  <h3 className="font-display text-base sm:text-xl font-bold uppercase text-white group-hover:text-[#E11D2E] transition leading-snug break-words mt-0.5">
                                     {team.name}
                                   </h3>
                                 </div>

@@ -180,14 +180,20 @@ export function HeroHighlightCarousel({
             didDragRef.current = false;
           }
         }}
-        style={{ touchAction: slides.length > 1 ? "pan-y" : undefined }}
-        className={`godlike-card relative overflow-hidden rounded-xl select-none ${
+        style={{ touchAction: slides.length > 1 ? "pan-y pinch-zoom" : undefined }}
+        className={`godlike-highlight-bg relative overflow-hidden rounded-xl select-none ${
           slides.length > 1 ? "cursor-grab active:cursor-grabbing" : ""
         }`}
       >
+        {/* Distinct geometric diagonal esports pattern overlay */}
+        <div
+          className="godlike-highlight-pattern pointer-events-none absolute inset-0 z-0"
+          aria-hidden="true"
+        />
+
         {/* Sliding Horizontal Track (1:1 real-time drag follow) */}
         <div
-          className="flex w-full"
+          className="relative z-10 flex w-full"
           style={{
             transform: `translate3d(calc(-${safeIdx * 100}% + ${dragOffsetPx}px), 0, 0)`,
             transition: isDragging
@@ -201,17 +207,17 @@ export function HeroHighlightCarousel({
               key={slide.id}
               className="relative w-full shrink-0 min-h-[340px] sm:min-h-[420px] md:min-h-[460px] flex items-end overflow-hidden"
             >
-              {/* Background Media */}
+              {/* Subtle Background Image Blended Over Crimson Motif */}
               {slide.image && (
                 <div className="pointer-events-none absolute inset-0">
                   <img
                     src={assetUrl(slide.image)}
                     alt={slide.title}
                     draggable={false}
-                    className="w-full h-full object-cover object-center opacity-40"
+                    className="w-full h-full object-cover object-center opacity-22 mix-blend-luminosity"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#09090d] via-[#09090d]/85 to-[#1a060b]/55" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#24040a]/90 via-[#4a0815]/60 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1f0308]/85 via-transparent to-transparent" />
                 </div>
               )}
 
@@ -231,7 +237,7 @@ export function HeroHighlightCarousel({
               <div className="relative z-10 w-full p-6 sm:p-10 md:p-12 pb-16 sm:pb-12">
                 <div className="max-w-xl space-y-3 sm:space-y-4">
                   {slide.badge && (
-                    <span className="block text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#E11D2E]">
+                    <span className="block text-[11px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-rose-200">
                       {slide.badge}
                     </span>
                   )}

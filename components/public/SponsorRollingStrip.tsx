@@ -68,7 +68,7 @@ export function SponsorRollingStrip({
                 />
               </div>
               <div className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/95 group-hover:text-white transition line-clamp-1">
+                <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/95 group-hover:text-white transition leading-snug break-words">
                   {sp.name}
                 </span>
                 {sp.tier && (

@@ -144,6 +144,32 @@
   color: #ffffff !important;
 }
 
+/* Hero Highlight Carousel crimson gradient with distinct geometric/diagonal esports motif */
+.godlike-highlight-bg {
+  position: relative;
+  background-color: #460814;
+  background-image:
+    radial-gradient(circle at 82% 28%, rgba(255, 62, 92, 0.34) 0%, transparent 52%),
+    radial-gradient(circle at 14% 84%, rgba(225, 29, 46, 0.28) 0%, transparent 55%),
+    linear-gradient(125deg, #2b050c 0%, #5c0c1b 52%, #3a0610 100%);
+  border: 1px solid rgba(255, 96, 118, 0.3);
+  box-shadow: 0 18px 42px -18px rgba(225, 29, 46, 0.45);
+}
+
+.godlike-highlight-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' viewBox='0 0 320 320' fill='none'%3E%3Cpath d='M0 320L320 0M-80 240L240 -80M80 400L400 80' stroke='%23ff6b81' stroke-opacity='0.14' stroke-width='1.5'/%3E%3Cpolygon points='160,28 274,94 274,226 160,292 46,226 46,94' stroke='%23ff8093' stroke-opacity='0.11' stroke-width='1.2'/%3E%3Cpath d='M220 40L280 40L280 100' stroke='%23ff5c72' stroke-opacity='0.2' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size: 320px 320px;
+  background-repeat: repeat;
+}
+
+[data-site-theme="red-white"] .godlike-highlight-bg .text-white {
+  color: #ffffff !important;
+}
+
+[data-site-theme="red-white"] .godlike-highlight-bg .text-zinc-300 {
+  color: #f4f4f5 !important;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

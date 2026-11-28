@@ -702,7 +702,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                         </div>
                         {photo.caption && (
                           <div className="p-2.5 sm:p-4 border-t border-white/8">
-                            <span className="text-xs sm:text-sm font-medium text-zinc-100 block line-clamp-2 leading-snug">
+                            <span className="text-xs sm:text-sm font-medium text-zinc-100 block leading-snug break-words">
                               {photo.caption}
                             </span>
                           </div>
@@ -813,16 +813,16 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                         </div>
 
                         <div className="p-2.5 sm:p-4 border-t border-white/8 flex-1 flex flex-col">
-                          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-zinc-400 mb-0.5 truncate">
-                            <span className="font-semibold uppercase tracking-wider text-[#E11D2E] truncate">
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10px] sm:text-xs text-zinc-400 mb-1">
+                            <span className="font-semibold uppercase tracking-wider text-[#E11D2E] leading-snug break-words">
                               {evt.category}
                             </span>
                             <span className="hidden sm:inline">·</span>
-                            <span className="hidden sm:inline truncate">
+                            <span className="hidden sm:inline leading-snug">
                               {evt.date}
                             </span>
                           </div>
-                          <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-tight group-hover:text-[#E11D2E] transition line-clamp-1 sm:line-clamp-2">
+                          <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-snug break-words group-hover:text-[#E11D2E] transition">
                             {evt.title}
                           </h3>
                           <p className="hidden sm:line-clamp-2 text-xs text-zinc-400 mt-1 leading-relaxed">
@@ -961,7 +961,7 @@ function PublicSiteInner({ data }: { data: SiteData }) {
                           <span className="hidden sm:block text-[11px] text-zinc-500">
                             {product.category}
                           </span>
-                          <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-tight line-clamp-1 sm:line-clamp-2">
+                          <h3 className="font-display text-sm sm:text-xl font-bold uppercase text-white leading-snug break-words">
                             {product.name}
                           </h3>
                           <p className="hidden sm:line-clamp-2 text-xs text-zinc-400 mt-1 leading-relaxed">
